@@ -25,7 +25,8 @@ public class Screens {
 	String timeSource;
 
 	// Sat Variables
-	private String satName;
+	private String satName1;
+	private String satName2;
 	private String upperAzimuth;
 	private String lowerAzimuth;
 	private String elevation;
@@ -55,12 +56,14 @@ public class Screens {
 		
 		// Filter Satellite Information
 		if (currentSat == null) {
-			satName = "     ";
+			satName1 = "     ";
+			satName2 = "-    ";
 			upperAzimuth = "     ";
 			lowerAzimuth = "     ";
 			elevation = "    ";
 		} else {
-			satName = currentSat.getName();
+			satName1 = currentSat.getName();
+			satName2 = currentSat.getName();
 			upperAzimuth = currentSat.getUpperAzimuth();
 			lowerAzimuth = currentSat.getLowerAzimuth();
 			elevation = currentSat.getElevation();
@@ -94,7 +97,7 @@ public class Screens {
 				"                                       EHF                                      \r\n" + 
 				"                                                                                \r\n" +
 				"                                                                                \r\n" + 
-				"         "+String.format("%1$-11s", acqIndicators[0])+"             "+satName+"                                 \r\n" +
+				"         "+String.format("%1$-11s", acqIndicators[0])+"             "+satName1+"                                 \r\n" +
 				"         "+String.format("%1$-16s", acqIndicators[1])+"        "+satStatus+"                                      \r\n" + 
 				"         "+String.format("%1$-12s", acqIndicators[2])+"            "+beam+"                                             \r\n" + 
 				"                                                                                \r\n" + 
@@ -290,7 +293,7 @@ public class Screens {
 				"                                                                                \r\n" + 
 				"          CURRENT CONSTELLATION      MIL                                        \r\n" + 
 				"                                                                                \r\n" + 
-				"          CURRENT SAT                "+satName+"                             \r\n" + 
+				"          CURRENT SAT                "+satName2+"                             \r\n" + 
 				"          BEAM                       "+beam+"                                         \r\n" +
 				"                                                                                \r\n" + 
 				"          STATUS                     "+satStatus+"                                  \r\n" + 
@@ -456,7 +459,7 @@ public class Screens {
 				"CONSTELLATIONS                                                                  \r\n" + 
 				"         CANISTER ID      GROUP            UNIVERSAL  LINKING                   \r\n" + 
 				" LABEL   CURRENT FUTURE   ID     CHAINING  A     B    CURRENT FUTURE COMPROMISE \r\n" + 
-				" MIL     434  Y  434  Y   -      -         -     -    -       -      -          \r\n" + 
+				" MIL     434  Y  434  N   -      -         -     -    -       -      -          \r\n" + 
 				" UFO     -    N  -    N   -      -         -     -    -       -      -          \r\n" +
 				"                                                                                \r\n" + 
 				"                                                                                \r\n" + 
@@ -731,8 +734,18 @@ public class Screens {
 				"   ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯    ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯    ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯    ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯     \r\n";
 		screenIndex.put(indexNumber, newScreenTemplate(4, true, true, false, false));
 		
+		// START UL SCREEN
+		// LAST SCREEN = EHF ACQ/LOGON SCREEN (INDEX = 4)
+		indexNumber = 26;
+		newPromptArea =
+                "--------------------------------------------------------------------------------\r\n" + 
+                "     VERIFY TO START UL ACQ                                                     \r\n" + 
+                "                                                                                \r\n" + 
+                "                                                                                \r\n";
+		screenIndex.put(indexNumber, newScreenTemplate(25, true, true, false, true));
+		
 		// LOG OFF SCREEN
-		// LAST SCREEN = // EHF ACQ/LOGON SCREEN (INDEX = 4)
+		// LAST SCREEN = EHF ACQ/LOGON SCREEN (INDEX = 4)
 		indexNumber = 27;
 		newPromptArea =
                 "--------------------------------------------------------------------------------\r\n" + 
@@ -769,7 +782,7 @@ public class Screens {
 				"KGV-11 STATUS                                                                   \r\n" + 
 				"                                     HIGH                                       \r\n" +
 				"         KEK      DL      UL         COVER                                      \r\n" + 
-				"  TYPE   UNIQUE   "+satName+"   "+satName+" ST   "+satName+"           \r\n" + 
+				"  TYPE   UNIQUE   "+satName1+"   "+satName1+" ST   "+satName1+"           \r\n" + 
 				"  LOAD   R        B       B          B                                          \r\n" + 
 				"                                                                                \r\n" + 
 				"                                                                                \r\n" + 
@@ -3512,14 +3525,14 @@ public class Screens {
             associatedScreensIndex.put(indexNumber, associatedScreens);
         }
         
-        // NET ALREADY ACTIVE JOIN NET SCREEN (NOT SURE IF ACCURATE!!!!!!!!)
+        // NET ACTIVE JOIN NET SCREEN (NOT SURE IF ACCURATE!!!!!!!!)
         // LAST SCREEN = ENTERED NET NUMBER SCREEN (INDEX = 301)
         indexNumber = 423;
 		newPromptArea =
 				"--------------------------------------------------------------------------------\r\n" + 
 				"     SELECT OPTION                                                              \r\n" + 
 				"                                                                                \r\n" + 
-				"                               NET ALREADY ACTIVE                               \r\n";
+				"                                   NET ACTIVE                                   \r\n";
 		associatedScreens = new ArrayList<Integer>();
 		associatedScreens.add(300);
 		associatedScreens.add(304);
@@ -3670,10 +3683,7 @@ public class Screens {
 				"  ¦               ¦  ¦               ¦  ¦               ¦  ¦               ¦    \r\n" + 
 				"  ¦               ¦  ¦               ¦  ¦               ¦  ¦               ¦    \r\n" + 
 				"   ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯    ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯    ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯    ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯     \r\n";
-		associatedScreens = new ArrayList<Integer>();
-		associatedScreens.add(0);	
 		screenIndex.put(indexNumber, newScreenTemplate(0, true, true, false, false));
-        associatedScreensIndex.put(indexNumber, associatedScreens);
         
         // WORKING SCREEN CONT
         indexNumber = 999;
@@ -3682,10 +3692,7 @@ public class Screens {
 				"                                                                                \r\n" + 
 				"                                                                                \r\n" + 
 				"                                                                                \r\n";
-		associatedScreens = new ArrayList<Integer>();
-		associatedScreens.add(0);	
 		screenIndex.put(indexNumber, newScreenTemplate(998, true, true, false, true));
-        associatedScreensIndex.put(indexNumber, associatedScreens);
         
         // STARTUP SCREEN
         indexNumber = 1000;
@@ -3703,11 +3710,8 @@ public class Screens {
 				"   _______________    _______________    _______________    _______________     \r\n" +  
 				"  ¦               ¦  ¦               ¦  ¦               ¦  ¦               ¦    \r\n" + 
 				"  ¦               ¦  ¦               ¦  ¦               ¦  ¦               ¦    \r\n" + 
-				"   ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯    ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯    ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯    ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯     \r\n";
-		associatedScreens = new ArrayList<Integer>();
-		associatedScreens.add(1001);	
+				"   ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯    ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯    ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯    ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯     \r\n";	
 		screenIndex.put(indexNumber, newScreenTemplate(0, true, true, false, false));
-        associatedScreensIndex.put(indexNumber, associatedScreens);
         
         // STARTUP SCREEN CONT
         // LAST SCREEN = STARTUP SCREEN (INDEX = 1000)
@@ -3724,7 +3728,7 @@ public class Screens {
 				"   ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯    ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯    ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯    ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯     \r\n";
 		associatedScreens = new ArrayList<Integer>();
 		associatedScreens.add(1002);
-		associatedScreens.add(1302); // OR 1003?
+		associatedScreens.add(33); // OR 1003?
 		screenIndex.put(indexNumber, newScreenTemplate(0, true, true, true, false));
         associatedScreensIndex.put(indexNumber, associatedScreens);
         
@@ -4253,6 +4257,16 @@ public class Screens {
 				"   ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯    ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯    ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯    ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯     \r\n";
         screenIndex.put(indexNumber, newScreenTemplate(5, true, true, false, false));
 		
+        // RESTART SYSTEM SCREEN
+        // LAST SCREEN = DISRUPTIVE BIT TEST SCREEN
+        indexNumber = 1506;
+		newPromptArea =
+                "--------------------------------------------------------------------------------\r\n" + 
+                "     VERIFY TO RESTART SYSTEM                                                   \r\n" + 
+                "                                                                                \r\n" + 
+                "                                                                                \r\n";
+		screenIndex.put(indexNumber, newScreenTemplate(1505, true, true, false, true));
+        
 		// COMMON TEST CONT SCREEN
 		// LAST SCREEN = COMMON TEST SCREEN (INDEX = 1502)
 		indexNumber = 1512;
@@ -4506,13 +4520,6 @@ public class Screens {
 			if (log.get(log.size()-i).getStatus() == Status.ALARM) {
 				return log.get(log.size()-i).getTimeStamp()+"* "+log.get(log.size()-i).getMessage();
 			} else {
-//				String testString = log.get(log.size()-i).getTimeStamp()+"  "+log.get(log.size()-i).getMessage();
-//				System.out.println(testString);
-//				String[] words = testString.split(" ");
-//				System.out.println("Num words -> "+words.length);
-//				for (int j = 0; j < words.length; j++) {
-//					System.out.println("Word #"+(j+1)+" -> "+words[i]);
-//				}
 				return log.get(log.size()-i).getTimeStamp()+"  "+log.get(log.size()-i).getMessage();
 			}
 		}  else {

@@ -7,30 +7,101 @@ public class Acquisition {
 	boolean flag = false;
 	Random rand = new Random();
 	
-	public Acquisition(String satStatus) throws InterruptedException { // boolean prerequisitesMet
+	public Acquisition(String satStatus, String startupMode) throws InterruptedException {
 		
+		if (satStatus.equals("LOGGED ON")) {
+			Thread thread = new Thread(new Runnable() {
 
-		//System.out.println("satStatus passed to Acq class -> "+satStatus);
-		
-		if (satStatus.equals("LOGGED OFF") || satStatus.equals("")) {
+				@Override
+				public void run() {
+					status = Status.PENDING;
+					currentStep = "LOGOFF PENDING";
+					try {
+						Thread.sleep(1000); // 10000
+					} catch (InterruptedException e) {
+						e.printStackTrace();
+					}
+					status = Status.LOGGED_OFF;
+					currentStep = "LOGGED OFF";
+				}
+			});
+			thread.start();
+		} else if (satStatus.equals("DL COMPLETE")) {
+			Thread thread = new Thread(new Runnable() {
+				@Override
+				public void run() {
+					currentStep = "DL COMPLETE  -  WAITING FOR DL TRACK";
+					try {
+						Thread.sleep(1000); // 60000
+					} catch (InterruptedException e) {
+						e.printStackTrace();
+					}
+					currentStep = "DL COMPLETE  -  WAITING FOR HPA WARMUP";
+					try {
+						Thread.sleep(1000); // 5000
+					} catch (InterruptedException e) {
+						e.printStackTrace();
+					}
+					status = Status.ACQUIRING_UL;
+					currentStep = "DL COMPLETE  -  STARTING UL";
+					try {
+						Thread.sleep(1000); // 30000
+					} catch (InterruptedException e) {
+						e.printStackTrace();
+					}
+					currentStep = "DL COMPLETE  -  WAITING FOR ACCESS";
+					try {
+						Thread.sleep(1000); // 2000
+					} catch (InterruptedException e) {
+						e.printStackTrace();
+					}
+					currentStep = "DL COMPLETE  -  COARSE PROBE   -  1 MIN";
+					try {
+						Thread.sleep(1000); // 2000
+					} catch (InterruptedException e) {
+						e.printStackTrace();
+					}
+					currentStep = "DL COMPLETE  -  CONTENTION PROBING";
+					try {
+						Thread.sleep(1000);
+					} catch (InterruptedException e) {
+						e.printStackTrace();
+					}
+					currentStep = "DL COMPLETE  -  FINE PROBING";
+					try {
+						Thread.sleep(1000);
+					} catch (InterruptedException e) {
+						e.printStackTrace();
+					}
+					status = Status.UL_COMPLETE;
+					currentStep = "DL COMPLETE  -  UL COMPLETE";
+					try {
+						Thread.sleep(1000); // 5000
+					} catch (InterruptedException e) {
+						e.printStackTrace();
+					}
+					status = Status.FINISHED;
+					currentStep = "LOGGED ON";
+				}
+			});
+			thread.start();
+		} else {
 			Thread thread = new Thread(new Runnable() {
 				public void run() {
 					status = Status.ACQUIRING_DL;
 					currentStep = "DL WORKING   -  INITIALIZATION";
 					try {
-						Thread.sleep(5000);
+						Thread.sleep(1000); // 5000
 					} catch (InterruptedException e) {
-						e.printStackTrace(); // REPLACE WITH ACQ FAILED MESSAGE ???
+						e.printStackTrace();
 					}
-					
-					
 					if (flag == true) {
 						int x = rand.nextInt(18)+1; // RANDOM NUMBER BETWEEN 1 and 18
 						//System.out.println("MIN TO ACQUIRE -> "+x); // TEST PRINT
 						for (int i = 0; i < x; i++) {
 							currentStep = "DL WORKING   -   "+(28-i)+" MIN TO ACQUIRE";
 							try {
-								Thread.sleep(1000); // 60000 = MINUTE, 1000 = 1 SECOND
+								Thread.sleep(1000);
 							} catch (InterruptedException e) {
 								e.printStackTrace();
 							}
@@ -42,77 +113,81 @@ public class Acquisition {
 							e.printStackTrace();
 						}
 						status = Status.DL_COMPLETE;
-						currentStep = "DL COMPLETE  -  WAITING FOR DL TRACK";
-						try {
-							Thread.sleep(60000);
-						} catch (InterruptedException e) {
-							e.printStackTrace();
-						}
-						currentStep = "DL COMPLETE  -  WAITING FOR HPA WARMUP";
-						try {
-							Thread.sleep(5000);
-						} catch (InterruptedException e) {
-							e.printStackTrace();
-						}
-						status = Status.ACQUIRING_UL;
-						currentStep = "DL COMPLETE  -  STARTING UL";
-						try {
-							Thread.sleep(30000);
-						} catch (InterruptedException e) {
-							e.printStackTrace();
-						}
-						currentStep = "DL COMPLETE  -  WAITING FOR ACCESS";
-						try {
-							Thread.sleep(2000);
-						} catch (InterruptedException e) {
-							e.printStackTrace();
-						}
-						currentStep = "DL COMPLETE  -  COARSE PROBE   -  1 MIN";
-						try {
-							Thread.sleep(2000);
-						} catch (InterruptedException e) {
-							e.printStackTrace();
-						}
-						currentStep = "DL COMPLETE  -  CONTENTION PROBING";
-						try {
-							Thread.sleep(1000);
-						} catch (InterruptedException e) {
-							e.printStackTrace();
-						}
-						currentStep = "DL COMPLETE  -  FINE PROBING";
-						try {
-							Thread.sleep(1000);
-						} catch (InterruptedException e) {
-							e.printStackTrace();
-						}
-						status = Status.UL_COMPLETE;
-						currentStep = "DL COMPLETE  -  UL COMPLETE";
-						try {
-							Thread.sleep(5000);
-						} catch (InterruptedException e) {
-							e.printStackTrace();
-						}
-						status = Status.FINISHED;
-						currentStep = "LOGGED ON";
 						
+						// If Startup Mode is "AUTO", Then Uplink Will be Acquired Automatically
+						if (startupMode.equals("AUTO")) {
+							currentStep = "DL COMPLETE  -  WAITING FOR DL TRACK";
+							try {
+								Thread.sleep(1000); // 60000
+							} catch (InterruptedException e) {
+								e.printStackTrace();
+							}
+							currentStep = "DL COMPLETE  -  WAITING FOR HPA WARMUP";
+							try {
+								Thread.sleep(1000); // 5000
+							} catch (InterruptedException e) {
+								e.printStackTrace();
+							}
+							status = Status.ACQUIRING_UL;
+							currentStep = "DL COMPLETE  -  STARTING UL";
+							try {
+								Thread.sleep(1000); // 30000
+							} catch (InterruptedException e) {
+								e.printStackTrace();
+							}
+							currentStep = "DL COMPLETE  -  WAITING FOR ACCESS";
+							try {
+								Thread.sleep(1000); // 2000
+							} catch (InterruptedException e) {
+								e.printStackTrace();
+							}
+							currentStep = "DL COMPLETE  -  COARSE PROBE   -  1 MIN";
+							try {
+								Thread.sleep(1000); // 2000
+							} catch (InterruptedException e) {
+								e.printStackTrace();
+							}
+							currentStep = "DL COMPLETE  -  CONTENTION PROBING";
+							try {
+								Thread.sleep(1000);
+							} catch (InterruptedException e) {
+								e.printStackTrace();
+							}
+							currentStep = "DL COMPLETE  -  FINE PROBING";
+							try {
+								Thread.sleep(1000);
+							} catch (InterruptedException e) {
+								e.printStackTrace();
+							}
+							status = Status.UL_COMPLETE;
+							currentStep = "DL COMPLETE  -  UL COMPLETE";
+							try {
+								Thread.sleep(1000); // 5000
+							} catch (InterruptedException e) {
+								e.printStackTrace();
+							}
+							status = Status.FINISHED;
+							currentStep = "LOGGED ON";
+						} else {
+							currentStep = "DL COMPLETE"; // NO IDEA WHAT THIS IS SUPPOSED TO SAY
+						}
 					} else { // IF DL ACQ FAILS (CRYPTO KEYS OR NAV DATA IS INCORRECT)
-						
-						for (int i = 0; i < 4; i++) {
+						for (int i = 0; i < 5; i++) {
 							currentStep = "DL WORKING   -   0 MIN TO ACQUIRE";
 							try {
-								Thread.sleep(1000); // 60000 = MINUTE, 1000 = 1 SECOND
+								Thread.sleep(1000);
 							} catch (InterruptedException e) {
 								e.printStackTrace();
 							}
 							currentStep = "DL WORKING   -   1 MIN TO ACQUIRE";
 							try {
-								Thread.sleep(1000); // 60000 = MINUTE, 1000 = 1 SECOND
+								Thread.sleep(1000);
 							} catch (InterruptedException e) {
 								e.printStackTrace();
 							}
 							currentStep = "DL WORKING   -   0 MIN TO ACQUIRE";
 							try {
-								Thread.sleep(8000); // 60000 = MINUTE, 1000 = 1 SECOND
+								Thread.sleep(1000); // 23000
 							} catch (InterruptedException e) {
 								e.printStackTrace();
 							}
@@ -124,39 +199,21 @@ public class Acquisition {
 							case 2: status = Status.DL_FAILED_C;
 								break;
 							case 3: status = Status.DL_FAILED_D;
+								break;
+							case 4: status = Status.DL_FAILED;
 								try {
-									Thread.sleep(1000); // 60000 = MINUTE, 1000 = 1 SECOND
+									Thread.sleep(1000); // 2000
 								} catch (InterruptedException e) {
 									e.printStackTrace();
 								}
+								status = Status.NO_SAT;
 								break;
-							default:
+							default: status = Status.DL_FAILED;
 								break;
 							}
 						}
-						status = Status.DL_FAILED;
 						currentStep = "LOGGED OFF";
 					}
-				}
-			});
-			thread.start();
-		}
-		
-		if (satStatus.equals("LOGGED ON")) {
-			Thread thread = new Thread(new Runnable() {
-
-				@Override
-				public void run() {
-					status = Status.PENDING;
-					currentStep = "LOGOFF PENDING";
-					try {
-						Thread.sleep(10000);
-					} catch (InterruptedException e) {
-						// TODO Auto-generated catch block
-						e.printStackTrace();
-					}
-					status = Status.LOGGED_OFF;
-					currentStep = "LOGGED OFF";
 				}
 			});
 			thread.start();
@@ -181,5 +238,4 @@ public class Acquisition {
 	public boolean getFlag() {
 		return flag;
 	}
-	
 }

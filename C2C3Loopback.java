@@ -13,7 +13,6 @@ public class C2C3Loopback {
 			
 			@Override
 			public void run() {
-				
 				if (satStatus.equals("LOGGED ON")) {
 					status = Status.STARTED;
 					determineNumAttempts();

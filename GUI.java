@@ -7,26 +7,22 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.PrintWriter;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Random;
 import java.util.Scanner;
-import java.util.Set;
-import java.util.TimeZone;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-
 import javax.sound.sampled.AudioInputStream;
 import javax.sound.sampled.AudioSystem;
 import javax.sound.sampled.Clip;
@@ -34,7 +30,6 @@ import javax.swing.BorderFactory;
 import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JLayeredPane;
-import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JTextArea;
 import javax.swing.JTextField;
@@ -42,13 +37,15 @@ import javax.swing.SwingWorker;
 
 public class GUI extends JFrame {
 
-	// Screen Dimensions
-	private static int WIDTH = 800;
-	private static int HEIGHT = 1000;
+	// GUI Dimensions
+	private static int WIDTH;
+	private static int HEIGHT;
+	private int[] componentSpacings;
+	private static int fontSize;
 	
 	// GUI Components
 	private static Color ORANGE = new Color(255,70,0);
-	private JPanel buttonPanel;
+	private JPanel buttonPanel = new JPanel();
 	private JButton button1 = new JButton();
 	private JButton button2 = new JButton();
 	private JButton button3 = new JButton();
@@ -57,13 +54,13 @@ public class GUI extends JFrame {
 	private JButton button6 = new JButton();
 	private JButton button7 = new JButton();
 	private JButton button8 = new JButton();
-	private JTextArea textArea;
-	private JTextField textField;
-	private JLayeredPane layeredPane;
+	private JTextArea textArea = new JTextArea();
+	private JTextField textField = new JTextField("");
+	private JLayeredPane layeredPane = new JLayeredPane();
 	
 	// Local Variables
-	private int previousScreen;
-	private int screenNumber = 998; // Initial Screen
+	private int previousScreen; // May want to replace this with first index of associated screens
+	private int screenNumber = 998;
 	private boolean run = true;
 	
 	// Initial Navigation Data
@@ -73,9 +70,9 @@ public class GUI extends JFrame {
 	private double heading = 360.0; 
 	private double pitch = 0.0; 
 	private double roll = 0.0; 
-	private boolean isClickable = true;  // PREVENTS FROM RAPID CLICKING OF BUTTONS TO ALLOW FOR SCREEN CONDITIONS TO BE LOADED
+	private boolean isClickable = true;
 	private boolean isVerified = false;
-	private boolean startupComplete = false;
+	private boolean startupIsComplete = false;
 	private boolean newTime = false;
 	private boolean autoAcq = true;
 	private boolean newEphemerisRequested = false;
@@ -110,7 +107,7 @@ public class GUI extends JFrame {
 	ArrayList<Log> log = new ArrayList<Log>();
 	String GSData = "";
 	String constellation = "MIL";
-	String startupMode = "AUTO";
+	String startupMode = "AUTO"; // AUTO
 	String mode = "STDBY";
 	String dataID = "";
 	String databaseSource = "NORMAL";
@@ -126,7 +123,6 @@ public class GUI extends JFrame {
 	String[] operatorInputs = {"AUTO","AUTO","AUTO","AUTO",""};
 	Random rand;
 	boolean newNetLog = false;
-	boolean newC2C3Log = false;
 	String commonGroupBIT = "";
 	String EHFGroupBIT = "";
 	String timeInput = "";
@@ -137,16 +133,54 @@ public class GUI extends JFrame {
 	private HashMap<String, Satellite> sats = new HashMap<String, Satellite>();
 	private HashMap<Integer, Net> nets = new HashMap<Integer, Net>();
 	
-	
 	// TEST NET PARAM STRINGS
 	String interruptible = "";
 	
 	// Constructs GUI
 	public GUI() {
 		
-		// IF ACQ MODE IS AUTO THEN START ACQ
-		// ELSE MANUALLY
+		determineDimensions(Toolkit.getDefaultToolkit().getScreenSize());
 		
+		createClassObjects();
+		
+		// Initiates Button Functionality
+		createGUIComponents();
+		
+		// Initializes KeyListeners/MouseListeners for Keyboard & Mouse Input
+		startEventListeners();
+		
+		startActionListeners();
+		
+		// Starts Initial Swing Worker
+		startSwingWorker(998);
+	}
+	
+	// Determines Dimensions of GUI Componenents Based on Screen Resolution
+	private void determineDimensions(Dimension screenSize) {
+		if (screenSize.height < 864) {
+			WIDTH = 544;
+			HEIGHT = 680;
+			componentSpacings = new int[] {18,23,82,550,362,74,68,34,544,612,68,503,136,10};
+			fontSize = 9;
+		} else if (screenSize.height >= 864 && screenSize.height < 1024) {
+			WIDTH = 640;
+			HEIGHT = 800;
+			componentSpacings = new int[] {22,27,87,628,435,86,70,25,640,700,70,571,172,12};
+			fontSize = 10;
+		} else {
+			WIDTH = 800;
+			HEIGHT = 1000;
+			componentSpacings = new int[] {25,30,119,781,510,107,100,50,800,900,100,714,200,15};
+			fontSize = 12;
+		}
+		// 0 - 1 button gaps
+		// 2 - 5 buttonPanel bounds
+		// 6 - 9 textArea bounds
+		// 10 - 13 textfield bounds
+	}
+	
+	// Creates Class Objects for Key Terminal Components
+	private void createClassObjects() {
 		// Creates initial Time
 		timing = new Time(timeSource, timeInput, newTime, calendar);
 		time = timing.getTime();
@@ -156,19 +190,19 @@ public class GUI extends JFrame {
 			sats.put(satName, new Satellite(satName));
 		}
 		
+		// TEST AUTO AUTHORIZATIONS
+		sats.get("SAT02").setAuthorization(true);
+		sats.get("SAT08").setAuthorization(true);
+		
+		
+		
 		// Creates 36 Nets
 		for (int i = 0; i < 36; i++) {
 			nets.put((i+1), new Net((i+1), netNames[i]));
 		}
 		
 		// Initiates Navigation Data
-		navData = new NavData(latitude, longitude, altitude, heading, pitch, roll);		
-		
-		// Initiates Button Functionality
-		createGUIComponents();
-		
-		// Initializes KeyListener for Keyboard Input
-		startKeyListener();
+		navData = new NavData(latitude, longitude, altitude, heading, pitch, roll);	
 		
 		// Creates Initial Screens Instance
 		screens = new Screens(log, currentSat, navData, tempNavData, printMode, satStatus, 
@@ -176,140 +210,19 @@ public class GUI extends JFrame {
 				otarAuto, sats, time, beam, acqIndicators, GSData, ephemeris, logonParams, operatorInputs,
 				loggedOnSat, SRC, mode);
 		
-		// Creates Initial Log Entry
-		log.add(new Log(time, "TERMINAL STARTUP INITIATED", Status.ADVISORY)); // LOG CANNOT BE NULL
-		
-		// Starts Initial Swing Worker
-		startSwingWorker(998);
-		
-		// Action Listeners for Buttons
-		// NEED TO ADD ACTIONLISTENERS FOR MAIN MENU BUTTON + LAST SCREEN BUTTON
-		button1.addActionListener(new ActionListener() { 
-			  public void actionPerformed(ActionEvent e) { 
-				  if (screens.getAssociatedScreens(screenNumber).size() >= 1 && isClickable == true) {
-					  isClickable = false;
-					  previousScreen = screenNumber;  // NEEDS TO BE CHAGNED TO AN ASSOCIATED SCREEN INDEX
-					  loadScreen(screens.getAssociatedScreens(screenNumber).get(0));
-				  }
-			  } 
-		});
-		button2.addActionListener(new ActionListener() { 
-			  public void actionPerformed(ActionEvent e) { 
-				  if (screens.getAssociatedScreens(screenNumber).size() >= 2  && isClickable == true) {
-					  isClickable = false;
-					  previousScreen = screenNumber;  // NEEDS TO BE CHAGNED TO AN ASSOCIATED SCREEN INDEX
-					  loadScreen(screens.getAssociatedScreens(screenNumber).get(1));
-				  }
-			  } 
-		});
-		button3.addActionListener(new ActionListener() { 
-			  public void actionPerformed(ActionEvent e) {
-				  if (screens.getAssociatedScreens(screenNumber).size() >= 3  && isClickable == true) {
-					  isClickable = false;
-					  previousScreen = screenNumber;  // NEEDS TO BE CHAGNED TO AN ASSOCIATED SCREEN INDEX
-					  loadScreen(screens.getAssociatedScreens(screenNumber).get(2));
-				  }
-			  } 
-		});
-		button4.addActionListener(new ActionListener() { 
-			  public void actionPerformed(ActionEvent e) { 
-				  if (screens.getAssociatedScreens(screenNumber).size() >= 4  && isClickable == true) {
-					  isClickable = false;
-					  previousScreen = screenNumber;  // NEEDS TO BE CHAGNED TO AN ASSOCIATED SCREEN INDEX
-					  loadScreen(screens.getAssociatedScreens(screenNumber).get(3));
-				  }
-			  } 
-		});
-		button5.addActionListener(new ActionListener() { 
-			  public void actionPerformed(ActionEvent e) { 
-				  if (screens.getAssociatedScreens(screenNumber).size() >= 5  && isClickable == true) {
-					  isClickable = false;
-					  previousScreen = screenNumber;  // NEEDS TO BE CHAGNED TO AN ASSOCIATED SCREEN INDEX
-					  loadScreen(screens.getAssociatedScreens(screenNumber).get(4));
-				  }
-			  } 
-		});
-		button6.addActionListener(new ActionListener() { 
-			  public void actionPerformed(ActionEvent e) { 
-				  if (screens.getAssociatedScreens(screenNumber).size() >= 6  && isClickable == true) {
-					  isClickable = false;
-					  previousScreen = screenNumber;  // NEEDS TO BE CHAGNED TO AN ASSOCIATED SCREEN INDEX
-					  loadScreen(screens.getAssociatedScreens(screenNumber).get(5));
-				  }
-			  } 
-		});
-		button7.addActionListener(new ActionListener() { 
-			  public void actionPerformed(ActionEvent e) { 
-				  if (screens.getAssociatedScreens(screenNumber).size() >= 7  && isClickable == true) {
-					  isClickable = false;
-					  previousScreen = screenNumber;  // NEEDS TO BE CHAGNED TO AN ASSOCIATED SCREEN INDEX
-					  loadScreen(screens.getAssociatedScreens(screenNumber).get(6));
-				  }
-			  } 
-		});
-		button8.addActionListener(new ActionListener() { 
-			  public void actionPerformed(ActionEvent e) { 
-				  if (screens.getAssociatedScreens(screenNumber).size() >= 8  && isClickable == true) {
-					  isClickable = false;
-					  previousScreen = screenNumber;  // NEEDS TO BE CHAGNED TO AN ASSOCIATED SCREEN INDEX
-					  loadScreen(screens.getAssociatedScreens(screenNumber).get(7));
-				  }
-			  } 
-		});
-	}
-	
-	// Initiates Swing Worker Instance
-	private void startSwingWorker(int screenNumber) {
-		
-		worker = new SwingWorker<Void, Integer>() {
-			
-			@Override
-			protected Void doInBackground() throws Exception {
-				
-				while (run) {
-			        checkPreScreenConditions(screenNumber);
-					publish(screenNumber);
-					// Updates Time Every Second
-					TimeUnit.MILLISECONDS.sleep(1000);
-					isClickable = true;
-					updateGUIValues();
-					if (!getFocusOwner().toString().contains("JTextField")) {
-						textArea.requestFocus();
-					}
-				}
-				return null;
-			}
-			
-			// Updates GUI Dynamically
-			protected void process (List<Integer> screenNumber) {
-				
-				for (int screen : screenNumber) {
-					// Retrieves Screen from Screen Index and Generates GUI
-					textArea.replaceRange(screens.getScreen(screen),0,textArea.getDocument().getLength()); // Replaces Text on Screen
-				}
-			}
-		};
-		worker.execute();
-	}
-	
-	// Starts a New Swing Worker for Specified Screen
-	private void loadScreen(int screenNumber) {
-		if (screens.getScreen(screenNumber) != null) {
-			  worker.cancel(true);  // Cancels Old Swing Worker
-			  startSwingWorker(screenNumber);
-			  this.screenNumber = screenNumber;
-		}
+		// Creates Initial Empty Log Entry (Null Error Otherwise)
+		log.add(new Log("", "", Status.ADVISORY));
 	}
 	
 	// Creates Hidden Buttons
 	private void createGUIComponents() {
 		
-		buttonPanel = new JPanel();
-		buttonPanel.setLayout(new GridLayout(2,4,25,30));
-		buttonPanel.setBounds(118,HEIGHT-220,WIDTH-290,107);
+		// Button Panel Parameters
+		buttonPanel.setLayout(new GridLayout(2,4,componentSpacings[0],componentSpacings[1]));
+		buttonPanel.setBounds(componentSpacings[2],componentSpacings[3],componentSpacings[4],componentSpacings[5]);
 		buttonPanel.setOpaque(false);
 		
-		// Makes Buttons
+		// Button Parameters
 		button1.setOpaque(false);
 		button1.setContentAreaFilled(false);
 		button1.setBorderPainted(false);
@@ -344,40 +257,469 @@ public class GUI extends JFrame {
 		buttonPanel.add(button8);
 		add(buttonPanel);
 		
-		// Initializes Text Area
-		textArea = new JTextArea();
-		textArea.setBounds(100, 50, WIDTH, HEIGHT-100);
-		textArea.setFont(new Font("monospaced", Font.PLAIN, 12));
+		// Text Area Parameters
+		textArea.setBounds(componentSpacings[6],componentSpacings[7],componentSpacings[8],componentSpacings[9]);
+		textArea.setFont(new Font("monospaced", Font.PLAIN, fontSize));
 		textArea.setBackground(Color.BLACK);
 		textArea.setForeground(ORANGE.brighter());
 		textArea.setEditable(false);
+		textArea.setHighlighter(null);
 		
-    	textField = new JTextField("");
-    	textField.setBounds(100, HEIGHT-286, 200, 15); // textField.setBounds(120,HEIGHT-290, 50, 30);
-    	textField.setFont(new Font("monospaced", Font.PLAIN, 12));
-    	textField.setBackground(Color.BLACK); // Used to be Black, just testing
+		// Text Field Parameters
+    	textField.setBounds(componentSpacings[10],componentSpacings[11],componentSpacings[12],componentSpacings[13]);
+    	textField.setFont(new Font("monospaced", Font.PLAIN, fontSize));
+    	textField.setBackground(Color.BLACK);
     	textField.setForeground(ORANGE.brighter());
     	textField.setBorder(BorderFactory.createEmptyBorder());
+    	textField.setEditable(false);
+    	textField.setHighlighter(null);
 
-    	layeredPane = new JLayeredPane();
+    	// Layered Pane Parameters
     	layeredPane.setSize(WIDTH,HEIGHT);
     	layeredPane.add(textArea, JLayeredPane.DEFAULT_LAYER);
     	layeredPane.add(textField, JLayeredPane.PALETTE_LAYER);
     	add(layeredPane);
 	}
 	
-	// Updates GUI Values
-	private void updateGUIValues() {
-		checkScreenConditions(screenNumber);
-		updateTime();
-		updateEphemeris();
-		screens = new Screens(log, currentSat, navData, tempNavData, printMode, satStatus, 
-				commonGroupBIT, EHFGroupBIT, nets, selectedNet, tsmStatus, timeSource, startupMode, 
-				otarAuto, sats, time, beam, acqIndicators, GSData, ephemeris, logonParams, operatorInputs,
-				loggedOnSat, SRC, mode);
+	// Event Listeners for GUI Components
+	private void startEventListeners() {
+		
+		// Key Bindings
+		textArea.addKeyListener(new KeyListener() {
+			public void keyPressed(KeyEvent evt) {
+				switch(evt.getKeyCode()) {
+					case KeyEvent.VK_ESCAPE:
+				  		if (screenNumber != 800 && screenNumber < 998) {
+				  			loadScreen(0);
+				  			tempNavData = new String[6];
+				  		}
+						break;
+					case KeyEvent.VK_P:
+					  	try {
+					  		PrintWriter writer = new PrintWriter("SystemLog.txt", "UTF-8");
+					  		for (Log logEntry : log) {
+					  			writer.println(logEntry.getTimeStamp()+"   "+logEntry.getMessage());
+					  		}
+					  		writer.close();
+					  		System.out.println(screens.getScreen(screenNumber));
+					  	} catch (IOException ioe) {
+					  		System.out.println("PRINT FUNCTION FAILED");
+					  	}
+						break;
+					case KeyEvent.VK_SPACE:
+						isVerified = true;
+						break;
+					case KeyEvent.VK_BACK_QUOTE:
+						loadScreen(previousScreen);
+						tempNavData = new String[6];
+						break;
+					case KeyEvent.VK_T:
+						soundAlarm();
+						break;
+					case KeyEvent.VK_A:
+						if (clip != null) {
+							clip.close();
+						}
+						break;
+					default:
+//						System.out.println(evt.getKeyCode());
+						break;
+				}
+			}
+			public void keyReleased(KeyEvent arg0) {}
+			public void keyTyped(KeyEvent arg0) {}
+		});
+		textField.addKeyListener(new KeyListener() {
+			public void keyPressed(KeyEvent evt) {
+				switch(evt.getKeyCode()) {
+					case KeyEvent.VK_ENTER:
+					  	if (!textField.getText().equals("")) {
+					  		String temp = textField.getText();
+					  		textField.setText("");
+					  		if (screenNumber == 21 || screenNumber == 299) {
+					  			try {
+					  				selectedNet = Integer.parseInt(temp);
+					  				loadScreen(300);  // NOT CORRECT SCREEN NEED TO ALTERN MAIN AREA
+					  				// NEEDS TO LOAD NET PARAMETERS THAT ARE STORED IN HASHMAP, key = net number, value = string arraylist of params
+					  			} catch (NumberFormatException nfe) {
+					  				textField.setText(temp);
+					  				loadScreen(299);
+					  			}
+					  		}
+					  		if (screenNumber == 22) {
+					  			loadScreen(500); // NOT REAL VALUE JUST FOR TEST
+					  		}
+					  		if (screenNumber == 71 || screenNumber == 201) {
+					  			if (verifyEntry("latitude", temp)) {
+					        		if (temp.charAt(0) == '0') {
+					        			StringBuilder sb = new StringBuilder(temp);
+					        			tempNavData[0] = sb.deleteCharAt(0).toString();
+					        		} else {
+					        			tempNavData[0] = temp;
+					        		}
+						  			loadScreen(17);
+					  			} else {
+					  				textField.setText(temp);
+					  				loadScreen(201);
+					  			}
+					  		}
+					  		if (screenNumber == 72 || screenNumber == 202) {
+					  			if (verifyEntry("longitude", temp)) {
+					        		if (temp.charAt(0) == '0') {
+					        			StringBuilder sb = new StringBuilder(temp);
+					        			tempNavData[1] = sb.deleteCharAt(0).toString();
+					        		} else {
+					        			tempNavData[1] = temp;
+					        		}
+						  			loadScreen(17);
+					  			} else {
+					  				textField.setText(temp);
+					  				loadScreen(202);
+					  			}
+					  		}
+					  		if (screenNumber == 73 || screenNumber == 203) {
+					  			if (verifyEntry("altitude", temp)) {
+					  				if (!temp.contains(".")) {
+					  					temp = temp+'.';
+					  				}
+					  				if (temp.charAt(0) == '.') {
+					  					temp = '0'+temp;
+					  				}
+				  					if (temp.charAt(temp.length()-1) == '.') {
+				  						temp = temp+'0';
+				  					}
+					  				tempNavData[2] = temp;
+						  			loadScreen(17);
+					  			} else {
+					  				textField.setText(temp);
+					  				loadScreen(203);
+					  			}
+					  		}
+					  		if (screenNumber == 77 || screenNumber == 204) {
+					  			if (verifyEntry("heading", temp)) {
+					  				if (!temp.contains(".")) {
+					  					temp = temp+'.';
+					  				}
+					  				if (temp.charAt(0) == '.') {
+					  					temp = '0'+temp;
+					  				}
+				  					if (temp.charAt(temp.length()-1) == '.') {
+				  						temp = temp+'0';
+				  					}
+					  				tempNavData[3] = temp;
+						  			loadScreen(76);
+					  			} else {
+					  				textField.setText(temp);
+					  				loadScreen(204);
+					  			}
+					  		}
+					  		if (screenNumber == 78 || screenNumber == 205) {
+					  			if (verifyEntry("pitch", temp)) {
+					  				if (!temp.contains(".")) {
+					  					temp = temp+'.';
+					  				}
+					  				if (temp.charAt(0) == '.') {
+					  					temp = '0'+temp;
+					  				}
+				  					if (temp.charAt(temp.length()-1) == '.') {
+				  						temp = temp+'0';
+				  					}
+					  				tempNavData[4] = temp;
+						  			loadScreen(76);
+					  			} else {
+					  				textField.setText(temp);
+					  				loadScreen(205);
+					  			}
+					  		}
+					  		if (screenNumber == 79 || screenNumber == 206) {
+					  			if (verifyEntry("roll", temp)) {
+					  				if (!temp.contains(".")) {
+					  					temp = temp+'.';
+					  				}
+					  				if (temp.charAt(0) == '.') {
+					  					temp = '0'+temp;
+					  				}
+				  					if (temp.charAt(temp.length()-1) == '.') {
+				  						temp = temp+'0';
+				  					}
+					  				tempNavData[5] = temp;
+						  			loadScreen(76);
+					  			} else {
+					  				textField.setText(temp);
+					  				loadScreen(206);
+					  			}
+					  		}
+					  		// PERHAPS CHANGE verifyNavDataEntry method to verifyEntry()
+					  		if (screenNumber == 156 || screenNumber == 185) {
+					  			if (verifyEntry("heading", temp)) {
+					  				if (!temp.contains(".")) {
+					  					temp = temp+'.';
+					  				}
+					  				if (temp.charAt(0) == '.') {
+					  					temp = '0'+temp;
+					  				}
+				  					if (temp.charAt(temp.length()-1) == '.') {
+				  						temp = temp+"00";
+				  					}
+				  					if (temp.charAt(temp.length()-2) == '.') {
+				  						temp = temp+'0';
+				  					}
+						  			operatorInputs[0] = temp;
+						  			loadScreen(145);
+					  			} else {
+					  				textField.setText(temp);
+					  				loadScreen(185);
+					  			}
+					  		}
+					  		if (screenNumber == 157 || screenNumber == 186) {
+					  			if (verifyEntry("pitch", temp)) {
+					  				if (!temp.contains(".")) {
+					  					temp = temp+'.';
+					  				}
+					  				if (temp.charAt(0) == '.') {
+					  					temp = '0'+temp;
+					  				}
+				  					if (temp.charAt(temp.length()-1) == '.') {
+				  						temp = temp+"00";
+				  					}
+				  					if (temp.charAt(temp.length()-2) == '.') {
+				  						temp = temp+'0';
+				  					}
+						  			operatorInputs[1] = temp;
+						  			loadScreen(145);
+					  			} else {
+					  				textField.setText(temp);
+					  				loadScreen(186);
+					  			}
+					  		}
+					  		if (screenNumber == 158 || screenNumber == 187) {
+					  			if (verifyEntry("altitude", temp)) {
+					  				if (!temp.contains(".")) {
+					  					temp = temp+'.';
+					  				}
+					  				if (temp.charAt(0) == '.') {
+					  					temp = '0'+temp;
+					  				}
+				  					if (temp.charAt(temp.length()-1) == '.') {
+				  						temp = temp+"00";
+				  					}
+				  					if (temp.charAt(temp.length()-2) == '.') {
+				  						temp = temp+'0';
+				  					}
+						  			operatorInputs[2] = temp;
+						  			loadScreen(145);
+					  			} else {
+					  				textField.setText(temp);
+					  				loadScreen(187);
+					  			}
+					  		}
+					  		if (screenNumber == 159 || screenNumber == 188) {
+					  			if (verifyEntry("altitude", temp)) {
+					  				if (!temp.contains(".")) {
+					  					temp = temp+'.';
+					  				}
+					  				if (temp.charAt(0) == '.') {
+					  					temp = '0'+temp;
+					  				}
+				  					if (temp.charAt(temp.length()-1) == '.') {
+				  						temp = temp+"00";
+				  					}
+				  					if (temp.charAt(temp.length()-2) == '.') {
+				  						temp = temp+'0';
+				  					}
+						  			operatorInputs[3] = temp;
+						  			loadScreen(145);
+					  			} else {
+					  				textField.setText(temp);
+					  				loadScreen(188);
+					  			}
+					  		}
+					  		if (screenNumber == 355) {
+					  			String[] servParam1 = nets.get(selectedNet).getServiceParameters1();
+					  			servParam1[0] = temp;
+					  			nets.get(selectedNet).setServiceParameters1(servParam1);
+					  			loadScreen(317);
+					  		}
+					  		if (screenNumber == 357) {
+					  			String[] servParam1 = nets.get(selectedNet).getServiceParameters1();
+					  			servParam1[2] = temp;
+					  			nets.get(selectedNet).setServiceParameters1(servParam1);
+					  			loadScreen(317);
+					  		}
+					  		if (screenNumber == 398) {
+					  			String[] servParam2 = nets.get(selectedNet).getServiceParameters2();
+					  			servParam2[3] = temp;
+					  			nets.get(selectedNet).setServiceParameters2(servParam2);
+					  			loadScreen(318);
+					  		}
+					  		if (screenNumber == 1006 || screenNumber == 1007) {
+					  			boolean isValidDateTime = checkDateTimeFormat(temp);
+					  			if (isValidDateTime == true) {
+					  				timeInput = temp;
+					  				loadScreen(1008);
+					  			} else {
+					  				loadScreen(1007);
+					  			}
+					  			textField.setText(temp);
+					  		}
+					  		if (screenNumber == 1031) {
+					  			dataID = temp;
+					  			loadScreen(1025);
+					  		}
+					  	}
+					  	textArea.requestFocus();
+					  	break;
+					case KeyEvent.VK_ESCAPE:
+				  		if (screenNumber != 800 && screenNumber < 998) {
+				  			loadScreen(0);
+				  		}
+				  		textArea.requestFocus();
+						break;
+					case KeyEvent.VK_BACK_QUOTE:
+						loadScreen(previousScreen);
+						textArea.requestFocus();
+						break;
+					default:
+						break;
+				}
+			}
+			public void keyReleased(KeyEvent arg0) {}
+			public void keyTyped(KeyEvent arg0) {}
+		});
+		
+		// Mouse Bindings
+		textArea.addMouseListener(new MouseAdapter() {
+			public void mouseClicked(MouseEvent e) {
+				if (e.getButton() == MouseEvent.BUTTON1) {
+					if (worker.isDone()) {
+						worker.cancel(true);
+						startSwingWorker(screenNumber);
+					}
+				}
+			}
+		});
+		
+		// Window Activation Listener
+		addWindowListener(new WindowAdapter() {
+			public void windowActivated(WindowEvent we) {
+				if (worker.isDone()) {
+					worker.cancel(true);
+					startSwingWorker(screenNumber);
+				}
+			}
+		});
+		
 	}
 	
-	// Checks to See if Certain Screens Can Load
+	// Action Listeners for Buttons
+	private void startActionListeners() {
+		button1.addActionListener(new ActionListener() { 
+			  public void actionPerformed(ActionEvent e) { 
+				  if (screens.getAssociatedScreens(screenNumber) != null && screens.getAssociatedScreens(screenNumber).size() >= 1 && isClickable) {
+					  isClickable = false;
+					  previousScreen = screenNumber;  // NEEDS TO BE CHAGNED TO AN ASSOCIATED SCREEN INDEX
+					  loadScreen(screens.getAssociatedScreens(screenNumber).get(0));
+				  }
+			  } 
+		});
+		button2.addActionListener(new ActionListener() { 
+			  public void actionPerformed(ActionEvent e) { 
+				  if (screens.getAssociatedScreens(screenNumber) != null && screens.getAssociatedScreens(screenNumber).size() >= 2  && isClickable) {
+					  isClickable = false;
+					  previousScreen = screenNumber;  // NEEDS TO BE CHAGNED TO AN ASSOCIATED SCREEN INDEX
+					  loadScreen(screens.getAssociatedScreens(screenNumber).get(1));
+				  }
+			  } 
+		});
+		button3.addActionListener(new ActionListener() { 
+			  public void actionPerformed(ActionEvent e) {
+				  if (screens.getAssociatedScreens(screenNumber) != null && screens.getAssociatedScreens(screenNumber).size() >= 3  && isClickable) {
+					  isClickable = false;
+					  previousScreen = screenNumber;  // NEEDS TO BE CHAGNED TO AN ASSOCIATED SCREEN INDEX
+					  loadScreen(screens.getAssociatedScreens(screenNumber).get(2));
+				  }
+			  } 
+		});
+		button4.addActionListener(new ActionListener() { 
+			  public void actionPerformed(ActionEvent e) { 
+				  if (screens.getAssociatedScreens(screenNumber) != null && screens.getAssociatedScreens(screenNumber).size() >= 4  && isClickable) {
+					  isClickable = false;
+					  previousScreen = screenNumber;  // NEEDS TO BE CHAGNED TO AN ASSOCIATED SCREEN INDEX
+					  loadScreen(screens.getAssociatedScreens(screenNumber).get(3));
+				  }
+			  } 
+		});
+		button5.addActionListener(new ActionListener() { 
+			  public void actionPerformed(ActionEvent e) { 
+				  if (screens.getAssociatedScreens(screenNumber) != null && screens.getAssociatedScreens(screenNumber).size() >= 5  && isClickable) {
+					  isClickable = false;
+					  previousScreen = screenNumber;  // NEEDS TO BE CHAGNED TO AN ASSOCIATED SCREEN INDEX
+					  loadScreen(screens.getAssociatedScreens(screenNumber).get(4));
+				  }
+			  } 
+		});
+		button6.addActionListener(new ActionListener() { 
+			  public void actionPerformed(ActionEvent e) { 
+				  if (screens.getAssociatedScreens(screenNumber) != null && screens.getAssociatedScreens(screenNumber).size() >= 6  && isClickable) {
+					  isClickable = false;
+					  previousScreen = screenNumber;  // NEEDS TO BE CHAGNED TO AN ASSOCIATED SCREEN INDEX
+					  loadScreen(screens.getAssociatedScreens(screenNumber).get(5));
+				  }
+			  } 
+		});
+		button7.addActionListener(new ActionListener() { 
+			  public void actionPerformed(ActionEvent e) { 
+				  if (screens.getAssociatedScreens(screenNumber) != null && screens.getAssociatedScreens(screenNumber).size() >= 7  && isClickable) {
+					  isClickable = false;
+					  previousScreen = screenNumber;  // NEEDS TO BE CHAGNED TO AN ASSOCIATED SCREEN INDEX
+					  loadScreen(screens.getAssociatedScreens(screenNumber).get(6));
+				  }
+			  } 
+		});
+		button8.addActionListener(new ActionListener() { 
+			  public void actionPerformed(ActionEvent e) { 
+				  if (screens.getAssociatedScreens(screenNumber) != null && screens.getAssociatedScreens(screenNumber).size() >= 8  && isClickable) {
+					  isClickable = false;
+					  previousScreen = screenNumber;  // NEEDS TO BE CHAGNED TO AN ASSOCIATED SCREEN INDEX
+					  loadScreen(screens.getAssociatedScreens(screenNumber).get(7));
+				  }
+			  } 
+		});
+	}
+	
+	// Initiates Swing Worker Instance
+	private void startSwingWorker(int screenNumber) {
+		worker = new SwingWorker<Void, Integer>() {
+
+			// Updates Variables Every Second
+			protected Void doInBackground() throws Exception {
+				while (run) {
+			        checkPreScreenConditions(screenNumber);
+					publish(screenNumber);
+					TimeUnit.MILLISECONDS.sleep(1000);
+					isClickable = true;
+					checkObjectStatus();
+					updateGUIValues();
+					if (!getFocusOwner().toString().contains("JTextField")) {
+						textArea.requestFocus();
+						textField.setEditable(false);
+					}
+				}
+				return null;
+			}
+			
+			// Updates GUI Dynamically
+			protected void process(List<Integer> screenNumber) {
+				for (int screen : screenNumber) {
+					// Retrieves Screen from Screen Index and Generates GUI
+					textArea.replaceRange(screens.getScreen(screen),0,textArea.getDocument().getLength());
+				}
+			}
+		};
+		worker.execute();
+	}
+	
+	// Checks to See if Certain Screens Can Be Loaded
 	private void checkPreScreenConditions(int screenNumber) {
         if (screenNumber == 5 && !loggedOnSat) {
         	loadScreen(132);
@@ -400,61 +742,49 @@ public class GUI extends JFrame {
 		}
 	}
 	
-	// Checks to See if Current Screen Triggers an Action?
-	private void checkScreenConditions(int screenNumber) {
-
-//		System.out.println("Screen # -> "+screenNumber);
-//		System.out.println("Net # -> "+selectedNet);
-//		System.out.println("Logged On Sat -> "+loggedOnSat);
+	// Checks the Status of Various Class Objects
+	private void checkObjectStatus() throws InterruptedException {
+//		System.out.println("current sat -> "+currentSat);
+//		if (currentSat != null) {
+//			System.out.println("current sat name -> "+currentSat.getName());
+//		}
 		
-		if (startupComplete) {
-			for (String satName : satNames) {
-				if (sats.get(satName).getAuthorization() == true) {
-					currentSat = sats.get(satName);
-					satStatus = "LOGGED OFF";
-					if (autoAcq && startupMode.equals("AUTO")) {
-						autoAcq = false;
-						try {
-							if (checkCryptoKeys() && checkNavData()) {
-								acq = new Acquisition(satStatus);
-								acq.setFlag(true);
-							} else {
-								acq = new Acquisition(satStatus);
-							}
-						} catch (InterruptedException e) {
-							// TODO Auto-generated catch block
-							e.printStackTrace();
-						}
+//		System.out.println("acq -> "+acq);
+		
+		// Determines Current Sat if Not Logged On
+		if (startupIsComplete && acq == null && !loggedOnSat) {
+			if (currentSat == null) {
+				for (String satName : satNames) {
+					if (sats.get(satName).getAuthorization() == true) {
+						currentSat = sats.get(satName);
+						satStatus = "LOGGED OFF";
+						break;
 					}
-					break;
-				} else {
 					currentSat = null;
-					satStatus = "NO SAT AVAILABLE";
 				}
 			}
-		}
-
-		if (startupComplete && autoAcq && startupMode.equals("AUTO")) {
-			autoAcq = false;
-			if (currentSat != null) {
-				try {
+			if (currentSat == null) {
+				satStatus = "NO SAT AVAILABLE";
+			}
+			
+			// If Startup Mode is "AUTO", Satellite ACQ is Attempted Once after Startup
+			if (startupMode.equals("AUTO") && autoAcq) {
+				autoAcq = false;
+				if (currentSat == null) {
+					satStatus = "NO SAT AVAILABLE";
+					log.add(new Log(time, "NO SAT FOR DL ACQUISITION", Status.ALARM));
+	    			soundAlarm();	
+				} else {
+					acq = new Acquisition(satStatus, startupMode);
 					if (checkCryptoKeys() && checkNavData()) {
-						acq = new Acquisition(satStatus);
 						acq.setFlag(true);
-					} else {
-						acq = new Acquisition(satStatus);
 					}
-				} catch (InterruptedException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
 				}
-			} else {
-    			log.add(new Log(time, "NO SAT FOR DL ACQUISITION", Status.ALARM));
-    			soundAlarm();
 			}
 		}
 		
-		if (acq != null ) { // Satellite Acq Steps
+		// Checks Satellite Acquisition Status
+		if (acq != null ) {
 			if (acq.getStatus() == Status.ACQUIRING_DL) {
 				logonParams[0] = "HHR 4";
 				logonParams[1] = "ANY";
@@ -474,7 +804,7 @@ public class GUI extends JFrame {
 			}
 			if (acq.getStatus() == Status.UL_COMPLETE) {
 				Log ULAcquisitionComplete = new Log(time, "EHF LOGON COMPLETE", Status.ADVISORY);
-				if (!ULAcquisitionComplete.getMessage().equals(log.get(log.size()-1).getMessage())) { // NEEDS TO BE CHANGED TO TRIGGER EVERY TIME THAT VERIFY IS PRESSED
+				if (!ULAcquisitionComplete.getMessage().equals(log.get(log.size()-1).getMessage())) {
 					log.add(ULAcquisitionComplete);
 				}
 				logonParams[3] = "HHR 4";
@@ -499,45 +829,55 @@ public class GUI extends JFrame {
 			}
 			if (acq.getStatus() == Status.DL_FAILED_A) {
 				Log FailedStrategyA = new Log(time, "DL ACQ FAILED - STRATEGY A", Status.ADVISORY);
-				if (!FailedStrategyA.getMessage().equals(log.get(log.size()-1).getMessage())) { // NEEDS TO BE CHANGED TO TRIGGER EVERY TIME THAT VERIFY IS PRESSED
+				if (!FailedStrategyA.getMessage().equals(log.get(log.size()-1).getMessage())) {
 					log.add(FailedStrategyA);
 				}
 			}
 			if (acq.getStatus() == Status.DL_FAILED_B) {
 				Log FailedStrategyB = new Log(time, "DL ACQ FAILED - STRATEGY B", Status.ADVISORY);
-				if (!FailedStrategyB.getMessage().equals(log.get(log.size()-1).getMessage())) { // NEEDS TO BE CHANGED TO TRIGGER EVERY TIME THAT VERIFY IS PRESSED
+				if (!FailedStrategyB.getMessage().equals(log.get(log.size()-1).getMessage())) {
 					log.add(FailedStrategyB);
 				}
 			}
 			if (acq.getStatus() == Status.DL_FAILED_C) {
 				Log FailedStrategyC = new Log(time, "DL ACQ FAILED - STRATEGY C", Status.ADVISORY);
-				if (!FailedStrategyC.getMessage().equals(log.get(log.size()-1).getMessage())) { // NEEDS TO BE CHANGED TO TRIGGER EVERY TIME THAT VERIFY IS PRESSED
+				if (!FailedStrategyC.getMessage().equals(log.get(log.size()-1).getMessage())) {
 					log.add(FailedStrategyC);
 				}
 			}
 			if (acq.getStatus() == Status.DL_FAILED_D) {
 				Log FailedStrategyD = new Log(time, "DL ACQ FAILED - STRATEGY D", Status.ADVISORY);
-				if (!FailedStrategyD.getMessage().equals(log.get(log.size()-1).getMessage())) { // NEEDS TO BE CHANGED TO TRIGGER EVERY TIME THAT VERIFY IS PRESSED
+				if (!FailedStrategyD.getMessage().equals(log.get(log.size()-1).getMessage())) {
 					log.add(FailedStrategyD);
 				}
 			}
 			if (acq.getStatus() == Status.DL_FAILED) {
-				Log DLAcquisitionFailed = new Log(time, "DL ACQ FAILED", Status.ALARM);
-				if (!DLAcquisitionFailed.getMessage().equals(log.get(log.size()-1).getMessage())) { // NEEDS TO BE CHANGED TO TRIGGER EVERY TIME THAT VERIFY IS PRESSED
+				Log DLAcquisitionFailed = new Log(time, "DL ACQ FAILED ON SAT "+currentSat.getName(), Status.ADVISORY);
+				if (!DLAcquisitionFailed.getMessage().equals(log.get(log.size()-1).getMessage())) {
 					log.add(DLAcquisitionFailed);
 				}
 			}
+			if (acq.getStatus() == Status.NO_SAT) {
+				Log NoSatelliteAvaiable = new Log(time, "NO SAT FOR DL ACQUISITION", Status.ALARM);
+				if (!NoSatelliteAvaiable.getMessage().equals(log.get(log.size()-1).getMessage())) {
+					log.add(NoSatelliteAvaiable);
+				}
+				soundAlarm();
+			}
 			if (acq.getStatus() == Status.LOGGED_OFF) {
 				Log LoggedOffSatellite = new Log(time, "TERMINAL LOGOFF COMPLETE", Status.ADVISORY);
-				if (!LoggedOffSatellite.getMessage().equals(log.get(log.size()-1).getMessage())) { // NEEDS TO BE CHANGED TO TRIGGER EVERY TIME THAT VERIFY IS PRESSED
+				if (!LoggedOffSatellite.getMessage().equals(log.get(log.size()-1).getMessage())) {
 					log.add(LoggedOffSatellite);
 				}
 				loggedOnSat = false;
 			}
 			satStatus = acq.getCurrentStep();
+			if (acq.getStatus() == Status.LOGGED_OFF || acq.getStatus() == Status.NO_SAT || acq.getStatus() == Status.FINISHED) {
+				acq = null;
+			}
 		}
 		
-		// CHECKS CONDITION OF SELECTED NET
+		// Checks Status of Selected Net
 		if (nets.get(selectedNet).getStatus() == Status.ACTIVE && newNetLog == true) {
 			log.add(new Log(time, "JOIN N"+selectedNet+" SUCCESSFUL", Status.ADVISORY));
 			newNetLog = false;
@@ -547,19 +887,17 @@ public class GUI extends JFrame {
 			newNetLog = false;
 		}
 
-		// CHECKS CONDITIONS OF C2/C3 LOOPBACK TEST
-		if (c2c3 != null) {
-			if (c2c3.getStatus() == Status.SUCCESSFUL && newC2C3Log == true) {
-				log.add(new Log(time, "C2/C3 TEST SUCCEEDED AFTER "+c2c3.getNumAttempts()+" ATTEMPTS", Status.ADVISORY));
-				newC2C3Log = false;
-			}
-			if (c2c3.getStatus() == Status.FAILED && newC2C3Log == true) {
-				log.add(new Log(time, "C2/C3 TEST FAILED AFTER "+c2c3.getNumAttempts()+" ATTEMPTS", Status.ADVISORY));
-				newC2C3Log = false;
-			}
+		// Checks Status of C2/C3 Loopback
+		if (c2c3 != null && c2c3.getStatus() == Status.SUCCESSFUL) {
+			log.add(new Log(time, "C2/C3 TEST SUCCEEDED AFTER "+c2c3.getNumAttempts()+" ATTEMPTS", Status.ADVISORY));
+			c2c3 = null;
+		}
+		if (c2c3 != null && c2c3.getStatus() == Status.FAILED) {
+			log.add(new Log(time, "C2/C3 TEST FAILED AFTER "+c2c3.getNumAttempts()+" ATTEMPTS", Status.ADVISORY));
+			c2c3 = null;
 		}
 		
-		// CHECKS CONDITIONS OF KEY REQUESTS
+		// Checks Status of OTAR
 		if (otar != null) {
 			for (int i = 0; i < keyRequests.size(); i++) {
 				
@@ -591,8 +929,29 @@ public class GUI extends JFrame {
 				}
 			}
 		}
+	}
+	
+	// Updates GUI Values
+	private void updateGUIValues() throws InterruptedException {
+		checkScreenConditions(screenNumber);
+		updateTime();
+		updateEphemeris();
+		screens = new Screens(log, currentSat, navData, tempNavData, printMode, satStatus, 
+				commonGroupBIT, EHFGroupBIT, nets, selectedNet, tsmStatus, timeSource, startupMode, 
+				otarAuto, sats, time, beam, acqIndicators, GSData, ephemeris, logonParams, operatorInputs,
+				loggedOnSat, SRC, mode);
+	}
+	
+	// Checks to See if Current Screen Triggers an Action?
+	private void checkScreenConditions(int screenNumber) throws InterruptedException {
+
+		System.out.println("Screen # -> "+screenNumber);
+//		System.out.println("associated screens -> "+screens.getAssociatedScreens(screenNumber));
+//		System.out.println("Net # -> "+selectedNet);
+//		System.out.println("Logged On Sat -> "+loggedOnSat);
+		
 		if (screenNumber == 0) {
-			startupComplete = true;
+			startupIsComplete = true;
 			GSData = "0700 GSDATA";
 			acqIndicators[0] = "CURRECT SAT";
 			acqIndicators[1] = "ACQ/LOGON STATUS";
@@ -605,50 +964,66 @@ public class GUI extends JFrame {
 		}
         if (screenNumber == 21 || screenNumber == 299) {
         	textField.requestFocus();
+        	textField.setEditable(true);
         }
         if (screenNumber == 22) {
         	textField.requestFocus();
+        	textField.setEditable(true);
         }
         if (screenNumber == 25 && isVerified == true) {
-        	try {
-        		if (currentSat != null) {
-        			// CHECK FOR NECESSARY PREREQUISITES
-        			//checkAcquisitionPrerequisites();
-					if (checkCryptoKeys() && checkNavData()) {
-						acq = new Acquisition(satStatus);
-						acq.setFlag(true);
-					} else {
-						acq = new Acquisition(satStatus);
-					}
-					
-    				//System.out.println("Started ACQ");
-        		} else {
-        			log.add(new Log(time, "NO SAT FOR DL ACQUISITION", Status.ALARM));
-        			soundAlarm();
-        		}
-			} catch (InterruptedException e) {
-				e.printStackTrace();
-			}
         	isVerified = false;
+        	System.out.println("currentSat -> "+currentSat);
+    		satStatus = "";
+    		loggedOnSat = false;
+    		if (currentSat != null) {
+    			acq = new Acquisition(satStatus, startupMode);
+				if (checkCryptoKeys() && checkNavData()) {
+					acq.setFlag(true);
+				}
+    		} else {
+    			log.add(new Log(time, "NO SAT FOR DL ACQUISITION", Status.ALARM));
+    			soundAlarm();
+    		}
+
+        	loadScreen(4);
+        }
+        if (screenNumber == 26 && isVerified) {
+        	isVerified = false;
+        	// WHAT ABOUT IF ALREADY LOGGED ON???
+        	if (satStatus.equals("DL COMPLETE")) {
+				acq = new Acquisition(satStatus, startupMode);
+        	} else if ((acq != null && (acq.getStatus() == Status.DL_COMPLETE || acq.getStatus() == Status.ACQUIRING_UL 
+        			|| acq.getStatus() == Status.UL_COMPLETE || acq.getStatus() == Status.FINISHED)) 
+        			|| satStatus.equals("LOGGED ON")) {
+        		satStatus = "DL COMPLETE";
+        		loggedOnSat = false;
+    			acq = new Acquisition(satStatus, startupMode);
+        	} else {
+        		// NEED DL FIRST!!!
+        	}
+        	// ALSO WHAT IF ON AUTO MODE
         	loadScreen(4);
         }
         if (screenNumber == 27 && isVerified == true) {
         	isVerified = false;
         	if (satStatus.equals("LOGGED ON")) {
-        		try {
-					acq = new Acquisition(satStatus);
-				} catch (InterruptedException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				}
+				acq = new Acquisition(satStatus, startupMode);
+        	} else if (satStatus.equals("LOGGED OFF")) {
+        		// MAY NEED TO ADD CONDITION IF ALREADY LOGGED OFF
+        	} else if (!satStatus.equals("NO SAT AVAILABLE")) {
+        		satStatus = "LOGGED OFF";
+        		acq = null;
         	}
         	loadScreen(4);
-        	
         }
         if (screenNumber == 33 && isVerified == true) {
         	if (workingCount > 3) {
         		workingCount = 0;
-        		loadScreen(1301);
+				if (startupIsComplete) {
+					loadScreen(1301);
+				} else {
+					loadScreen(1302);
+				}
         	} else {
         		loadScreen(1300);
         	}
@@ -656,7 +1031,6 @@ public class GUI extends JFrame {
         }
         if (screenNumber == 35 && isVerified == true) {
         	isVerified = false;
-        	newC2C3Log = true;
         	c2c3 = new C2C3Loopback(satStatus);
 			loadScreen(5);
         }
@@ -692,6 +1066,7 @@ public class GUI extends JFrame {
         		|| screenNumber == 78 || screenNumber == 79 || screenNumber == 201 || screenNumber == 202
         		|| screenNumber == 203 || screenNumber == 204 || screenNumber == 205 || screenNumber == 206) {
         	textField.requestFocus();
+        	textField.setEditable(true);
         }
         if (screenNumber == 80) {
         	tempNavData = new String[6];
@@ -861,6 +1236,7 @@ public class GUI extends JFrame {
 		if (screenNumber == 156 || screenNumber == 157 || screenNumber == 158 || screenNumber == 159
 				|| screenNumber == 185 || screenNumber == 186 || screenNumber == 187 || screenNumber == 188) {
 			textField.requestFocus();
+			textField.setEditable(true);
 		}
 		if (screenNumber == 160) {
 			selectedSat = "SAT01";
@@ -902,12 +1278,28 @@ public class GUI extends JFrame {
 		}
 		if (screenNumber == 180) {
 			sats.get(selectedSat).setAuthorization(true);
-			if (startupMode.equals("AUTO")) {
-				autoAcq = true;
-			}
 		}
 		if (screenNumber == 181) {
 			sats.get(selectedSat).setAuthorization(false);
+			if (selectedSat.equals(currentSat.getName())) {
+				acq = null;
+				beam = "";
+				if (loggedOnSat) {
+					satStatus = "";
+					loggedOnSat = false;
+				}
+			}
+			for (String satName : satNames) {
+				if (sats.get(satName).getAuthorization() == true) {
+					currentSat = sats.get(satName);
+					satStatus = "LOGGED OFF";
+					break;
+				}
+				currentSat = null;
+			}
+			if (currentSat == null) {
+				satStatus = "NO SAT AVAILABLE";
+			}
 		}
 		if (screenNumber == 182) {
 			operatorInputs[4] = "LDR";
@@ -920,7 +1312,6 @@ public class GUI extends JFrame {
 				nets.get(selectedNet).setFlag(true);
 				if (!nets.get(selectedNet).getThread().isAlive()) {
 					nets.get(selectedNet).getThread().start();
-//					System.out.println("Thread started");
 				}
 				loadScreen(301);
 				newNetLog = true;
@@ -1081,6 +1472,7 @@ public class GUI extends JFrame {
 		}
 		if (screenNumber == 355 || screenNumber == 357) {
 			textField.requestFocus();
+			textField.setEditable(true);
 		}
 		if (screenNumber == 362) {
 			String[] temp = nets.get(selectedNet).getServiceParameters1();
@@ -1244,6 +1636,7 @@ public class GUI extends JFrame {
 		}
 		if (screenNumber == 398) {
 			textField.requestFocus();
+			textField.setEditable(true);
 		}
 		if (screenNumber == 403) {
 			String[] temp = nets.get(selectedNet).getServiceParameters2();
@@ -1357,6 +1750,7 @@ public class GUI extends JFrame {
 		
         if (screenNumber == 500) { // IF SCREEN IS 500 (VALUE TO CHANGE LATER!!!!)
         	textField.requestFocus();
+        	textField.setEditable(true);
         }
 		if (screenNumber == 998) {
 			if (workingCount > 10) {
@@ -1376,21 +1770,22 @@ public class GUI extends JFrame {
 			}
 			workingCount++;
 		}
-		
 		if (screenNumber == 1000 && isVerified == true) {
 			loadScreen(1001);
 			isVerified = false;
 		}
 		if (screenNumber == 1006 || screenNumber == 1007) {
 			textField.requestFocus();
+			textField.setEditable(true);
 		}
 		if (screenNumber == 1008 && isVerified == true) {
 			newTime = true;
-			loadScreen(1009); // NOT REAL VALUE
+			textField.setText("");
+			loadScreen(1009);
 			isVerified = false;
 		}
 		if (screenNumber == 1009) {
-			if (workingCount > 3) {
+			if (workingCount > 8) {
 				workingCount = 0;
 				loadScreen(1012);
 			} else {
@@ -1399,7 +1794,7 @@ public class GUI extends JFrame {
 			workingCount++;
 		}
 		if (screenNumber == 1010) {
-			if (workingCount > 3) {
+			if (workingCount > 8) {
 				workingCount = 0;
 				loadScreen(1012);
 			} else {
@@ -1408,7 +1803,6 @@ public class GUI extends JFrame {
 			workingCount++;
 		}
 		if (screenNumber == 1012) {
-			textField.setText("");
 			timeSource = "KYBD";
 		}
 		if (screenNumber == 1020) {
@@ -1447,11 +1841,16 @@ public class GUI extends JFrame {
 		}
 		if (screenNumber == 1031) {
 			textField.requestFocus();
+			textField.setEditable(true);
 		}
 		if (screenNumber == 1300) {
 			if (workingCount > 3) {
 				workingCount = 0;
-				loadScreen(1301);
+				if (startupIsComplete) {
+					loadScreen(1301);
+				} else {
+					loadScreen(1302);
+				}
 			} else {
 				loadScreen(33);
 			}
@@ -1478,10 +1877,14 @@ public class GUI extends JFrame {
 			bit.setFlag(false);
 			loadScreen(1530);
 		}
+		if (screenNumber == 1506 && isVerified) {
+			isVerified = false;
+			// RESTART PROGRAM
+		}
 		if (screenNumber == 1508 && isVerified == true) {
 			isVerified = false;
 			startBIT("BBP", null, 5);
-			if (startupComplete == true) {
+			if (startupIsComplete == true) {
 				loadScreen(1502);
 			} else {
 				loadScreen(1532);
@@ -1490,7 +1893,7 @@ public class GUI extends JFrame {
 		if (screenNumber == 1509 && isVerified == true) {
 			isVerified = false;
 			startBIT("TAC", null, 5);
-			if (startupComplete == true) {
+			if (startupIsComplete == true) {
 				loadScreen(1502);
 			} else {
 				loadScreen(1532);
@@ -1499,7 +1902,7 @@ public class GUI extends JFrame {
 		if (screenNumber == 1510 && isVerified == true) {
 			isVerified = false;
 			startBIT("TBI", null, 5);
-			if (startupComplete == true) {
+			if (startupIsComplete == true) {
 				loadScreen(1502);
 			} else {
 				loadScreen(1532);
@@ -1508,7 +1911,7 @@ public class GUI extends JFrame {
 		if (screenNumber == 1511 && isVerified == true) {
 			isVerified = false;
 			startBIT("TFSTST", null, 5);
-			if (startupComplete == true) {
+			if (startupIsComplete == true) {
 				loadScreen(1502);
 			} else {
 				loadScreen(1532);
@@ -1527,7 +1930,7 @@ public class GUI extends JFrame {
 		if (screenNumber == 1518 && isVerified == true) {
 			isVerified = false;
 			startBIT(null, "EHFMOD", 5);
-			if (startupComplete == true) {
+			if (startupIsComplete == true) {
 				loadScreen(1503);
 			} else {
 				loadScreen(1533);
@@ -1536,7 +1939,7 @@ public class GUI extends JFrame {
 		if (screenNumber == 1519 && isVerified == true) {
 			isVerified = false;
 			startBIT(null, "RSUTST", 5);
-			if (startupComplete == true) {
+			if (startupIsComplete == true) {
 				loadScreen(1503);
 			} else {
 				loadScreen(1533);
@@ -1545,7 +1948,7 @@ public class GUI extends JFrame {
 		if (screenNumber == 1520 && isVerified == true) {
 			isVerified = false;
 			startBIT(null, "RSUVT", 5);
-			if (startupComplete == true) {
+			if (startupIsComplete == true) {
 				loadScreen(1503);
 			} else {
 				loadScreen(1533);
@@ -1554,7 +1957,7 @@ public class GUI extends JFrame {
 		if (screenNumber == 1521 && isVerified == true) {
 			isVerified = false;
 			startBIT(null, "RECVT", 5);
-			if (startupComplete == true) {
+			if (startupIsComplete == true) {
 				loadScreen(1503);
 			} else {
 				loadScreen(1533);
@@ -1579,6 +1982,91 @@ public class GUI extends JFrame {
 			isVerified = false;
 			startBIT(null, "EHFRAD", 5);
 			loadScreen(1522);
+		}
+	}
+	
+	// Updates Terminal Timing Every Second
+	public void updateTime() {
+		timing = new Time(timeSource, timeInput, newTime, calendar);
+		calendar = timing.getCalendar();
+		newTime = timing.isNewTime();
+		time = timing.getTime();
+	}
+	
+	// Updates Ephemeris Every 5 Seconds
+	public void updateEphemeris() {
+		if (currentSat != null) {
+			if (ephemerisCount >= 5) {
+				ephem = new Ephemeris();
+				ephemeris[0] = ephem.getRange();
+				ephemeris[1] = ephem.getRangeRate();
+				ephemeris[2] = ephem.getOffsetOne();
+				ephemeris[3] = ephem.getOffsetTwo();
+				ephemeris[4] = ephem.getOffsetThree();
+				ephemeris[5] = ephem.getOffsetFour();
+				if (loggedOnSat) {
+					ephemeris[6] = ephem.getSNRL();
+					ephemeris[7] = ephem.getSNRHC();
+					ephemeris[8] = ephem.getSNRHF();
+					ephemeris[9] = ephem.getESNR();
+				} else {
+					ephemeris[6] = "0.0";
+					ephemeris[7] = "0.0";
+					ephemeris[8] = "0.0";
+					ephemeris[9] = "0.0";
+				}
+				if (newEphemerisRequested) {
+					newEphemerisRequested = false;
+					log.add(new Log(time, "EPHEMERIS UPDATED FOR SAT "+sats.get(selectedSat).getName(), Status.ADVISORY));
+					sats.get(selectedSat).setEphemerisCurrentness(true);
+				}
+				ephemerisCount = 0;
+			} else {
+				ephemerisCount++;
+			}
+			mode = "TRACK";
+		} else {
+			mode = "STDBY";
+		}
+		if (!operatorInputs[0].equals("AUTO")) {
+			ephemeris[2] = "0.0";
+		}
+		if (!operatorInputs[1].equals("AUTO")) {
+			ephemeris[3] = "0.0";
+		}
+		if (!operatorInputs[2].equals("AUTO")) {
+			ephemeris[4] = "0.0";
+		}
+		if (!operatorInputs[3].equals("AUTO")) {
+			ephemeris[5] = "0.0";
+		}
+	}
+	
+	// Cancels Current Swing Worker & Starts a New One for Specified Screen
+	private void loadScreen(int screenNumber) {
+		if (screens.getScreen(screenNumber) != null) {
+			  worker.cancel(true);
+			  startSwingWorker(screenNumber);
+			  this.screenNumber = screenNumber;
+		}
+	}
+	
+	// Sounds Alarm
+	public void soundAlarm() {
+		if (clip != null && clip.isActive()) {
+			return;
+		}
+		try {
+			File musicPath = new File("alarm.wav");
+			if (musicPath.exists()) {
+				AudioInputStream audioInput = AudioSystem.getAudioInputStream(musicPath);
+				clip = AudioSystem.getClip();
+				clip.open(audioInput);
+				clip.loop(Clip.LOOP_CONTINUOUSLY);
+				clip.start();
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
 		}
 	}
 	
@@ -1609,6 +2097,7 @@ public class GUI extends JFrame {
 	}
 	
 	// NEED TO REFORMAT TIME (NOT CORRECT)
+	// Checks if Manual Timing Input Matches Regex Pattern
 	private boolean checkDateTimeFormat(String dateTime) {
 		Pattern pattern = Pattern.compile("[\\d][\\d][-]([01]\\d|[0-3])[0-5]\\d[0-5]"
 				+ "\\d[Z][-]([J][A][N]|[F][E][B]|[M][A][R]|[A][P][R]|[M][A][Y]|"
@@ -1622,333 +2111,8 @@ public class GUI extends JFrame {
 		}
 	}
 	
-	// Key Bindings
-	private void startKeyListener() {
-		textArea.addKeyListener(new KeyListener() {
-			public void keyPressed(KeyEvent evt) {
-				switch(evt.getKeyCode()) {
-					case KeyEvent.VK_ESCAPE:
-				  		if (screenNumber != 800 && screenNumber < 998) {  // SET SCREENS THAT CANNOT GO BACK TO MAIN MENU LIKE DISRUPTIVE BITesting
-				  			loadScreen(0);
-				  			tempNavData = new String[6];
-				  		}
-						break;
-					case KeyEvent.VK_P:
-//					  	System.out.println(screens.getScreen(screenNumber));
-					  	try {
-					  		PrintWriter writer = new PrintWriter("SystemLog.txt", "UTF-8");
-					  		for (Log logEntry : log) {
-					  			writer.println(logEntry.getTimeStamp()+"   "+logEntry.getMessage());
-					  		}
-					  		writer.close();
-					  	} catch (IOException ioe) {
-//					  		System.out.println("PRINT FUNCTION FAILED");
-					  	}
-						break;
-					case KeyEvent.VK_SPACE:
-						isVerified = true;
-						break;
-					case KeyEvent.VK_BACK_QUOTE:
-						loadScreen(previousScreen);
-						tempNavData = new String[6];
-						break;
-					case KeyEvent.VK_T: // TEST ALARM
-						soundAlarm();
-						break;
-					case KeyEvent.VK_A: // ACKNOWLEDGE ALARM BUTTON
-						if (clip != null) {
-							clip.close();
-						}
-						break;
-					default:
-//						System.out.println(evt.getKeyCode());
-						break;
-				}
-			}
-			public void keyReleased(KeyEvent arg0) {}
-			public void keyTyped(KeyEvent arg0) {}
-		});
-		
-		textField.addKeyListener(new KeyListener() {
-			public void keyPressed(KeyEvent evt) {
-				switch(evt.getKeyCode()) {
-					case KeyEvent.VK_ENTER:
-					  	if (!textField.getText().equals("")) {
-					  		String temp = textField.getText();
-					  		textField.setText("");
-					  		// MAKE NET ACTIVE
-					  		if (screenNumber == 21 || screenNumber == 299) {
-					  			try {
-					  				selectedNet = Integer.parseInt(temp);
-//					  				System.out.println(selectedNet);
-					  				loadScreen(300);  // NOT CORRECT SCREEN NEED TO ALTERN MAIN AREA
-					  				// NEEDS TO LOAD NET PARAMETERS THAT ARE STORED IN HASHMAP, key = net number, value = string arraylist of params
-					  			} catch (NumberFormatException nfe) {
-					  				textField.setText(temp);
-					  				loadScreen(299);
-					  			}
-					  		}
-					  		if (screenNumber == 22) {
-					  			loadScreen(500); // NOT REAL VALUE JUST FOR TEST
-					  		}
-					  		if (screenNumber == 71 || screenNumber == 201) {
-					  			if (verifyNavDataEntry("latitude", temp)) {
-					        		if (temp.charAt(0) == '0') {
-					        			StringBuilder sb = new StringBuilder(temp);
-					        			tempNavData[0] = sb.deleteCharAt(0).toString();
-					        		} else {
-					        			tempNavData[0] = temp;
-					        		}
-						  			loadScreen(17);
-					  			} else {
-					  				textField.setText(temp);
-					  				loadScreen(201);
-					  			}
-					  		}
-					  		if (screenNumber == 72 || screenNumber == 202) {
-					  			if (verifyNavDataEntry("longitude", temp)) {
-					        		if (temp.charAt(0) == '0') {
-					        			StringBuilder sb = new StringBuilder(temp);
-					        			tempNavData[1] = sb.deleteCharAt(0).toString();
-					        		} else {
-					        			tempNavData[1] = temp;
-					        		}
-						  			loadScreen(17);
-					  			} else {
-					  				textField.setText(temp);
-					  				loadScreen(202);
-					  			}
-					  		}
-					  		if (screenNumber == 73 || screenNumber == 203) {
-					  			if (verifyNavDataEntry("altitude", temp)) {
-					  				if (!temp.contains(".")) {
-					  					temp = temp+'.';
-					  				}
-					  				if (temp.charAt(0) == '.') {
-					  					temp = '0'+temp;
-					  				}
-				  					if (temp.charAt(temp.length()-1) == '.') {
-				  						temp = temp+'0';
-				  					}
-					  				tempNavData[2] = temp;
-						  			loadScreen(17);
-					  			} else {
-					  				textField.setText(temp);
-					  				loadScreen(203);
-					  			}
-					  		}
-					  		if (screenNumber == 77 || screenNumber == 204) {
-					  			if (verifyNavDataEntry("heading", temp)) {
-					  				if (!temp.contains(".")) {
-					  					temp = temp+'.';
-					  				}
-					  				if (temp.charAt(0) == '.') {
-					  					temp = '0'+temp;
-					  				}
-				  					if (temp.charAt(temp.length()-1) == '.') {
-				  						temp = temp+'0';
-				  					}
-					  				tempNavData[3] = temp;
-						  			loadScreen(76);
-					  			} else {
-					  				textField.setText(temp);
-					  				loadScreen(204);
-					  			}
-					  		}
-					  		if (screenNumber == 78 || screenNumber == 205) {
-					  			if (verifyNavDataEntry("pitch", temp)) {
-					  				if (!temp.contains(".")) {
-					  					temp = temp+'.';
-					  				}
-					  				if (temp.charAt(0) == '.') {
-					  					temp = '0'+temp;
-					  				}
-				  					if (temp.charAt(temp.length()-1) == '.') {
-				  						temp = temp+'0';
-				  					}
-					  				tempNavData[4] = temp;
-						  			loadScreen(76);
-					  			} else {
-					  				textField.setText(temp);
-					  				loadScreen(205);
-					  			}
-					  		}
-					  		if (screenNumber == 79 || screenNumber == 206) {
-					  			if (verifyNavDataEntry("roll", temp)) {
-					  				if (!temp.contains(".")) {
-					  					temp = temp+'.';
-					  				}
-					  				if (temp.charAt(0) == '.') {
-					  					temp = '0'+temp;
-					  				}
-				  					if (temp.charAt(temp.length()-1) == '.') {
-				  						temp = temp+'0';
-				  					}
-					  				tempNavData[5] = temp;
-						  			loadScreen(76);
-					  			} else {
-					  				textField.setText(temp);
-					  				loadScreen(206);
-					  			}
-					  		}
-					  		// PERHAPS CHANGE verifyNavDataEntry method to verifyEntry()
-					  		if (screenNumber == 156 || screenNumber == 185) {
-					  			if (verifyNavDataEntry("heading", temp)) {
-					  				if (!temp.contains(".")) {
-					  					temp = temp+'.';
-					  				}
-					  				if (temp.charAt(0) == '.') {
-					  					temp = '0'+temp;
-					  				}
-				  					if (temp.charAt(temp.length()-1) == '.') {
-				  						temp = temp+"00";
-				  					}
-				  					if (temp.charAt(temp.length()-2) == '.') {
-				  						temp = temp+'0';
-				  					}
-						  			operatorInputs[0] = temp;
-						  			loadScreen(145);
-					  			} else {
-					  				textField.setText(temp);
-					  				loadScreen(185);
-					  			}
-					  		}
-					  		if (screenNumber == 157 || screenNumber == 186) {
-					  			if (verifyNavDataEntry("pitch", temp)) {
-					  				if (!temp.contains(".")) {
-					  					temp = temp+'.';
-					  				}
-					  				if (temp.charAt(0) == '.') {
-					  					temp = '0'+temp;
-					  				}
-				  					if (temp.charAt(temp.length()-1) == '.') {
-				  						temp = temp+"00";
-				  					}
-				  					if (temp.charAt(temp.length()-2) == '.') {
-				  						temp = temp+'0';
-				  					}
-						  			operatorInputs[1] = temp;
-						  			loadScreen(145);
-					  			} else {
-					  				textField.setText(temp);
-					  				loadScreen(186);
-					  			}
-					  		}
-					  		if (screenNumber == 158 || screenNumber == 187) {
-					  			if (verifyNavDataEntry("altitude", temp)) {
-					  				if (!temp.contains(".")) {
-					  					temp = temp+'.';
-					  				}
-					  				if (temp.charAt(0) == '.') {
-					  					temp = '0'+temp;
-					  				}
-				  					if (temp.charAt(temp.length()-1) == '.') {
-				  						temp = temp+"00";
-				  					}
-				  					if (temp.charAt(temp.length()-2) == '.') {
-				  						temp = temp+'0';
-				  					}
-						  			operatorInputs[2] = temp;
-						  			loadScreen(145);
-					  			} else {
-					  				textField.setText(temp);
-					  				loadScreen(187);
-					  			}
-					  		}
-					  		if (screenNumber == 159 || screenNumber == 188) {
-					  			if (verifyNavDataEntry("altitude", temp)) {
-					  				if (!temp.contains(".")) {
-					  					temp = temp+'.';
-					  				}
-					  				if (temp.charAt(0) == '.') {
-					  					temp = '0'+temp;
-					  				}
-				  					if (temp.charAt(temp.length()-1) == '.') {
-				  						temp = temp+"00";
-				  					}
-				  					if (temp.charAt(temp.length()-2) == '.') {
-				  						temp = temp+'0';
-				  					}
-						  			operatorInputs[3] = temp;
-						  			loadScreen(145);
-					  			} else {
-					  				textField.setText(temp);
-					  				loadScreen(188);
-					  			}
-					  		}
-					  		if (screenNumber == 355) {
-					  			String[] servParam1 = nets.get(selectedNet).getServiceParameters1();
-					  			servParam1[0] = temp;
-					  			nets.get(selectedNet).setServiceParameters1(servParam1);
-					  			loadScreen(317);
-					  		}
-					  		if (screenNumber == 357) {
-					  			String[] servParam1 = nets.get(selectedNet).getServiceParameters1();
-					  			servParam1[2] = temp;
-					  			nets.get(selectedNet).setServiceParameters1(servParam1);
-					  			loadScreen(317);
-					  		}
-					  		if (screenNumber == 398) {
-					  			String[] servParam2 = nets.get(selectedNet).getServiceParameters2();
-					  			servParam2[3] = temp;
-					  			nets.get(selectedNet).setServiceParameters2(servParam2);
-					  			loadScreen(318);
-					  		}
-					  		if (screenNumber == 1006 || screenNumber == 1007) {
-					  			boolean isValidDateTime = checkDateTimeFormat(temp);
-					  			if (isValidDateTime == true) {
-					  				//timeObj = new Time(temp, true);
-					  				timeInput = temp;
-					  				loadScreen(1008);
-					  			} else {
-					  				loadScreen(1007);
-					  			}
-					  			textField.setText(temp);
-					  		}
-					  		if (screenNumber == 1031) {
-					  			dataID = temp;
-					  			loadScreen(1025);
-					  		}
-					  	}
-					  	textArea.requestFocus();
-					  	break;
-					case KeyEvent.VK_ESCAPE:
-				  		if (screenNumber != 800 && screenNumber < 998) {  // SET SCREENS THAT CANNOT GO BACK TO MAIN MENU LIKE DISRUPTIVE BITesting
-				  			loadScreen(0);
-				  		}
-				  		textArea.requestFocus();
-						break;
-					case KeyEvent.VK_BACK_QUOTE:
-						loadScreen(previousScreen);
-						textArea.requestFocus();
-						break;
-					default:
-						break;
-				}
-			}
-			public void keyReleased(KeyEvent arg0) {}
-			public void keyTyped(KeyEvent arg0) {}
-		});
-	}
-	
-	// TEST ALARM METHOD
-	public void soundAlarm() {
-		try {
-			File musicPath = new File("alarm.wav");
-			if (musicPath.exists()) {
-				AudioInputStream audioInput = AudioSystem.getAudioInputStream(musicPath);
-				clip = AudioSystem.getClip();
-				clip.open(audioInput);
-				clip.loop(Clip.LOOP_CONTINUOUSLY);
-				clip.start();
-			}
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-		
-	}
-	
-	public boolean verifyNavDataEntry(String navDataType, String navDataInput) {
+	// Verifies Navigational Data & Manual Pointing Data Input Matches Regex Pattern
+	public boolean verifyEntry(String navDataType, String navDataInput) {
 		Pattern pattern = null;
 		switch (navDataType) {
 		case "latitude": pattern = Pattern.compile("([0-8]?[0-9][ ][0-5][0-9]|[9][0][ ][0][0])([N]|[S])");
@@ -1974,98 +2138,46 @@ public class GUI extends JFrame {
 		}
 	}
 	
-	public void updateTime() {
-		timing = new Time(timeSource, timeInput, newTime, calendar);
-		calendar = timing.getCalendar();
-		newTime = timing.isNewTime();
-		time = timing.getTime();
-	}
-	
-	public void updateEphemeris() {
-		if (currentSat != null) {
-			if (ephemerisCount >= 5) {
-				ephem = new Ephemeris();
-				ephemeris[0] = ephem.getRange();
-				ephemeris[1] = ephem.getRangeRate();
-				ephemeris[2] = ephem.getOffsetOne();
-				ephemeris[3] = ephem.getOffsetTwo();
-				ephemeris[4] = ephem.getOffsetThree();
-				ephemeris[5] = ephem.getOffsetFour();
-				ephemeris[6] = ephem.getSNRL();
-				ephemeris[7] = ephem.getSNRHC();
-				ephemeris[8] = ephem.getSNRHF();
-				ephemeris[9] = ephem.getESNR();
-				if (newEphemerisRequested) {
-					newEphemerisRequested = false;
-					log.add(new Log(time, "EPHEMERIS UPDATED FOR SAT "+sats.get(selectedSat).getName(), Status.ADVISORY));
-					sats.get(selectedSat).setEphemerisCurrentness(true);
-				}
-				ephemerisCount = 0;
-			} else {
-				ephemerisCount++;
-			}
-			mode = "TRACK";
-		} else {
-			mode = "STDBY";
-		}
-		if (!operatorInputs[0].equals("AUTO")) {
-			ephemeris[2] = "0.0";
-		}
-		if (!operatorInputs[1].equals("AUTO")) {
-			ephemeris[3] = "0.0";
-		}
-		if (!operatorInputs[2].equals("AUTO")) {
-			ephemeris[4] = "0.0";
-		}
-		if (!operatorInputs[3].equals("AUTO")) {
-			ephemeris[5] = "0.0";
-		}
-	}
-	
+	// Checks Presence of Crypto Keys for Satellite Acquisition
 	public boolean checkCryptoKeys() {
-		ArrayList<Character> keys = sats.get(currentSat.getName()).getKeys();
-		if (keys.get(0) == 'Y' && keys.get(1) == 'Y' && keys.get(4) == 'Y') {
-			return true;
-		} else {
-//			System.out.println("missing keys");
-			return false;
-		}
+//		ArrayList<Character> keys = sats.get(currentSat.getName()).getKeys();
+//		if (keys.get(0) == 'Y' && keys.get(1) == 'Y' && keys.get(4) == 'Y') {
+//			return true;
+//		} else {
+//			return false;
+//		}
+		return true; // ONLY FOR TESTING!!!!!!
 	}
 	
+	// Checks if Navigational Data is Accurate for Satellite Acquisition
 	public boolean checkNavData() {
 		if (!navData.getLatitude().equals(correctNavData[0])) {
-//			System.out.println("Wrong latitude");
-			return false;
+//			return false;
 		}
 		if (!navData.getLongitude().equals(correctNavData[1])) {
-//			System.out.println("Wrong longitude");
-			return false;
+//			return false;
 		}
 		if (!navData.getAltitude().equals(correctNavData[2])) {
-//			System.out.println("Wrong altitude");
-			return false;
+//			return false;
 		}
 		if (!navData.getHeading().equals(correctNavData[3])) {
-//			System.out.println("Wrong heading");
-			return false;
+//			return false;
 		}
 		if (!navData.getPitch().equals(correctNavData[4])) {
-//			System.out.println("Wrong pitch");
-			return false;
+//			return false;
 		}
 		if (!navData.getRoll().equals(correctNavData[5])) {
-//			System.out.println("Wrong roll");
-			return false;
+//			return false;
 		}
-		return true;
+		return true; // LEAVE THIS HERE UN-COMMENT RETURN FALSE's
 	}
-	
+
 	// Main Method
 	public static void main(String args[]) {
-		
+		System.setProperty("sun.java2d.uiScale", "1.0");
 		GUI gui = new GUI();
-		
 		gui.setSize(WIDTH,HEIGHT);
+		gui.setResizable(false);
 		gui.setTitle("MILSTAR SIMULATOR");
 		gui.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		gui.getContentPane().setBackground(Color.BLACK);
