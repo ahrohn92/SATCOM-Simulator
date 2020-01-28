@@ -4,12 +4,13 @@ import java.util.ArrayList;
 public class Satellite {
 
 	// Local Variables
-	String satName;
-	double lowerAzimuth;
-	double elevation;
-	double upperAzimuth;
-	boolean isAuthorized = false;
-	boolean isEphemerisCurrent = false;
+	private String satName;
+	private double lowerAzimuth;
+	private double elevation;
+	private double upperAzimuth;
+	private boolean canBeAuthorized = false;
+	private boolean isAuthorized = false;
+	private boolean isEphemerisCurrent = false;
 	
 	// TRANSEC Keys
 	ArrayList<Character> keys = new ArrayList<Character>();
@@ -24,9 +25,18 @@ public class Satellite {
 		elevation = generateRandomValue(20.0, 45.0);
 		upperAzimuth = elevation + lowerAzimuth;
 		
-		// Initializes TRANSEC keys
+		// Determines Which Satellites Can Be Authorized Based on Image
+		if (satName.equals("SAT02") || satName.equals("SAT08")) {
+			canBeAuthorized = true;
+		}
+		
+		// Initializes TRANSEC keys Based on Image
 		for (int i = 0; i < 10; i++) {
-			keys.add('-');
+			if ((i == 0 || i == 1 || i == 4) && canBeAuthorized) {
+				keys.add('Y');
+			} else {
+				keys.add('-');
+			}
 		}
 	}
 	
@@ -53,6 +63,11 @@ public class Satellite {
 	// Returns Upper Azimuth
 	public String getUpperAzimuth() {
 		return decimalFormat.format(upperAzimuth);
+	}
+	
+	// Returns Whether Satellite Can Be Authorized
+	public boolean canBeAuthorized() {
+		return canBeAuthorized;
 	}
 	
 	// Sets Authorization

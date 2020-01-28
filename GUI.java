@@ -128,10 +128,12 @@ public class GUI extends JFrame {
 	String timeInput = "";
 	String selectedSat;
 	String beam = "";
+	private String[] beams = {"EC/AG","SB","SB","EC/AG","EC/AG","EC/AG","EC/AG","SB","",""};
 	int selectedNet = 1; // TO PREVENT NULL (NEEDS TO BE CHANGED LATER!!!!!!!!!)
 	int selectedKey;
 	private HashMap<String, Satellite> sats = new HashMap<String, Satellite>();
 	private HashMap<Integer, Net> nets = new HashMap<Integer, Net>();
+	char[] satStatusChars = {'N','N','N','N','N','N','N','N','N','N'};
 	
 	// TEST NET PARAM STRINGS
 	String interruptible = "";
@@ -194,8 +196,6 @@ public class GUI extends JFrame {
 		sats.get("SAT02").setAuthorization(true);
 		sats.get("SAT08").setAuthorization(true);
 		
-		
-		
 		// Creates 36 Nets
 		for (int i = 0; i < 36; i++) {
 			nets.put((i+1), new Net((i+1), netNames[i]));
@@ -208,7 +208,7 @@ public class GUI extends JFrame {
 		screens = new Screens(log, currentSat, navData, tempNavData, printMode, satStatus, 
 				commonGroupBIT, EHFGroupBIT, nets, selectedNet, tsmStatus, timeSource, startupMode, 
 				otarAuto, sats, time, beam, acqIndicators, GSData, ephemeris, logonParams, operatorInputs,
-				loggedOnSat, SRC, mode);
+				loggedOnSat, SRC, mode, satStatusChars, beams);
 		
 		// Creates Initial Empty Log Entry (Null Error Otherwise)
 		log.add(new Log("", "", Status.ADVISORY));
@@ -270,6 +270,7 @@ public class GUI extends JFrame {
     	textField.setFont(new Font("monospaced", Font.PLAIN, fontSize));
     	textField.setBackground(Color.BLACK);
     	textField.setForeground(ORANGE.brighter());
+    	textField.setCaretColor(ORANGE.brighter());
     	textField.setBorder(BorderFactory.createEmptyBorder());
     	textField.setEditable(false);
     	textField.setHighlighter(null);
@@ -339,12 +340,21 @@ public class GUI extends JFrame {
 					  		if (screenNumber == 21 || screenNumber == 299) {
 					  			try {
 					  				selectedNet = Integer.parseInt(temp);
-					  				loadScreen(300);  // NOT CORRECT SCREEN NEED TO ALTERN MAIN AREA
-					  				// NEEDS TO LOAD NET PARAMETERS THAT ARE STORED IN HASHMAP, key = net number, value = string arraylist of params
+					  				if (selectedNet >= 1 && selectedNet <= 36) {
+					  					Thread.sleep(1000);
+						  				loadScreen(300);  // NOT CORRECT SCREEN NEED TO ALTERN MAIN AREA
+					  				} else {
+					  					selectedNet = 1;
+					  					textField.setText(temp);
+					  					loadScreen(299);
+					  				}
 					  			} catch (NumberFormatException nfe) {
 					  				textField.setText(temp);
 					  				loadScreen(299);
-					  			}
+					  			} catch (InterruptedException e) {
+					  				textField.setText(temp);
+					  				loadScreen(299);
+								}
 					  		}
 					  		if (screenNumber == 22) {
 					  			loadScreen(500); // NOT REAL VALUE JUST FOR TEST
@@ -554,7 +564,7 @@ public class GUI extends JFrame {
 					  		}
 					  		if (screenNumber == 1006 || screenNumber == 1007) {
 					  			boolean isValidDateTime = checkDateTimeFormat(temp);
-					  			if (isValidDateTime == true) {
+					  			if (isValidDateTime) {
 					  				timeInput = temp;
 					  				loadScreen(1008);
 					  			} else {
@@ -570,12 +580,14 @@ public class GUI extends JFrame {
 					  	textArea.requestFocus();
 					  	break;
 					case KeyEvent.VK_ESCAPE:
+						textField.setText("");
 				  		if (screenNumber != 800 && screenNumber < 998) {
 				  			loadScreen(0);
 				  		}
 				  		textArea.requestFocus();
 						break;
 					case KeyEvent.VK_BACK_QUOTE:
+						textField.setText("");
 						loadScreen(previousScreen);
 						textArea.requestFocus();
 						break;
@@ -701,6 +713,7 @@ public class GUI extends JFrame {
 					checkObjectStatus();
 					updateGUIValues();
 					if (!getFocusOwner().toString().contains("JTextField")) {
+						textField.setText("");
 						textArea.requestFocus();
 						textField.setEditable(false);
 					}
@@ -724,6 +737,21 @@ public class GUI extends JFrame {
         if (screenNumber == 5 && !loggedOnSat) {
         	loadScreen(132);
         }
+        // NEED TO ADD RED FILL SCREENS TO THIS CHECK
+        if (screenNumber != 29 && screenNumber != 136 && screenNumber != 137 && screenNumber != 160
+        		&& screenNumber != 161 && screenNumber != 162 && screenNumber != 163 && screenNumber != 164
+        		&& screenNumber != 165 && screenNumber != 166 && screenNumber != 167 && screenNumber != 168
+        		&& screenNumber != 169 && screenNumber != 170 && screenNumber != 171 && screenNumber != 172
+        		&& screenNumber != 173 && screenNumber != 174 && screenNumber != 175 && screenNumber != 180
+        		&& screenNumber != 181) {
+        	for (int i = 0; i < 10; i++) {
+        		if (sats.get(satNames[i]).canBeAuthorized()) {
+        			satStatusChars[i] = 'Y';
+        		} else {
+        			satStatusChars[i] = 'N';
+        		}
+        	}
+        }
 		if ((screenNumber == 93 || screenNumber == 94 || screenNumber == 95
         		|| screenNumber == 96 || screenNumber == 97) && !loggedOnSat) {
         	loadScreen(131);
@@ -746,16 +774,18 @@ public class GUI extends JFrame {
 	private void checkObjectStatus() throws InterruptedException {
 //		System.out.println("current sat -> "+currentSat);
 //		if (currentSat != null) {
-//			System.out.println("current sat name -> "+currentSat.getName());
+//			System.out.println("current sat -> "+currentSat.getName());
 //		}
-		
+//		if (selectedSat != null) {
+//			System.out.println("selected sat -> "+selectedSat);
+//		}	
 //		System.out.println("acq -> "+acq);
 		
 		// Determines Current Sat if Not Logged On
 		if (startupIsComplete && acq == null && !loggedOnSat) {
 			if (currentSat == null) {
 				for (String satName : satNames) {
-					if (sats.get(satName).getAuthorization() == true) {
+					if (sats.get(satName).getAuthorization()) {
 						currentSat = sats.get(satName);
 						satStatus = "LOGGED OFF";
 						break;
@@ -812,7 +842,7 @@ public class GUI extends JFrame {
 				logonParams[5] = "LEAST  OK";
 			}
 			if (acq.getStatus() == Status.FINISHED) {
-				if (currentSat.getEphemerisCurrentness() == false) {
+				if (!currentSat.getEphemerisCurrentness()) {
 					Log OutdatedEphemeris = new Log(time, "SAT "+currentSat.getName()+" EPHEMERIDES  7 DAYS OLD", Status.ADVISORY); // PERHAPS NEED ONE FOR EACH SAT THAT IS AUTHORIZED?
 					boolean logAlreadyExists = false;
 					for (Log logEntry : log) {
@@ -821,7 +851,7 @@ public class GUI extends JFrame {
 							break;
 						}
 					}
-					if (logAlreadyExists == false) {
+					if (!logAlreadyExists) {
 						log.add(OutdatedEphemeris);
 					}
 				}
@@ -878,13 +908,22 @@ public class GUI extends JFrame {
 		}
 		
 		// Checks Status of Selected Net
-		if (nets.get(selectedNet).getStatus() == Status.ACTIVE && newNetLog == true) {
+		if (nets.get(selectedNet).getStatus() == Status.ACTIVE && newNetLog) {
 			log.add(new Log(time, "JOIN N"+selectedNet+" SUCCESSFUL", Status.ADVISORY));
 			newNetLog = false;
 		}
-		if (nets.get(selectedNet).getStatus() == Status.INACTIVE && newNetLog == true) {
+		if (nets.get(selectedNet).getStatus() == Status.INACTIVE && newNetLog) {
 			log.add(new Log(time, "N"+selectedNet+" - EXIT COMPLETE", Status.ADVISORY));
 			newNetLog = false;
+		}
+		
+		// Ensures Nets Are Inactive When Not on Sat
+		if (!loggedOnSat) {
+			for (int i = 1; i <= 36; i++) {
+				nets.get(i).setFlag(false);
+				nets.get(i).setStatus(Status.INACTIVE);
+				nets.get(i).setNetStatus("IA");
+			}
 		}
 
 		// Checks Status of C2/C3 Loopback
@@ -898,35 +937,52 @@ public class GUI extends JFrame {
 		}
 		
 		// Checks Status of OTAR
+		if (keyRequests.size() == 0) {
+			otar = null;
+		}
 		if (otar != null) {
 			for (int i = 0; i < keyRequests.size(); i++) {
-				
-//				System.out.println(keyRequest.getSelectedKey());
-//				System.out.println(keyRequest.getSelectedSat());
 				ArrayList<Character> keys = sats.get(keyRequests.get(i).getSelectedSat()).getKeys();
 				Status keyRequestStatus = keyRequests.get(i).getStatus();
-				
 				if (keyRequestStatus == Status.PENDING) {
 					if (keys.get(keyRequests.get(i).getSelectedKey()).equals('Y') || 
 							keys.get(keyRequests.get(i).getSelectedKey()).equals('O')) {
-						keys.set(keyRequests.get(i).getSelectedKey(), 'O');
+						if (loggedOnSat) {
+							keys.set(keyRequests.get(i).getSelectedKey(), 'O');
+						} else {
+							keys.set(keyRequests.get(i).getSelectedKey(), 'Y');
+						}
 					} else {
-						keys.set(keyRequests.get(i).getSelectedKey(), 'P');
+						if (loggedOnSat) {
+							keys.set(keyRequests.get(i).getSelectedKey(), 'P');
+						} else {
+							keys.set(keyRequests.get(i).getSelectedKey(), '-');
+						}
 					}
-				} else if (keyRequestStatus == Status.STARTED && keyRequests.get(i).getFlag()) {
+				} else if (keyRequestStatus == Status.STARTED && keyRequests.get(i).getFlag() && loggedOnSat) {
 					log.add(new Log(time, "SINGLE TRANSEC KEY REQUEST - EXPECTED AT "+timing.getExpectedTime(), Status.ADVISORY));
 					keyRequests.get(i).setFlag(false);
 				} else if (keyRequestStatus == Status.SUCCESSFUL) {
-					keys.set(keyRequests.get(i).getSelectedKey(), 'Y'); // IS THERE A SUCCESSFUL MESSAGE???
+					keys.set(keyRequests.get(i).getSelectedKey(), 'Y');
 					keyRequests.remove(i);
 				} else if (keyRequestStatus == Status.DENIED || keyRequestStatus == Status.FAILED) {
 					keys.set(keyRequests.get(i).getSelectedKey(), '-');
 					if (keyRequests.get(i).getFlag()) {
 						log.add(new Log(time, "REKEY REQUEST FAILURE - KEY NOT AUTHORIZED", Status.ADVISORY));
 						keyRequests.get(i).setFlag(false);
-						keyRequests.remove(i); // I like this it cleans up no longer useful class objects
+						keyRequests.remove(i);
 					}
 				}
+			}
+			if (!loggedOnSat) {
+				for (int i = 0; i < keyRequests.size(); i++) {
+					ArrayList<Character> keys = sats.get(keyRequests.get(i).getSelectedSat()).getKeys();
+					if (keys.get(keyRequests.get(i).getSelectedKey()).equals('P')) {
+						System.out.println("still pending");
+						keys.set(keyRequests.get(i).getSelectedKey(), '-');
+					}
+				}
+				keyRequests.clear();
 			}
 		}
 	}
@@ -939,7 +995,7 @@ public class GUI extends JFrame {
 		screens = new Screens(log, currentSat, navData, tempNavData, printMode, satStatus, 
 				commonGroupBIT, EHFGroupBIT, nets, selectedNet, tsmStatus, timeSource, startupMode, 
 				otarAuto, sats, time, beam, acqIndicators, GSData, ephemeris, logonParams, operatorInputs,
-				loggedOnSat, SRC, mode);
+				loggedOnSat, SRC, mode, satStatusChars, beams);
 	}
 	
 	// Checks to See if Current Screen Triggers an Action?
@@ -958,9 +1014,9 @@ public class GUI extends JFrame {
 			acqIndicators[2] = "CURRENT BEAM";
 			tsmStatus = "IMG2019v23    29-200000Z-APR98";
 		}
-		if (screenNumber == 19 && isVerified == true) {
-			loadScreen(800);
+		if (screenNumber == 19 && isVerified) {
 			isVerified = false;
+			loadScreen(800);
 		}
         if (screenNumber == 21 || screenNumber == 299) {
         	textField.requestFocus();
@@ -970,7 +1026,7 @@ public class GUI extends JFrame {
         	textField.requestFocus();
         	textField.setEditable(true);
         }
-        if (screenNumber == 25 && isVerified == true) {
+        if (screenNumber == 25 && isVerified) {
         	isVerified = false;
         	System.out.println("currentSat -> "+currentSat);
     		satStatus = "";
@@ -1004,7 +1060,7 @@ public class GUI extends JFrame {
         	// ALSO WHAT IF ON AUTO MODE
         	loadScreen(4);
         }
-        if (screenNumber == 27 && isVerified == true) {
+        if (screenNumber == 27 && isVerified) {
         	isVerified = false;
         	if (satStatus.equals("LOGGED ON")) {
 				acq = new Acquisition(satStatus, startupMode);
@@ -1016,7 +1072,7 @@ public class GUI extends JFrame {
         	}
         	loadScreen(4);
         }
-        if (screenNumber == 33 && isVerified == true) {
+        if (screenNumber == 33 && isVerified) {
         	if (workingCount > 3) {
         		workingCount = 0;
 				if (startupIsComplete) {
@@ -1029,7 +1085,7 @@ public class GUI extends JFrame {
         	}
         	workingCount++;
         }
-        if (screenNumber == 35 && isVerified == true) {
+        if (screenNumber == 35 && isVerified) {
         	isVerified = false;
         	c2c3 = new C2C3Loopback(satStatus);
 			loadScreen(5);
@@ -1074,7 +1130,7 @@ public class GUI extends JFrame {
         if (screenNumber == 86) {
         	if (workingCount > 10) {
         		workingCount = 0;
-        		loadScreen(92); // IF NO KEYS IN TSM THEN 88
+        		loadScreen(88); // IF KEYS IN TSM THEN 92
         	} else {
         		loadScreen(87);
         	}
@@ -1083,7 +1139,7 @@ public class GUI extends JFrame {
         if (screenNumber == 87) {
         	if (workingCount > 10) {
         		workingCount = 0;
-        		loadScreen(92); // IF NO KEYS IN TSM THEN 88
+        		loadScreen(88); // IF KEYS IN TSM THEN 92
         	} else {
         		loadScreen(86);
         	}
@@ -1268,7 +1324,7 @@ public class GUI extends JFrame {
 		if (screenNumber == 169) {
 			selectedSat = "SAT10";
 		}
-		if (screenNumber == 172 && isVerified == true) {
+		if (screenNumber == 172 && isVerified) {
 			isVerified = false;
 			if (satStatus.equals("LOGGED ON")) {
 				newEphemerisRequested = true;
@@ -1277,10 +1333,24 @@ public class GUI extends JFrame {
 			}
 		}
 		if (screenNumber == 180) {
-			sats.get(selectedSat).setAuthorization(true);
+			for (int i = 0; i < 10; i++) {
+				if (satNames[i].equals(selectedSat)) {
+					satStatusChars[i] = 'Y';
+					break;
+				}
+			}
+			if (sats.get(selectedSat).canBeAuthorized()) {
+				sats.get(selectedSat).setAuthorization(true);
+			}
 		}
 		if (screenNumber == 181) {
 			sats.get(selectedSat).setAuthorization(false);
+			for (int i = 0; i < 10; i++) {
+				if (satNames[i].equals(selectedSat)) {
+					satStatusChars[i] = 'N';
+					break;
+				}
+			}
 			if (selectedSat.equals(currentSat.getName())) {
 				acq = null;
 				beam = "";
@@ -1288,14 +1358,14 @@ public class GUI extends JFrame {
 					satStatus = "";
 					loggedOnSat = false;
 				}
-			}
-			for (String satName : satNames) {
-				if (sats.get(satName).getAuthorization() == true) {
-					currentSat = sats.get(satName);
-					satStatus = "LOGGED OFF";
-					break;
+				for (String satName : satNames) {
+					if (sats.get(satName).getAuthorization()) {
+						currentSat = sats.get(satName);
+						satStatus = "LOGGED OFF";
+						break;
+					}
+					currentSat = null;
 				}
-				currentSat = null;
 			}
 			if (currentSat == null) {
 				satStatus = "NO SAT AVAILABLE";
@@ -1307,7 +1377,12 @@ public class GUI extends JFrame {
 		if (screenNumber == 183) {
 			operatorInputs[4] = "LDR/MDR";
 		}
-		if (screenNumber == 304 && isVerified == true) {
+		if (screenNumber == 299) {
+			textField.requestFocus();
+			textField.setEditable(true);
+		}
+		if (screenNumber == 304 && isVerified) {
+			isVerified = false;
 			if (satStatus.equals("LOGGED ON")) {
 				nets.get(selectedNet).setFlag(true);
 				if (!nets.get(selectedNet).getThread().isAlive()) {
@@ -1318,9 +1393,9 @@ public class GUI extends JFrame {
 			} else {
 				loadScreen(309);
 			}
-			isVerified = false;
 		}
-		if (screenNumber == 305 && isVerified == true) {
+		if (screenNumber == 305 && isVerified) {
+			isVerified = false;
 			if (satStatus.equals("LOGGED ON") && nets.get(selectedNet).getStatus() == Status.ACTIVE) {
 				nets.get(selectedNet).setFlag(true);
 				loadScreen(301);
@@ -1328,7 +1403,6 @@ public class GUI extends JFrame {
 			} else {
 //				System.out.println("CAN'T LOGOFF OF INACTIVE NET");
 			}
-			isVerified = false;
 		}
 		if (screenNumber == 314 && isVerified) {
 			isVerified = false;
@@ -1770,19 +1844,19 @@ public class GUI extends JFrame {
 			}
 			workingCount++;
 		}
-		if (screenNumber == 1000 && isVerified == true) {
-			loadScreen(1001);
+		if (screenNumber == 1000 && isVerified) {
 			isVerified = false;
+			loadScreen(1001);
 		}
 		if (screenNumber == 1006 || screenNumber == 1007) {
 			textField.requestFocus();
 			textField.setEditable(true);
 		}
-		if (screenNumber == 1008 && isVerified == true) {
+		if (screenNumber == 1008 && isVerified) {
+			isVerified = false;
 			newTime = true;
 			textField.setText("");
 			loadScreen(1009);
-			isVerified = false;
 		}
 		if (screenNumber == 1009) {
 			if (workingCount > 8) {
@@ -1823,15 +1897,15 @@ public class GUI extends JFrame {
 			}
 			workingCount++;
 		}
-		if (screenNumber == 1027 && isVerified == true) {
+		if (screenNumber == 1027 && isVerified) {
+			isVerified = false;
 			constellation = "MIL";
 			loadScreen(1022);
-			isVerified = false;
 		}
-		if (screenNumber == 1028 && isVerified == true) {
+		if (screenNumber == 1028 && isVerified) {
+			isVerified = false;
 			constellation = "UFO";
 			loadScreen(1022);
-			isVerified = false;
 		}
 		if (screenNumber == 1029) {
 			startupMode = "AUTO";
@@ -1844,6 +1918,7 @@ public class GUI extends JFrame {
 			textField.setEditable(true);
 		}
 		if (screenNumber == 1300) {
+			isVerified = false;
 			if (workingCount > 3) {
 				workingCount = 0;
 				if (startupIsComplete) {
@@ -1866,13 +1941,13 @@ public class GUI extends JFrame {
 			bit.setStatus(Status.IDLE);
 		}
 		if (screenNumber == 1301 || screenNumber == 1302) {
-			printMode = "PRINT IMMEDIATE"; 
 			isVerified = false;
+			printMode = "PRINT IMMEDIATE"; 
 			if (bit == null) {
 				bit = new BIT(); // Want to keep it here to check if already running			
 			}
 		}
-		if (screenNumber == 1505 && isVerified == true) {
+		if (screenNumber == 1505 && isVerified) {
 			isVerified = false;
 			bit.setFlag(false);
 			loadScreen(1530);
@@ -1881,104 +1956,104 @@ public class GUI extends JFrame {
 			isVerified = false;
 			// RESTART PROGRAM
 		}
-		if (screenNumber == 1508 && isVerified == true) {
+		if (screenNumber == 1508 && isVerified) {
 			isVerified = false;
 			startBIT("BBP", null, 5);
-			if (startupIsComplete == true) {
+			if (startupIsComplete) {
 				loadScreen(1502);
 			} else {
 				loadScreen(1532);
 			}
 		}
-		if (screenNumber == 1509 && isVerified == true) {
+		if (screenNumber == 1509 && isVerified) {
 			isVerified = false;
 			startBIT("TAC", null, 5);
-			if (startupIsComplete == true) {
+			if (startupIsComplete) {
 				loadScreen(1502);
 			} else {
 				loadScreen(1532);
 			}
 		}
-		if (screenNumber == 1510 && isVerified == true) {
+		if (screenNumber == 1510 && isVerified) {
 			isVerified = false;
 			startBIT("TBI", null, 5);
-			if (startupIsComplete == true) {
+			if (startupIsComplete) {
 				loadScreen(1502);
 			} else {
 				loadScreen(1532);
 			}
 		}
-		if (screenNumber == 1511 && isVerified == true) {
+		if (screenNumber == 1511 && isVerified) {
 			isVerified = false;
 			startBIT("TFSTST", null, 5);
-			if (startupIsComplete == true) {
+			if (startupIsComplete) {
 				loadScreen(1502);
 			} else {
 				loadScreen(1532);
 			}
 		}
-		if (screenNumber == 1513 && isVerified == true) {
+		if (screenNumber == 1513 && isVerified) {
 			isVerified = false;
 			startBIT("DISTST", null, 5);
 			loadScreen(1512);
 		}
-		if (screenNumber == 1514 && isVerified == true) {
+		if (screenNumber == 1514 && isVerified) {
 			isVerified = false;
 			startBIT("KEYTST", null, 5);
 			loadScreen(1512);
 		}
-		if (screenNumber == 1518 && isVerified == true) {
+		if (screenNumber == 1518 && isVerified) {
 			isVerified = false;
 			startBIT(null, "EHFMOD", 5);
-			if (startupIsComplete == true) {
+			if (startupIsComplete) {
 				loadScreen(1503);
 			} else {
 				loadScreen(1533);
 			}
 		}
-		if (screenNumber == 1519 && isVerified == true) {
+		if (screenNumber == 1519 && isVerified) {
 			isVerified = false;
 			startBIT(null, "RSUTST", 5);
-			if (startupIsComplete == true) {
+			if (startupIsComplete) {
 				loadScreen(1503);
 			} else {
 				loadScreen(1533);
 			}
 		}
-		if (screenNumber == 1520 && isVerified == true) {
+		if (screenNumber == 1520 && isVerified) {
 			isVerified = false;
 			startBIT(null, "RSUVT", 5);
-			if (startupIsComplete == true) {
+			if (startupIsComplete) {
 				loadScreen(1503);
 			} else {
 				loadScreen(1533);
 			}
 		}
-		if (screenNumber == 1521 && isVerified == true) {
+		if (screenNumber == 1521 && isVerified) {
 			isVerified = false;
 			startBIT(null, "RECVT", 5);
-			if (startupIsComplete == true) {
+			if (startupIsComplete) {
 				loadScreen(1503);
 			} else {
 				loadScreen(1533);
 			}
 		}
-		if (screenNumber == 1523 && isVerified == true) {
+		if (screenNumber == 1523 && isVerified) {
 			isVerified = false;
 			startBIT(null, "EHFANT", 5);
 			loadScreen(1522);
 		}
-		if (screenNumber == 1524 && isVerified == true) {
+		if (screenNumber == 1524 && isVerified) {
 			isVerified = false;
 			startBIT(null, "KIV7LP", 5);
 			loadScreen(1522);
 		}
-		if (screenNumber == 1525 && isVerified == true) {
+		if (screenNumber == 1525 && isVerified) {
 			isVerified = false;
 			startBIT(null, "PABIT", 5);
 			loadScreen(1522);
 		}
-		if (screenNumber == 1526 && isVerified == true) {
+		if (screenNumber == 1526 && isVerified) {
 			isVerified = false;
 			startBIT(null, "EHFRAD", 5);
 			loadScreen(1522);
@@ -2017,8 +2092,10 @@ public class GUI extends JFrame {
 				}
 				if (newEphemerisRequested) {
 					newEphemerisRequested = false;
-					log.add(new Log(time, "EPHEMERIS UPDATED FOR SAT "+sats.get(selectedSat).getName(), Status.ADVISORY));
-					sats.get(selectedSat).setEphemerisCurrentness(true);
+					if (loggedOnSat) {
+						log.add(new Log(time, "EPHEMERIS UPDATED FOR SAT "+sats.get(selectedSat).getName(), Status.ADVISORY));
+						sats.get(selectedSat).setEphemerisCurrentness(true);
+					}
 				}
 				ephemerisCount = 0;
 			} else {
@@ -2140,13 +2217,12 @@ public class GUI extends JFrame {
 	
 	// Checks Presence of Crypto Keys for Satellite Acquisition
 	public boolean checkCryptoKeys() {
-//		ArrayList<Character> keys = sats.get(currentSat.getName()).getKeys();
-//		if (keys.get(0) == 'Y' && keys.get(1) == 'Y' && keys.get(4) == 'Y') {
-//			return true;
-//		} else {
-//			return false;
-//		}
-		return true; // ONLY FOR TESTING!!!!!!
+		ArrayList<Character> keys = sats.get(currentSat.getName()).getKeys();
+		if (keys.get(0) == 'Y' && keys.get(1) == 'Y' && keys.get(4) == 'Y') {
+			return true;
+		} else {
+			return false;
+		}
 	}
 	
 	// Checks if Navigational Data is Accurate for Satellite Acquisition

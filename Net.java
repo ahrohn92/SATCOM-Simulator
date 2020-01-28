@@ -68,7 +68,6 @@ public class Net {
 	
 	
 	// Setter and Getter Methods for Net Parameters
-	
 	public void setTerminalParameters(String[] terminalParameters) {
 		this.terminalParameters = terminalParameters;
 	}
@@ -92,7 +91,6 @@ public class Net {
 	public String[] getServiceParameters2() {
 		return serviceParameters2;
 	}
-	
 	
 	// Setter Method for isSelected
 	public void isSelected(boolean isSelected) {
@@ -124,7 +122,12 @@ public class Net {
 		this.flag = flag;
 	}
 	
-	// Setter Method for Net Status
+	// Setter Methos for Net Status
+	public void setNetStatus(String netStatus) {
+		this.netStatus = netStatus;
+	}
+	
+	// Getter Method for Net Status
 	public String getNetStatus() {
 		return netStatus;
 	}

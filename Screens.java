@@ -44,7 +44,8 @@ public class Screens {
 	public Screens(ArrayList<Log> log, Satellite currentSat, NavData navData, String[] tempNavData, String printMode, String satStatus, 
 			String commonGroupBIT, String EHFGroupBIT, HashMap<Integer, Net> nets, int selectedNet, String tsmStatus, String timeSource,
 			String startupMode, String otarAuto, HashMap<String, Satellite> sats, String time, String beam, String[] acqIndicators, String GSData, 
-			String[] ephemeris, String[] logonParams, String[] operatorInputs, boolean loggedOnSat, char[] SRC, String mode) {
+			String[] ephemeris, String[] logonParams, String[] operatorInputs, boolean loggedOnSat, char[] SRC, String mode, char[] satStatusChars,
+			String[] beams) {
 		this.log = log;
 		this.tempNavData = tempNavData;
 		this.sats = sats;
@@ -767,16 +768,16 @@ public class Screens {
 				"SATELLITES                                         TERMINAL LOGON PARAMETERS    \r\n" + 
 				"               SET   RISE  BEAMS                          C2      C2     C3     \r\n" + 
 				"  LABEL S EL   TIME  TIME  EC SA SB SC AH AL CI RB BEAM   ROBUST  CYCLE  MODE   \r\n" +
-				"  SAT01 C XX  >24.0    -   Y  Y  Y  Y  Y  Y  Y  Y  EC/AG  HHR XX  ANY    MOST   \r\n" + 
-				"  SAT02 N <0     -  >24.0  Y  Y  Y  Y  Y  Y  Y  Y  SB     HHR X   ANY    AUTO   \r\n" + 
-				"  SAT03 N  -     -     -   Y  Y  -  -  -  -  -  -  SB     HHR XX  ANY    MOST   \r\n" + 
-				"  SAT04 N  -     -     -   Y  Y  Y  Y  Y  Y  Y  Y  EC/AG  HHR XX  ANY    AUTO   \r\n" + 
-				"  SAT05 N  -     -     -   Y  Y  Y  Y  Y  Y  Y  Y  EC/AG  HHR XX  ANY    MOST   \r\n" + 
-				"  SAT06 N  -     -     -   Y  Y  Y  Y  Y  Y  Y  Y  EC/AG  HHR XX  ANY    AUTO   \r\n" + 
-				"  SAT07 N  -     -     -   Y  Y  Y  Y  Y  Y  Y  Y  EC/AG  HHR XX  ANY    MOST   \r\n" + 
-				"  SAT08 N  -     -     -   Y  Y  Y  Y  Y  Y  Y  Y  SB     HHR XX  ANY    AUTO   \r\n" +
-				"  SAT09 N  -     -     -   Y  Y  -  -  -  -  -  -         CI      ANY    MOST   \r\n" + 
-				"  SAT10 N  -     -     -   Y  Y  -  -  -  -  -  -         CI      ANY    AUTO   \r\n" + 
+				"  SAT01 "+satStatusChars[0]+" XX  >24.0    -   Y  Y  Y  Y  Y  Y  Y  Y  "+String.format("%1$-5s",beams[0])+"  HHR XX  ANY    MOST   \r\n" + 
+				"  SAT02 "+satStatusChars[1]+" <0     -  >24.0  Y  Y  Y  Y  Y  Y  Y  Y  "+String.format("%1$-5s",beams[1])+"  HHR X   ANY    AUTO   \r\n" + 
+				"  SAT03 "+satStatusChars[2]+"  -     -     -   Y  Y  -  -  -  -  -  -  "+String.format("%1$-5s",beams[2])+"  HHR XX  ANY    MOST   \r\n" + 
+				"  SAT04 "+satStatusChars[3]+"  -     -     -   Y  Y  Y  Y  Y  Y  Y  Y  "+String.format("%1$-5s",beams[3])+"  HHR XX  ANY    AUTO   \r\n" + 
+				"  SAT05 "+satStatusChars[4]+"  -     -     -   Y  Y  Y  Y  Y  Y  Y  Y  "+String.format("%1$-5s",beams[4])+"  HHR XX  ANY    MOST   \r\n" + 
+				"  SAT06 "+satStatusChars[5]+"  -     -     -   Y  Y  Y  Y  Y  Y  Y  Y  "+String.format("%1$-5s",beams[5])+"  HHR XX  ANY    AUTO   \r\n" + 
+				"  SAT07 "+satStatusChars[6]+"  -     -     -   Y  Y  Y  Y  Y  Y  Y  Y  "+String.format("%1$-5s",beams[6])+"  HHR XX  ANY    MOST   \r\n" + 
+				"  SAT08 "+satStatusChars[7]+"  -     -     -   Y  Y  Y  Y  Y  Y  Y  Y  "+String.format("%1$-5s",beams[7])+"  HHR XX  ANY    AUTO   \r\n" +
+				"  SAT09 "+satStatusChars[8]+"  -     -     -   Y  Y  -  -  -  -  -  -  "+String.format("%1$-5s",beams[8])+"  CI      ANY    MOST   \r\n" + 
+				"  SAT10 "+satStatusChars[9]+"  -     -     -   Y  Y  -  -  -  -  -  -  "+String.format("%1$-5s",beams[9])+"  CI      ANY    AUTO   \r\n" + 
 				"                                                                                \r\n" + 
 				"                                                                                \r\n" + 
 				"KGV-11 STATUS                                                                   \r\n" + 
@@ -2242,13 +2243,6 @@ public class Screens {
 		// ENTERED NET SCREEN
 		// LAST SCREEN = ENTER NET NUMBER SCREEN (INDEX = 21)
 		indexNumber = 300;
-		newStatusArea = 
-				"DTG:      09-220539z-aug19        ** SECRET **                                  \r\n" + 
-				"                                                                                \r\n" + 
-				"ALARM:                                                                     	 \r\n" + 
-				"                                                                                \r\n" + 
-				"ADVISORY: "+fetchLogEntry(1)+" \r\n" +
-				"                                                                                \r\n";
 		newMainArea = 
 				"MAIN:EHF:NET--------------------------------------------------------------------\r\n" + 
 				"                                             SETUP CAPABLE      NO              \r\n" + 

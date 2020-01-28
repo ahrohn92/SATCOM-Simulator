@@ -11,8 +11,6 @@ public class OTAR {
 		this.selectedSat = selectedSat;
 		
 		Thread thread = new Thread(new Runnable() {
-
-			@Override
 			public void run() {
 				//System.out.print("Key Request Started");
 				flag = true;
