@@ -10,40 +10,52 @@ public class OTAR {
 		this.selectedKey = selectedKey;
 		this.selectedSat = selectedSat;
 		
-		Thread thread = new Thread(new Runnable() {
-			public void run() {
-				//System.out.print("Key Request Started");
-				flag = true;
-				status = Status.PENDING;
-				try {
-					Thread.sleep(10000);
-				} catch (InterruptedException e) {
-					status = Status.FAILED;
-					e.printStackTrace();
-				}
-				if ((selectedSat.equals("SAT02") || selectedSat.equals("SAT08")) && 
-						!(selectedKey == 2 || selectedKey == 3 || selectedKey == 7 || selectedKey == 8)) {  // Authorized Keys & Sats
-					status = Status.STARTED;
+		// TRANSEC Keys
+		if (selectedKey < 10) {
+			Thread thread = new Thread(new Runnable() {
+				public void run() {
+					flag = true;
+					status = Status.PENDING;
 					try {
-						Thread.sleep(1000);  // MAYBE REMOVE
+						Thread.sleep(20000);
 					} catch (InterruptedException e) {
 						status = Status.FAILED;
 						e.printStackTrace();
 					}
-					//flag = true;
-					try {
-						Thread.sleep(15000);
-					} catch (InterruptedException e) {
-						status = Status.FAILED;
-						e.printStackTrace();
+					if ((selectedSat.equals("SAT02") || selectedSat.equals("SAT08")) && 
+							!(selectedKey == 2 || selectedKey == 3 || selectedKey == 7 || selectedKey == 8)) {  // Authorized Keys & Sats
+						status = Status.STARTED;
+						try {
+							Thread.sleep(1000);  // MAYBE REMOVE
+						} catch (InterruptedException e) {
+							status = Status.FAILED;
+							e.printStackTrace();
+						}
+						try {
+							Thread.sleep(15000);
+						} catch (InterruptedException e) {
+							status = Status.FAILED;
+							e.printStackTrace();
+						}
+						status = Status.SUCCESSFUL;
+					} else {
+						status = Status.DENIED;
 					}
-					status = Status.SUCCESSFUL;
-				} else {
-					status = Status.DENIED;
 				}
-			}
-		});
-		thread.start();
+			});
+			thread.start();
+		}
+		
+		// COMSEC Keys
+//		if (selectedKey == 10 || selectedKey == 11) { // TEST VALUES
+//			Thread thread = new Thread(new Runnable() {
+//				public void run() {
+//					System.out.println();
+////					status = Status.PENDING;
+//				}
+//			});
+//			thread.start();
+//		}
 	}
 	
 	// Returns Selected Key

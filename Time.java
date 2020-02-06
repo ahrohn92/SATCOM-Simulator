@@ -13,7 +13,7 @@ public class Time {
 	private String month = "";
 	private String year = "";
 	private String time;
-	private SimpleDateFormat timeFormat = new SimpleDateFormat("dd-HHmmss'Z'-MMMyy");;
+	private SimpleDateFormat timeFormat = new SimpleDateFormat("dd-HHmmss'Z'-MMMyy");
 	private Calendar calendar;
 	private boolean newTime;
 	

@@ -1,8 +1,5 @@
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.HashMap;
-import java.util.TimeZone;
 
 public class Screens {
 
@@ -18,11 +15,12 @@ public class Screens {
 	private String newMainArea;
 	private String newPromptArea;
 	private String newOptionsArea;
-	private int indexNumber;
+	private int index;
 	private ArrayList<Log> log;
 	private String[] tempNavData;
-	private String lineTwo = "Line Two Begins Here";
+	private String lineTwo = "";
 	String timeSource;
+	private boolean alarmIsActive;
 
 	// Sat Variables
 	private String satName1;
@@ -45,11 +43,12 @@ public class Screens {
 			String commonGroupBIT, String EHFGroupBIT, HashMap<Integer, Net> nets, int selectedNet, String tsmStatus, String timeSource,
 			String startupMode, String otarAuto, HashMap<String, Satellite> sats, String time, String beam, String[] acqIndicators, String GSData, 
 			String[] ephemeris, String[] logonParams, String[] operatorInputs, boolean loggedOnSat, char[] SRC, String mode, char[] satStatusChars,
-			String[] beams) {
+			String[] beams, String[] switches, String[] categoryStatus, boolean alarmIsActive) {
 		this.log = log;
 		this.tempNavData = tempNavData;
 		this.sats = sats;
 		this.timeSource = timeSource;
+		this.alarmIsActive = alarmIsActive;
 		
 		if (satStatus == null) {
 			satStatus = "";
@@ -71,14 +70,14 @@ public class Screens {
 		}
 		
 		// MAIN SCREEN
-		indexNumber = 0;
+		index = 0;
 		newStatusArea =
 				"DTG:      "+time+"     ** UNCLASSIFIED **                               \r\n" + 
 				"                                                                                \r\n" + 
-				"ALARM:                                                                     	 \r\n" + 
+				"ALARM:    "+getAlarm()+"                                                        \r\n" + 
 				"                                                                                \r\n" + 
-				"ADVISORY: "+fetchLogEntry(1)+"                                                  \r\n" +
-				"                                                                                \r\n";
+				"ADVISORY: "+getAdvisory()+"                                                     \r\n" +
+				"                            "+lineTwo+"                                         \r\n";
 		newMainArea =
 				"MAIN----------------------------------------------------------------------------\r\n" + 
 				"                                                                          V14.00\r\n" + 
@@ -138,12 +137,12 @@ public class Screens {
 		associatedScreens.add(4);
 		associatedScreens.add(5);
 		associatedScreens.add(6);
-		screenIndex.put(indexNumber, screenAreas);
-		associatedScreensIndex.put(indexNumber, associatedScreens);
+		screenIndex.put(index, screenAreas);
+		associatedScreensIndex.put(index, associatedScreens);
 			
 		// MESSAGE PROCESSING SCREEN
 		// LAST SCREEN = MAIN SCREEN
-		indexNumber = 1;
+		index = 1;
 		newOptionsArea = 
 				"-------------------------------** UNCLASSIFIED **-------------------------------\r\n" + 
 				"   _______________    _______________    _______________    _______________     \r\n" + 
@@ -162,12 +161,12 @@ public class Screens {
 		associatedScreens.add(11);
 		associatedScreens.add(12);
 		associatedScreens.add(13);
-		screenIndex.put(indexNumber, newScreenTemplate(0, true, true, true, false));
-		associatedScreensIndex.put(indexNumber, associatedScreens);
+		screenIndex.put(index, newScreenTemplate(0, true, true, true, false));
+		associatedScreensIndex.put(index, associatedScreens);
 		
 		// TERMINAL CONTROL SCREEN
 		// LAST SCREEN = MAIN SCREEN
-		indexNumber = 2;
+		index = 2;
 		newMainArea = 
 				"MAIN:TERMINAL-------------------------------------------------------------------\r\n" + 
 				"                                                                                \r\n" + 
@@ -219,19 +218,19 @@ public class Screens {
 		associatedScreens.add(18);
 		associatedScreens.add(19);
 		associatedScreens.add(20);
-		screenIndex.put(indexNumber, newScreenTemplate(0, true, false, true, false));
-		associatedScreensIndex.put(indexNumber, associatedScreens);
+		screenIndex.put(index, newScreenTemplate(0, true, false, true, false));
+		associatedScreensIndex.put(index, associatedScreens);
 		
 		// EHF SERVICES SCREEN
 		// LAST SCREEN = MAIN SCREEN
-		indexNumber = 3;
+		index = 3;
 		newStatusArea = 
 				"DTG:      "+time+"        ** SECRET **                                  \r\n" + 
 				"                                                                                \r\n" + 
 				"ALARM:                                                                     	 \r\n" + 
 				"                                                                                \r\n" + 
-				"ADVISORY: "+fetchLogEntry(1)+" \r\n" +
-				"                                                                                \r\n";
+				"ADVISORY: "+getAdvisory()+" \r\n" +
+				"                            "+lineTwo+"                                         \r\n";
 		newMainArea = 
 				"MAIN:EHF------------------------------------------------------------------------\r\n" + 
 				"           UL SLOTS: PRIMARY    1 N01  2 -    3 -    4 -     CONSTELLATION  MIL \r\n" + 
@@ -280,12 +279,12 @@ public class Screens {
 		associatedScreens.add(22);
 		associatedScreens.add(23);
 		associatedScreens.add(24);
-		screenIndex.put(indexNumber, newScreenTemplate(0, false, false, true, false));
-		associatedScreensIndex.put(indexNumber, associatedScreens);
+		screenIndex.put(index, newScreenTemplate(0, false, false, true, false));
+		associatedScreensIndex.put(index, associatedScreens);
 		
 		// EHF ACQ/LOGON SCREEN
 		// LAST SCREEN = MAIN SCREEN
-		indexNumber = 4;
+		index = 4;
 		newMainArea =
 				"MAIN:EHF ACQ/TRACK--------------------------------------------------------------\r\n" + 
 				"                                                                                \r\n" + 
@@ -301,18 +300,18 @@ public class Screens {
 				"                                                                                \r\n" + 
 				"       LOGON PARAMETERS                                                         \r\n" + 
 				"                                     TERMINAL    REQUESTED                      \r\n" + 
-				"          C2 ROBUSTNESS              "+String.format("%1$-5s", logonParams[3])+"       "+String.format("%1$-5s", logonParams[0])+"                          \r\n" + 
-				"          C2 CYCLE PERIOD            "+String.format("%1$-4s", logonParams[4])+"        "+String.format("%1$-4s", logonParams[1])+"                            \r\n" + 
-				"          C3 MODE                    "+String.format("%1$-9s", logonParams[5])+"   "+String.format("%1$-5s", logonParams[2])+"                           \r\n" +
+				"          C2 ROBUSTNESS              "+String.format("%1$-7s", logonParams[3])+"     "+String.format("%1$-7s", logonParams[0])+"                        \r\n" + 
+				"          C2 CYCLE PERIOD            "+String.format("%1$-5s", logonParams[4])+"       "+String.format("%1$-5s", logonParams[1])+"                           \r\n" + 
+				"          C3 MODE                    "+String.format("%1$-9s", logonParams[5])+"   "+String.format("%1$-6s", logonParams[2])+"                          \r\n" +
 				"                                                                                \r\n" + 
 				"       SWITCHES                                                                 \r\n" + 
 				"                                                                                \r\n" + 
-				"          SAT TRANSFER IF BLOCKED    OFF                                        \r\n" + 
-				"          ACQ ON DETECTION           OFF                                        \r\n" + 
-				"          STRESS MODE                OFF                                        \r\n" +
-				"          REPEAT JAM MODE            OFF                                        \r\n" + 
-				"          RECEIVE ONLY MODE          OFF                                        \r\n" + 
-				"          SCINTILLATION MODE    AUTO OFF                                        \r\n" + 
+				"          SAT TRANSFER IF BLOCKED    "+switches[0]+"                                        \r\n" + 
+				"          ACQ ON DETECTION           "+switches[1]+"                                        \r\n" + 
+				"          STRESS MODE                "+switches[2]+"                                        \r\n" +
+				"          REPEAT JAM MODE            "+switches[3]+"                                        \r\n" + 
+				"          RECEIVE ONLY MODE          "+switches[4]+"                                        \r\n" + 
+				"          SCINTILLATION MODE  "+String.format("%1$6s", switches[5])+" "+switches[6]+"                                        \r\n" + 
 				"          ACQ MODE               LDR/MDR                                        \r\n" + 
 				"                                                                                \r\n" + 
 				"                                                                                \r\n" + 
@@ -337,12 +336,12 @@ public class Screens {
 		associatedScreens.add(29);
 		associatedScreens.add(30);
 		associatedScreens.add(31);
-		screenIndex.put(indexNumber, newScreenTemplate(0, true, false, true, false));
-		associatedScreensIndex.put(indexNumber, associatedScreens);
+		screenIndex.put(index, newScreenTemplate(0, true, false, true, false));
+		associatedScreensIndex.put(index, associatedScreens);
 		
 		// BUILT-IN TEST SCREEN
 		// LAST SCREEN = MAIN SCREEN
-		indexNumber = 5;
+		index = 5;
 		newMainArea =
 				"MAIN:BIT------------------------------------------------------------------------\r\n" + 
 				"  "+printMode+"                                                               \r\n" + 
@@ -391,12 +390,12 @@ public class Screens {
 		associatedScreens.add(33);
 		associatedScreens.add(34);
 		associatedScreens.add(35);
-		screenIndex.put(indexNumber, newScreenTemplate(0, true, false, true, false));
-		associatedScreensIndex.put(indexNumber, associatedScreens);
+		screenIndex.put(index, newScreenTemplate(0, true, false, true, false));
+		associatedScreensIndex.put(index, associatedScreens);
 
 		// DAMA SCREEN
 		// LAST SCREEN = MAIN SCREEN
-		indexNumber = 6;
+		index = 6;
 		newMainArea =
 				"MAIN:DAMA:EHF SUMMARY-----------------------------------------------------------\r\n" + 
 				"                                                                                \r\n" + 
@@ -446,12 +445,12 @@ public class Screens {
 		associatedScreens.add(38);
 		associatedScreens.add(39);
 		associatedScreens.add(40);
-		screenIndex.put(indexNumber, newScreenTemplate(0, true, false, true, false));
-		associatedScreensIndex.put(indexNumber, associatedScreens);
+		screenIndex.put(index, newScreenTemplate(0, true, false, true, false));
+		associatedScreensIndex.put(index, associatedScreens);
         
 		// CRYPTO KEYS SCREEN
 		// LAST SCREEN = TERMINAL CONTROL SCREEN (INDEX = 2)
-		indexNumber = 15;
+		index = 15;
 		newMainArea =
 				"MAIN:TERMINAL:KGV-11 KEYS-------------------------------------------------------\r\n" + 
 				"                                                                                \r\n" + 
@@ -460,7 +459,7 @@ public class Screens {
 				"CONSTELLATIONS                                                                  \r\n" + 
 				"         CANISTER ID      GROUP            UNIVERSAL  LINKING                   \r\n" + 
 				" LABEL   CURRENT FUTURE   ID     CHAINING  A     B    CURRENT FUTURE COMPROMISE \r\n" + 
-				" MIL     434  Y  434  N   -      -         -     -    -       -      -          \r\n" + 
+				" MIL     123  Y  123  N   -      -         -     -    -       -      -          \r\n" + 
 				" UFO     -    N  -    N   -      -         -     -    -       -      -          \r\n" +
 				"                                                                                \r\n" + 
 				"                                                                                \r\n" + 
@@ -501,12 +500,12 @@ public class Screens {
 		associatedScreens.add(83);  // NOT REAL VALUE JUST FOR TEST
 		associatedScreens.add(84);  // NOT REAL VALUE JUST FOR TEST
 		associatedScreens.add(85);  // NOT REAL VALUE JUST FOR TEST
-		screenIndex.put(indexNumber, newScreenTemplate(2, true, false, true, false));
-		associatedScreensIndex.put(indexNumber, associatedScreens);
+		screenIndex.put(index, newScreenTemplate(2, true, false, true, false));
+		associatedScreensIndex.put(index, associatedScreens);
 		
 		// NAV DATA UPDATE SCREENS
 		// LAST SCREEN = TERMINAL CONTROL SCREEN (INDEX = 2)
-		indexNumber = 17;
+		index = 17;
 		newMainArea =
 				"MAIN:TERMINAL:NAV DATA----------------------------------------------------------\r\n" + 
 				"                                                                                \r\n" + 
@@ -550,20 +549,40 @@ public class Screens {
 				"  ¦               ¦  ¦               ¦  ¦               ¦  ¦               ¦    \r\n" + 
 				"   ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯    ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯    ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯    ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯     \r\n";					
 		associatedScreens = new ArrayList<Integer>();
-		associatedScreens.add(70);  // NOT REAL VALUE JUST FOR TEST
-		associatedScreens.add(71);  // NOT REAL VALUE JUST FOR TEST
-		associatedScreens.add(72);  // NOT REAL VALUE JUST FOR TEST
-		associatedScreens.add(73);  // NOT REAL VALUE JUST FOR TEST
-		associatedScreens.add(74);  // NOT REAL VALUE JUST FOR TEST
-		associatedScreens.add(75);  // NOT REAL VALUE JUST FOR TEST
-		associatedScreens.add(76);  // NOT REAL VALUE JUST FOR TEST
-		associatedScreens.add(80);  // NOT REAL VALUE JUST FOR TEST
-		screenIndex.put(indexNumber, newScreenTemplate(2, true, false, true, false));
-		associatedScreensIndex.put(indexNumber, associatedScreens);
+		associatedScreens.add(70);
+		associatedScreens.add(71);
+		associatedScreens.add(72);
+		associatedScreens.add(73);
+		associatedScreens.add(74);
+		associatedScreens.add(75);
+		associatedScreens.add(76);
+		associatedScreens.add(80);
+		screenIndex.put(index, newScreenTemplate(2, true, false, true, false));
+		associatedScreensIndex.put(index, associatedScreens);
+		
+		// KB LOCKOUT SCREEN
+		// LAST SCREEN = TERMINAL CONTROL SCREEN (INDEX = 2)
+		index = 18;
+		newPromptArea =
+                "--------------------------------------------------------------------------------\r\n" + 
+                "     ENTER LOCKOUT PASSWORD                                                     \r\n" + 
+                "                                                                                \r\n" + 
+                "                                                                                \r\n";
+        newOptionsArea =
+				"-------------------------------** UNCLASSIFIED **-------------------------------\r\n" + 
+				"   _______________    _______________    _______________    _______________     \r\n" + 
+				"  ¦               ¦  ¦               ¦  ¦               ¦  ¦               ¦    \r\n" + 
+				"  ¦               ¦  ¦               ¦  ¦               ¦  ¦               ¦    \r\n" + 
+				"   ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯    ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯    ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯    ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯     \r\n" + 
+				"   _______________    _______________    _______________    _______________     \r\n" +  
+				"  ¦               ¦  ¦               ¦  ¦               ¦  ¦               ¦    \r\n" + 
+				"  ¦               ¦  ¦               ¦  ¦               ¦  ¦               ¦    \r\n" + 
+				"   ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯    ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯    ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯    ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯     \r\n";
+        screenIndex.put(index, newScreenTemplate(2, true, true, false, false));
 		
 		// TERMINAL CONTROL POWER DOWN SCREEN
 		// LAST SCREEN = TERMINAL CONTROL SCREEN (INDEX = 2)
-		indexNumber = 19;
+		index = 19;
 		newPromptArea =
                 "--------------------------------------------------------------------------------\r\n" + 
                 "     VERIFY TO POWER DOWN                                                       \r\n" + 
@@ -579,11 +598,63 @@ public class Screens {
 				"  ¦               ¦  ¦               ¦  ¦               ¦  ¦               ¦    \r\n" + 
 				"  ¦               ¦  ¦               ¦  ¦               ¦  ¦               ¦    \r\n" + 
 				"   ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯    ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯    ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯    ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯     \r\n";
-		screenIndex.put(indexNumber, newScreenTemplate(2, true, true, false, false));
+		screenIndex.put(index, newScreenTemplate(2, true, true, false, false));
+		
+		// DATA RECORDING SCREEN
+		// LAST SCREEN = TERMINAL CONTROL SCREEN (INDEX = 2)
+		index = 20;
+		newMainArea =
+				"MAIN:TERMINAL:RECORDING---------------------------------------------------------\r\n" + 
+				"                                                                                \r\n" + 
+				"                                                                                \r\n" + 
+				"                                                                                \r\n" + 
+				"                                                                                \r\n" + 
+				"                                                                                \r\n" + 
+				"                                                                                \r\n" + 
+				"                           CATEGORY                 STATUS                      \r\n" + 
+				"                                                                                \r\n" +
+				"                     1  EHF ACQ & TRACK              "+categoryStatus[0]+"                        \r\n" +
+				"                     2  MCE, MCI & MDI               "+categoryStatus[1]+"                        \r\n" + 
+				"                     3  HI RATE MCI DATA             "+categoryStatus[2]+"                        \r\n" + 
+				"                     4  AGILE BEAM TRACK             "+categoryStatus[3]+"                        \r\n" + 
+				"                     5  UHF MODEM TX &RX             "+categoryStatus[4]+"                        \r\n" +
+				"                     6  CATEGORY 6                   "+categoryStatus[5]+"                        \r\n" +
+				"                     7  CATEGORY 7                   "+categoryStatus[6]+"                        \r\n" + 
+				"                     8  CATEGORY 8                   "+categoryStatus[7]+"                        \r\n" +
+				"                     9  CATEGORY 9                   "+categoryStatus[8]+"                        \r\n" + 
+				"                    10  CATEGORY 10                  "+categoryStatus[9]+"                        \r\n" + 
+				"                    11  CATEGORY 11                  "+categoryStatus[10]+"                        \r\n" + 
+				"                    12  CATEGORY 12                  "+categoryStatus[11]+"                        \r\n" + 
+				"                    13  CATEGORY 13                  "+categoryStatus[12]+"                        \r\n" + 
+				"                    14  CATEGORY 14                  "+categoryStatus[13]+"                       \r\n" +
+				"                                                                                \r\n" + 
+				"                                                                                \r\n" + 
+				"                                                                                \r\n" + 
+				"                                                                                \r\n" + 
+				"                                                                                \r\n" + 
+				"                                                                                \r\n" + 
+				"                                                                                \r\n" + 
+				"                                                                                \r\n";
+        newOptionsArea =
+				"-------------------------------** UNCLASSIFIED **-------------------------------\r\n" + 
+				"   _______________    _______________    _______________    _______________     \r\n" + 
+				"  ¦ EXIT DISPLAY  ¦  ¦ CHANGE STATUS ¦  ¦ CHANGE SETUP  ¦  ¦               ¦    \r\n" + 
+				"  ¦               ¦  ¦               ¦  ¦               ¦  ¦               ¦    \r\n" + 
+				"   ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯    ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯    ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯    ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯     \r\n" + 
+				"   _______________    _______________    _______________    _______________     \r\n" +  
+				"  ¦               ¦  ¦               ¦  ¦               ¦  ¦               ¦    \r\n" + 
+				"  ¦               ¦  ¦               ¦  ¦               ¦  ¦               ¦    \r\n" + 
+				"   ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯    ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯    ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯    ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯     \r\n";
+		associatedScreens = new ArrayList<Integer>();
+		associatedScreens.add(2);
+		associatedScreens.add(275);
+		associatedScreens.add(276);
+		screenIndex.put(index, newScreenTemplate(2, true, false, true, false));
+		associatedScreensIndex.put(index, associatedScreens);
 		
         // ENTER NET NUMBER SCREEN
         // LAST SCREEN = EHF SERVICES SCREEN (INDEX = 3)
-        indexNumber = 21;
+        index = 21;
         newPromptArea = 
                 "--------------------------------------------------------------------------------\r\n" + 
                 "     ENTER NET NUMBER                                                           \r\n" + 
@@ -599,23 +670,23 @@ public class Screens {
                 "  ¦               ¦  ¦               ¦  ¦               ¦  ¦               ¦    \r\n" + 
                 "  ¦               ¦  ¦               ¦  ¦               ¦  ¦               ¦    \r\n" + 
                 "   ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯    ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯    ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯    ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯     \r\n";
-		screenIndex.put(indexNumber, newScreenTemplate(3, true, true, false, false));
-		associatedScreensIndex.put(indexNumber, associatedScreens);
+		screenIndex.put(index, newScreenTemplate(3, true, true, false, false));
+		associatedScreensIndex.put(index, associatedScreens);
 
 		// PTP CALLS SCREEN
 		// LAST SCREEN = EHF SERVICES SCREEN (INDEX = 3)
-		indexNumber = 22;
+		index = 22;
         newPromptArea = 
                 "--------------------------------------------------------------------------------\r\n" + 
                 "     ENTER PTP CALL NUMBER                                                      \r\n" + 
                 "                                                                                \r\n" + 
                 "                                                                                \r\n";
-		screenIndex.put(indexNumber, newScreenTemplate(21, true, true, false, true));
-		associatedScreensIndex.put(indexNumber, associatedScreens);
+		screenIndex.put(index, newScreenTemplate(21, true, true, false, true));
+		associatedScreensIndex.put(index, associatedScreens);
 		
 		// TX/RX SUMMARY SCREEN
 		// LAST SCREEN = EHF SERVICES SCREEN (INDEX = 3)
-		indexNumber = 23;
+		index = 23;
 		newMainArea =
 				"MAIN:EHF:TX/RX SUMMARY----------------------------------------------------------\r\n" + 
 				"                                                                                \r\n" + 
@@ -661,12 +732,12 @@ public class Screens {
         associatedScreens = new ArrayList<Integer>();
 		associatedScreens.add(3);
 		associatedScreens.add(24);
-		screenIndex.put(indexNumber, newScreenTemplate(3, true, false, true, false));
-		associatedScreensIndex.put(indexNumber, associatedScreens);
+		screenIndex.put(index, newScreenTemplate(3, true, false, true, false));
+		associatedScreensIndex.put(index, associatedScreens);
 		
 		// RX-ONLY SUMMARY SCREEN
 		// LAST SCREEN = EHF SERVICES SCREEN (INDEX = 3)
-		indexNumber = 24;
+		index = 24;
 		newMainArea =
 				"MAIN:EHF:RX-ONLY SUMMARY--------------------------------------------------------\r\n" + 
 				"                                                                                \r\n" + 
@@ -712,12 +783,12 @@ public class Screens {
 		associatedScreens = new ArrayList<Integer>();
 		associatedScreens.add(3);
 		associatedScreens.add(23);
-		screenIndex.put(indexNumber, newScreenTemplate(3, true, false, true, false));
-		associatedScreensIndex.put(indexNumber, associatedScreens);
+		screenIndex.put(index, newScreenTemplate(3, true, false, true, false));
+		associatedScreensIndex.put(index, associatedScreens);
 		
 		// RESTART DL ACQ SCREEN
 		// LAST SCREEN = EHF ACQ/LOGON SCREEN (INDEX = 4)
-		indexNumber = 25;
+		index = 25;
 		newPromptArea =
                 "--------------------------------------------------------------------------------\r\n" + 
                 "     VERIFY TO RESTART DL ACQ                                                   \r\n" + 
@@ -733,31 +804,57 @@ public class Screens {
 				"  ¦               ¦  ¦               ¦  ¦               ¦  ¦               ¦    \r\n" + 
 				"  ¦               ¦  ¦               ¦  ¦               ¦  ¦               ¦    \r\n" + 
 				"   ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯    ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯    ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯    ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯     \r\n";
-		screenIndex.put(indexNumber, newScreenTemplate(4, true, true, false, false));
+		screenIndex.put(index, newScreenTemplate(4, true, true, false, false));
 		
 		// START UL SCREEN
 		// LAST SCREEN = EHF ACQ/LOGON SCREEN (INDEX = 4)
-		indexNumber = 26;
+		index = 26;
 		newPromptArea =
                 "--------------------------------------------------------------------------------\r\n" + 
                 "     VERIFY TO START UL ACQ                                                     \r\n" + 
                 "                                                                                \r\n" + 
                 "                                                                                \r\n";
-		screenIndex.put(indexNumber, newScreenTemplate(25, true, true, false, true));
+		screenIndex.put(index, newScreenTemplate(25, true, true, false, true));
 		
 		// LOG OFF SCREEN
 		// LAST SCREEN = EHF ACQ/LOGON SCREEN (INDEX = 4)
-		indexNumber = 27;
+		index = 27;
 		newPromptArea =
                 "--------------------------------------------------------------------------------\r\n" + 
                 "     VERIFY TO LOG OFF SAT                                                      \r\n" + 
                 "                                                                                \r\n" + 
                 "                                                                                \r\n";
-        screenIndex.put(indexNumber, newScreenTemplate(25, true, true, false, true));
-		
+        screenIndex.put(index, newScreenTemplate(25, true, true, false, true));
+        
+        // LOGON PARAMETERS SCREEN
+        // LAST SCREEN = EHF ACQ/LOGON SCREEN (INDEX = 4)
+		index = 28;
+		newPromptArea =
+                "--------------------------------------------------------------------------------\r\n" + 
+                "     SELECT LOGON PARAMETER                                                     \r\n" + 
+                "                                                                                \r\n" + 
+                "                                                                                \r\n";
+        newOptionsArea =
+				"-------------------------------** UNCLASSIFIED **-------------------------------\r\n" + 
+				"   _______________    _______________    _______________    _______________     \r\n" + 
+				"  ¦     EXIT      ¦  ¦ C2 ROBUSTNESS ¦  ¦C2 CYCLE PERIOD¦  ¦    C3 MODE    ¦    \r\n" + 
+				"  ¦               ¦  ¦               ¦  ¦               ¦  ¦               ¦    \r\n" + 
+				"   ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯    ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯    ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯    ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯     \r\n" + 
+				"   _______________    _______________    _______________    _______________     \r\n" +  
+				"  ¦               ¦  ¦               ¦  ¦               ¦  ¦               ¦    \r\n" + 
+				"  ¦               ¦  ¦               ¦  ¦               ¦  ¦               ¦    \r\n" + 
+				"   ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯    ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯    ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯    ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯     \r\n";
+		associatedScreens = new ArrayList<Integer>();
+		associatedScreens.add(4);
+		associatedScreens.add(230);
+		associatedScreens.add(231);
+		associatedScreens.add(233);
+		screenIndex.put(index, newScreenTemplate(4, true, true, false, false));
+		associatedScreensIndex.put(index, associatedScreens);
+        
 		// EHF SATS SCREEN
 		// LAST SCREEN = EHF ACQ/LOGON SCREEN
-		indexNumber = 29;
+		index = 29;
 		newMainArea =
 				"MAIN:EHF ACQ/TRACK:SATELLITES---------------------------------------------------\r\n" + 
 				"                                                                                \r\n" + 
@@ -804,12 +901,12 @@ public class Screens {
 		associatedScreens.add(4);
 		associatedScreens.add(136);  // NOT REAL VALUE JUST FOR TEST
 		associatedScreens.add(137);  // NOT REAL VALUE JUST FOR TEST
-		screenIndex.put(indexNumber, newScreenTemplate(4, true, false, true, false));
-		associatedScreensIndex.put(indexNumber, associatedScreens);
+		screenIndex.put(index, newScreenTemplate(4, true, false, true, false));
+		associatedScreensIndex.put(index, associatedScreens);
 		
 		// POINTING DATA SCREEN
 		// LAST SCREEN = EHF ACQ/LOGON SCREEN
-		indexNumber = 30;
+		index = 30;
 		newMainArea =
 				"MAIN:EHF ACQ/TRACK:POINTING-----------------------------------------------------\r\n" + 
 				"                                                                                \r\n" + 
@@ -855,12 +952,12 @@ public class Screens {
 		associatedScreens = new ArrayList<Integer>();
 		associatedScreens.add(4);
 		associatedScreens.add(145);
-		screenIndex.put(indexNumber, newScreenTemplate(4, true, false, true, false));
-		associatedScreensIndex.put(indexNumber, associatedScreens);
+		screenIndex.put(index, newScreenTemplate(4, true, false, true, false));
+		associatedScreensIndex.put(index, associatedScreens);
 		
-		// EHF ACQ/LOGON SCREEN Cont
+		// EHF ACQ/LOGON SCREEN CONT
 		// LAST SCREEN = EHF ACQ/LOGON SCREEN
-		indexNumber = 31;
+		index = 31;
 		newOptionsArea =
 				"-------------------------------** UNCLASSIFIED **-------------------------------\r\n" + 
 				"   _______________    _______________    _______________    _______________     \r\n" + 
@@ -873,14 +970,14 @@ public class Screens {
 				"   ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯    ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯    ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯    ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯     \r\n";
 		associatedScreens = new ArrayList<Integer>();
 		associatedScreens.add(4);
-		associatedScreens.add(128);  // NOT REAL VALUE JUST FOR TEST
-		associatedScreens.add(129);  // NOT REAL VALUE JUST FOR TEST
-		screenIndex.put(indexNumber, newScreenTemplate(4, true, true, true, false));
-		associatedScreensIndex.put(indexNumber, associatedScreens);
+		associatedScreens.add(254);
+		associatedScreens.add(274);
+		screenIndex.put(index, newScreenTemplate(4, true, true, true, false));
+		associatedScreensIndex.put(index, associatedScreens);
 		
 		// VERIFY FOR DISRUPTIVE TEST SCREEN
 		// LAST PAGE = BUILT-IN TEST SCREEN (INDEX = 5)
-		indexNumber = 33;
+		index = 33;
         newPromptArea = 
                 "--------------------------------------------------------------------------------\r\n" + 
                 "     VERIFY FOR DISRUPTIVE TEST                                                 \r\n" + 
@@ -897,12 +994,12 @@ public class Screens {
 				"  ¦               ¦  ¦               ¦  ¦               ¦  ¦               ¦    \r\n" + 
 				"   ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯    ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯    ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯    ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯     \r\n";
 		associatedScreens = new ArrayList<Integer>();
-		screenIndex.put(indexNumber, newScreenTemplate(5, true, true, false, false));
-		associatedScreensIndex.put(indexNumber, associatedScreens);
+		screenIndex.put(index, newScreenTemplate(5, true, true, false, false));
+		associatedScreensIndex.put(index, associatedScreens);
 		
 		// FAULT LOG PAGE
 		// LAST PAGE = BUILT-IN TEST SCREEN (INDEX = 5)
-		indexNumber = 34;
+		index = 34;
 		newOptionsArea = 
 				"-------------------------------** UNCLASSIFIED **-------------------------------\r\n" + 
 				"   _______________    _______________    _______________    _______________     \r\n" + 
@@ -919,12 +1016,12 @@ public class Screens {
 		associatedScreens.add(142);   // IS CORRECT
 		associatedScreens.add(143);  // NOT REAL VALUE JUST FOR TEST
 		associatedScreens.add(144);  // NOT REAL VALUE JUST FOR TEST
-		screenIndex.put(indexNumber, newScreenTemplate(5, true, true, true, false));
-		associatedScreensIndex.put(indexNumber, associatedScreens);
+		screenIndex.put(index, newScreenTemplate(5, true, true, true, false));
+		associatedScreensIndex.put(index, associatedScreens);
 		
 		// VERIFY C2/C3 LOOPBACK SCREEN
 		// LAST PAGE = BUILT-IN TEST SCREEN (INDEX = 5)
-		indexNumber = 35;
+		index = 35;
 		newPromptArea =
 				"--------------------------------------------------------------------------------\r\n" + 
 				"     VERIFY FOR C2/C3 LOOPBACK                                                  \r\n" + 
@@ -940,11 +1037,11 @@ public class Screens {
 				"  ¦               ¦  ¦               ¦  ¦               ¦  ¦               ¦    \r\n" + 
 				"  ¦               ¦  ¦               ¦  ¦               ¦  ¦               ¦    \r\n" + 
 				"   ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯    ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯    ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯    ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯     \r\n";
-		screenIndex.put(indexNumber, newScreenTemplate(5, true, true, false, false));
+		screenIndex.put(index, newScreenTemplate(5, true, true, false, false));
 		
 		// SAVED NAV DATA CHANGES SCREEN
 		// LAST SCREEN = NAV DATA SCREEN (INDEX = 17)
-		indexNumber = 70;
+		index = 70;
 		associatedScreens = new ArrayList<Integer>();
 		associatedScreens.add(0);
 		associatedScreens.add(14);
@@ -954,12 +1051,12 @@ public class Screens {
 		associatedScreens.add(18);
 		associatedScreens.add(19);
 		associatedScreens.add(20);
-		screenIndex.put(indexNumber, newScreenTemplate(2, true, true, true, true));
-		associatedScreensIndex.put(indexNumber, associatedScreens);
+		screenIndex.put(index, newScreenTemplate(2, true, true, true, true));
+		associatedScreensIndex.put(index, associatedScreens);
 		
 		// LATITUDE SCREEN
 		// LAST SCREEN = NAV DATA SCREEN (INDEX = 17)
-		indexNumber = 71;  // NOT REAL VALUE JUST FOR TEST
+		index = 71;  // NOT REAL VALUE JUST FOR TEST
 		newPromptArea = 
 				"--------------------------------------------------------------------------------\r\n" + 
 				"     ENTER LATITUDE (DEG MIN N/S)                                               \r\n" + 
@@ -975,31 +1072,31 @@ public class Screens {
 				"  ¦               ¦  ¦               ¦  ¦               ¦  ¦               ¦    \r\n" + 
 				"  ¦               ¦  ¦               ¦  ¦               ¦  ¦               ¦    \r\n" + 
 				"   ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯    ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯    ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯    ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯     \r\n";
-		screenIndex.put(indexNumber, newScreenTemplate(17, true, true, false, false));
+		screenIndex.put(index, newScreenTemplate(17, true, true, false, false));
 		
 		// LONGITUDE SCREEN
 		// LAST SCREEN = NAD DATA SCREEN (INDEX = 17)
-		indexNumber = 72;  // NOT REAL VALUE JUST FOR TEST
+		index = 72;  // NOT REAL VALUE JUST FOR TEST
 		newPromptArea = 
 				"--------------------------------------------------------------------------------\r\n" + 
 				"     ENTER LONGITUDE (DEG MIN E/W)                                              \r\n" + 
 				"                                                                                \r\n" + 
 				"                                                                                \r\n";
-		screenIndex.put(indexNumber, newScreenTemplate(71, true, true, false, true));
+		screenIndex.put(index, newScreenTemplate(71, true, true, false, true));
 		
 		// ALTITUDE SCREEN
 		// LAST SCREEN = NAD DATA SCREEN (INDEX = 17)
-		indexNumber = 73;  // NOT REAL VALUE JUST FOR TEST
+		index = 73;  // NOT REAL VALUE JUST FOR TEST
 		newPromptArea = 
 				"--------------------------------------------------------------------------------\r\n" + 
 				"     ENTER ALTITUDE (FT)                                                        \r\n" + 
 				"                                                                                \r\n" + 
 				"                                                                                \r\n";
-		screenIndex.put(indexNumber, newScreenTemplate(71, true, true, false, true));
+		screenIndex.put(index, newScreenTemplate(71, true, true, false, true));
 		
 		// SPEED SCREEN
 		// LAST SCREEN = NAD DATA SCREEN (INDEX = 17)
-		indexNumber = 74;  // NOT REAL VALUE JUST FOR TEST
+		index = 74;  // NOT REAL VALUE JUST FOR TEST
 		newPromptArea = 
 				"--------------------------------------------------------------------------------\r\n" + 
 				"                                                                                \r\n" + 
@@ -1014,12 +1111,12 @@ public class Screens {
 		associatedScreens.add(75);  // NOT REAL VALUE JUST FOR TEST
 		associatedScreens.add(76);  // NOT REAL VALUE JUST FOR TEST
 		associatedScreens.add(2);  // NOT REAL VALUE JUST FOR TEST
-		screenIndex.put(indexNumber, newScreenTemplate(17, true, true, false, true));
-		associatedScreensIndex.put(indexNumber, associatedScreens);
+		screenIndex.put(index, newScreenTemplate(17, true, true, false, true));
+		associatedScreensIndex.put(index, associatedScreens);
 		
 		// CLIMB RATE SCREEN
 		// LAST SCREEN = NAD DATA SCREEN (INDEX = 17)
-		indexNumber = 75;  // NOT REAL VALUE JUST FOR TEST
+		index = 75;  // NOT REAL VALUE JUST FOR TEST
 		associatedScreens = new ArrayList<Integer>();
 		associatedScreens.add(70);  // NOT REAL VALUE JUST FOR TEST
 		associatedScreens.add(71);  // NOT REAL VALUE JUST FOR TEST
@@ -1029,12 +1126,12 @@ public class Screens {
 		associatedScreens.add(75);  // NOT REAL VALUE JUST FOR TEST
 		associatedScreens.add(76);  // NOT REAL VALUE JUST FOR TEST
 		associatedScreens.add(2);  // NOT REAL VALUE JUST FOR TEST
-		screenIndex.put(indexNumber, newScreenTemplate(74, true, true, true, true));
-		associatedScreensIndex.put(indexNumber, associatedScreens);
+		screenIndex.put(index, newScreenTemplate(74, true, true, true, true));
+		associatedScreensIndex.put(index, associatedScreens);
 		
 		// ATTITUDE SCREEN
 		// LAST SCREEN = NAV DATA SCREEN (INDEX = 17)
-		indexNumber = 76;  // NOT REAL VALUE JUST FOR TEST
+		index = 76;  // NOT REAL VALUE JUST FOR TEST
 		newPromptArea =
 				"--------------------------------------------------------------------------------\r\n" + 
 				"     SELECT PARAM                                                               \r\n" + 
@@ -1055,42 +1152,42 @@ public class Screens {
 		associatedScreens.add(77);  // NOT REAL VALUE JUST FOR TEST
 		associatedScreens.add(78);  // NOT REAL VALUE JUST FOR TEST
 		associatedScreens.add(79);  // NOT REAL VALUE JUST FOR TEST
-		screenIndex.put(indexNumber, newScreenTemplate(17, true, true, false, false));
-		associatedScreensIndex.put(indexNumber, associatedScreens);
+		screenIndex.put(index, newScreenTemplate(17, true, true, false, false));
+		associatedScreensIndex.put(index, associatedScreens);
 		
 		// HEADING SCREEN
 		// LAST SCREEN = ATTITUDE SCREEN (INDEX = 76)
-		indexNumber = 77;  // NOT REAL VALUE JUST FOR TEST
+		index = 77;  // NOT REAL VALUE JUST FOR TEST
 		newPromptArea = 
 				"--------------------------------------------------------------------------------\r\n" + 
 				"     ENTER HEADING (DEG)                                                        \r\n" + 
 				"                                                                                \r\n" + 
 				"                                                                                \r\n";
-		screenIndex.put(indexNumber, newScreenTemplate(71, true, true, false, true));
+		screenIndex.put(index, newScreenTemplate(71, true, true, false, true));
 		
 		// PITCH SCREEN
 		// LAST SCREEN = ATTITUDE SCREEN (INDEX = 76)
-		indexNumber = 78;  // NOT REAL VALUE JUST FOR TEST
+		index = 78;  // NOT REAL VALUE JUST FOR TEST
 		newPromptArea = 
 				"--------------------------------------------------------------------------------\r\n" + 
 				"     ENTER PITCH (DEG)                                                          \r\n" + 
 				"                                                                                \r\n" + 
 				"                                                                                \r\n";
-		screenIndex.put(indexNumber, newScreenTemplate(71, true, true, false, true));
+		screenIndex.put(index, newScreenTemplate(71, true, true, false, true));
 		
 		// ROLL SCREEN
 		// LAST SCREEN = ATTITUDE SCREEN (INDEX = 76)
-		indexNumber = 79;  // NOT REAL VALUE JUST FOR TEST
+		index = 79;  // NOT REAL VALUE JUST FOR TEST
 		newPromptArea = 
 				"--------------------------------------------------------------------------------\r\n" + 
 				"     ENTER ROLL (DEG)                                                           \r\n" + 
 				"                                                                                \r\n" + 
 				"                                                                                \r\n";
-		screenIndex.put(indexNumber, newScreenTemplate(71, true, true, false, true));
+		screenIndex.put(index, newScreenTemplate(71, true, true, false, true));
 		
 		// ABORTED NAV DATA CHANGES SCREEN
 		// LAST SCREEN = NAV DATA SCREEN (INDEX = 17)
-		indexNumber = 80;
+		index = 80;
 		associatedScreens = new ArrayList<Integer>();
 		associatedScreens.add(0);
 		associatedScreens.add(14);
@@ -1100,12 +1197,65 @@ public class Screens {
 		associatedScreens.add(18);
 		associatedScreens.add(19);
 		associatedScreens.add(20);
-		screenIndex.put(indexNumber, newScreenTemplate(2, true, true, true, true));
-		associatedScreensIndex.put(indexNumber, associatedScreens);
+		screenIndex.put(index, newScreenTemplate(2, true, true, true, true));
+		associatedScreensIndex.put(index, associatedScreens);
+		
+		// COMSEC SCREEN
+		// LAST SCREEN = CRYPTO KEYS SCREEN (INDEX = 15)
+		index = 81;
+		newMainArea =
+				"MAIN:TERMINAL:KGV-11 KEYS:COMSEC------------------------------------------------\r\n" + 
+				"                                                                                \r\n" + 
+				"CURRENT CONSTELLATION  MIL             AUTO FUTURE ALL          COMPROMISE COT  \r\n" + 
+				"                                 OTAR  ON   -      -            -               \r\n" + 
+				"                                                                                \r\n" + 
+				"COMSEC KEYS                                                                     \r\n" + 
+				"                                                                      COMPROMISE\r\n" + 
+				"   CON ID    AUT   OLD   CURRENT   FUTURE   COMPROMISE   TRANSITION   TRANSITION\r\n" + 
+				"                                                                                \r\n" +
+				"   MIL 011    -    29      30U      -           -            31         -       \r\n" + 
+				"   MIL 022    -    29      30       -           -            31         -       \r\n" + 
+				"   MIL 033    -    29      30       -           -            31         -       \r\n" + 
+				"   MIL 044    -    29      30       -           -            31         -       \r\n" + 
+				"                                                                                \r\n" + 
+				"                                                                                \r\n" + 
+				"                                                                                \r\n" + 
+				"                                                                                \r\n" +
+				"                                                                                \r\n" + 
+				"                                                                                \r\n" + 
+				"                                                                                \r\n" + 
+				"                                                                                \r\n" + 
+				"                                                                                \r\n" + 
+				"                                                                                \r\n" +
+				"                                                                                \r\n" + 
+				"                                                                                \r\n" + 
+				"                                                                                \r\n" + 
+				"                                                                                \r\n" + 
+				"                                                                                \r\n" + 
+				"                                                                                \r\n" + 
+				"                                                                                \r\n" + 
+				"                                                                                \r\n";
+		newOptionsArea = 
+				"----------------------------------** SECRET **----------------------------------\r\n" + 
+				"   _______________    _______________    _______________    _______________     \r\n" + 
+				"  ¦ EXIT DISPLAY  ¦  ¦     OTAR      ¦  ¦ COMP ROLLOVER ¦  ¦  UPDATE KEYS  ¦    \r\n" + 
+				"  ¦               ¦  ¦               ¦  ¦               ¦  ¦               ¦    \r\n" + 
+				"   ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯    ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯    ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯    ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯     \r\n" + 
+				"   _______________    _______________    _______________    _______________     \r\n" +  
+				"  ¦               ¦  ¦               ¦  ¦               ¦  ¦               ¦    \r\n" + 
+				"  ¦               ¦  ¦               ¦  ¦               ¦  ¦               ¦    \r\n" + 
+				"   ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯    ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯    ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯    ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯     \r\n";
+		associatedScreens = new ArrayList<Integer>();
+		associatedScreens.add(15);
+		associatedScreens.add(207);
+		associatedScreens.add(208);
+		associatedScreens.add(209);
+		screenIndex.put(index, newScreenTemplate(3, true, false, true, false));
+		associatedScreensIndex.put(index, associatedScreens);
 		
 		// OTAR SCREEN
 		// LAST SCREEN = CRYPTO KEYS SCREEN (INDEX = 15)
-		indexNumber = 82;
+		index = 82;
 		newPromptArea = 
 				"--------------------------------------------------------------------------------\r\n" + 
 				"     SELECT OTAR OPTION                                                         \r\n" + 
@@ -1129,12 +1279,12 @@ public class Screens {
 		associatedScreens.add(96);
 		associatedScreens.add(97);
 		associatedScreens.add(98);
-		screenIndex.put(indexNumber, newScreenTemplate(15, true, true, false, false));
-		associatedScreensIndex.put(indexNumber, associatedScreens);
+		screenIndex.put(index, newScreenTemplate(15, true, true, false, false));
+		associatedScreensIndex.put(index, associatedScreens);
 		
 		// TSM SCREEN
 		// LAST SCREEN = CRYPTO KEYS SCREEN (INDEX = 15)
-		indexNumber = 85;
+		index = 85;
 		newOptionsArea =
 				"-------------------------------** UNCLASSIFIED **-------------------------------\r\n" + 
 				"   _______________    _______________    _______________    _______________     \r\n" + 
@@ -1148,12 +1298,12 @@ public class Screens {
 		associatedScreens = new ArrayList<Integer>();
 		associatedScreens.add(86);
 		associatedScreens.add(89);
-		screenIndex.put(indexNumber, newScreenTemplate(15, true, true, true, false));
-		associatedScreensIndex.put(indexNumber, associatedScreens);
+		screenIndex.put(index, newScreenTemplate(15, true, true, true, false));
+		associatedScreensIndex.put(index, associatedScreens);
 		
 		// TSM KEY LOAD SCREEN
 		// LAST SCREEN = TSM SCREEN (INDEX = 85)
-		indexNumber = 86;
+		index = 86;
         newPromptArea = 
                 "--------------------------------------------------------------------------------\r\n" + 
                 "     SELECT OPTION                                                              \r\n" + 
@@ -1169,21 +1319,21 @@ public class Screens {
 				"  ¦               ¦  ¦               ¦  ¦               ¦  ¦               ¦    \r\n" + 
 				"  ¦               ¦  ¦               ¦  ¦               ¦  ¦               ¦    \r\n" + 
 				"   ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯    ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯    ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯    ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯     \r\n";
-		screenIndex.put(indexNumber, newScreenTemplate(85, true, true, false, false));
+		screenIndex.put(index, newScreenTemplate(85, true, true, false, false));
 		
 		// TSM KEY LOAD CONT SCREEN
 		// LAST SCREEN = TSM SCREEN (INDEX = 85)
-		indexNumber = 87;
+		index = 87;
         newPromptArea = 
                 "--------------------------------------------------------------------------------\r\n" + 
                 "     SELECT OPTION                                                              \r\n" + 
 				"                                                                                \r\n" + 
                 "                                                                                \r\n";
-        screenIndex.put(indexNumber, newScreenTemplate(86, true, true, false, true));
+        screenIndex.put(index, newScreenTemplate(86, true, true, false, true));
         
         // NO TERMINAL KEYS IN TSM SCREEN
         // LAST SCREEN = TSM KEY LOAD SCREEN (INDEX = 86) or TSM KEY LOAD CONT SCREEN (INDEX = 87)
-        indexNumber = 88;
+        index = 88;
         newPromptArea = 
                 "--------------------------------------------------------------------------------\r\n" + 
                 "     SELECT OPTION                                                              \r\n" + 
@@ -1196,17 +1346,17 @@ public class Screens {
 		associatedScreens.add(83);
 		associatedScreens.add(84);
 		associatedScreens.add(85);
-		screenIndex.put(indexNumber, newScreenTemplate(15, true, true, false, true));
-		associatedScreensIndex.put(indexNumber, associatedScreens);
+		screenIndex.put(index, newScreenTemplate(15, true, true, false, true));
+		associatedScreensIndex.put(index, associatedScreens);
         
 		// 89 COPY OF 86
-		indexNumber = 89;
-		screenIndex.put(indexNumber, newScreenTemplate(86, true, true, true, true));
+		index = 89;
+		screenIndex.put(index, newScreenTemplate(86, true, true, true, true));
 		// 90 COPY OF 87
-		indexNumber = 90;
-		screenIndex.put(indexNumber, newScreenTemplate(87, true, true, true, true));
+		index = 90;
+		screenIndex.put(index, newScreenTemplate(87, true, true, true, true));
 		// 91 KEYS SAVED
-        indexNumber = 91;
+        index = 91;
         newPromptArea = 
                 "--------------------------------------------------------------------------------\r\n" + 
                 "     SELECT OPTION                                                              \r\n" + 
@@ -1219,11 +1369,11 @@ public class Screens {
 		associatedScreens.add(83);
 		associatedScreens.add(84);
 		associatedScreens.add(85);
-		screenIndex.put(indexNumber, newScreenTemplate(15, true, true, false, true));
-		associatedScreensIndex.put(indexNumber, associatedScreens);
+		screenIndex.put(index, newScreenTemplate(15, true, true, false, true));
+		associatedScreensIndex.put(index, associatedScreens);
 		
 		// SCREEN 92 KEYS LOADED FROM TSM
-		indexNumber = 92;
+		index = 92;
         newPromptArea = 
                 "--------------------------------------------------------------------------------\r\n" + 
                 "     SELECT OPTION                                                              \r\n" + 
@@ -1237,12 +1387,12 @@ public class Screens {
 		associatedScreens.add(83);
 		associatedScreens.add(84);
 		associatedScreens.add(85);
-		screenIndex.put(indexNumber, newScreenTemplate(15, true, true, false, true));
-		associatedScreensIndex.put(indexNumber, associatedScreens);
+		screenIndex.put(index, newScreenTemplate(15, true, true, false, true));
+		associatedScreensIndex.put(index, associatedScreens);
 		
 		// OTAR ALL KEYS SCREEN
 		// LAST SCREEN = OTAR SCREEN (INDEX = 82)
-		indexNumber = 93;
+		index = 93;
         newPromptArea = 
                 "--------------------------------------------------------------------------------\r\n" + 
                 "     VERIFY TO REQUEST OTAR                                                     \r\n" + 
@@ -1258,21 +1408,21 @@ public class Screens {
 				"  ¦               ¦  ¦               ¦  ¦               ¦  ¦               ¦    \r\n" + 
 				"  ¦               ¦  ¦               ¦  ¦               ¦  ¦               ¦    \r\n" + 
 				"   ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯    ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯    ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯    ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯     \r\n";
-		screenIndex.put(indexNumber, newScreenTemplate(82, true, true, false, false));
+		screenIndex.put(index, newScreenTemplate(82, true, true, false, false));
 		
 		// OTAR FUTURE KEYS SCREEN
 		// LAST SCREEN = OTAR SCREEN (INDEX = 82)
-		indexNumber = 94;
-		screenIndex.put(indexNumber, newScreenTemplate(93, true, true, true, true));
+		index = 94;
+		screenIndex.put(index, newScreenTemplate(93, true, true, true, true));
 		
 		// OTAR SEND BINDING SCREEN
 		// LAST SCREEN = OTAR SCREEN (INDEX = 82)
-		indexNumber = 95;
-		screenIndex.put(indexNumber, newScreenTemplate(93, true, true, true, true));
+		index = 95;
+		screenIndex.put(index, newScreenTemplate(93, true, true, true, true));
 		
 		// OTAR SINGLE CURRENT SCREEN
 		// LAST SCREEN = OTAR SCREEN (INDEX = 82)
-		indexNumber = 96;
+		index = 96;
         newPromptArea = 
                 "--------------------------------------------------------------------------------\r\n" + 
                 "     SELECT TRANSEC KEY TYPE                                                    \r\n" + 
@@ -1294,12 +1444,12 @@ public class Screens {
 		associatedScreens.add(103);
 		associatedScreens.add(104);
 		associatedScreens.add(105);
-		screenIndex.put(indexNumber, newScreenTemplate(82, true, true, false, false));
-		associatedScreensIndex.put(indexNumber, associatedScreens);
+		screenIndex.put(index, newScreenTemplate(82, true, true, false, false));
+		associatedScreensIndex.put(index, associatedScreens);
 		
 		// OTAR SINGLE FUTURE SCREEN
 		// LAST SCREEN = OTAR SCREEN (INDEX = 82)
-		indexNumber = 97;
+		index = 97;
 		newOptionsArea =
 				"-------------------------------** UNCLASSIFIED **-------------------------------\r\n" + 
 				"   _______________    _______________    _______________    _______________     \r\n" + 
@@ -1317,12 +1467,12 @@ public class Screens {
 		associatedScreens.add(108);
 		associatedScreens.add(109);
 		associatedScreens.add(110);
-		screenIndex.put(indexNumber, newScreenTemplate(96, true, true, true, false));
-		associatedScreensIndex.put(indexNumber, associatedScreens);
+		screenIndex.put(index, newScreenTemplate(96, true, true, true, false));
+		associatedScreensIndex.put(index, associatedScreens);
 		
 		// OTAR SWITCH AUTO SCREEN
 		// LAST SCREEN = OTAR SCREEN (INDEX = 82)
-		indexNumber = 98;
+		index = 98;
         newPromptArea = 
                 "--------------------------------------------------------------------------------\r\n" + 
                 "     AUTO OTAR                                                                  \r\n" + 
@@ -1341,12 +1491,12 @@ public class Screens {
 		associatedScreens = new ArrayList<Integer>();
 		associatedScreens.add(99);
 		associatedScreens.add(100);
-		screenIndex.put(indexNumber, newScreenTemplate(82, true, true, false, false));
-		associatedScreensIndex.put(indexNumber, associatedScreens);
+		screenIndex.put(index, newScreenTemplate(82, true, true, false, false));
+		associatedScreensIndex.put(index, associatedScreens);
 		
 		// AUTO OTAR ON SCREEN
 		// LAST SCREEN = OTAR SWITCH AUTO SCREEN (INDEX = 98)
-		indexNumber = 99;
+		index = 99;
 		associatedScreens = new ArrayList<Integer>();
 		associatedScreens.add(15);
 		associatedScreens.add(93);
@@ -1355,12 +1505,12 @@ public class Screens {
 		associatedScreens.add(96);
 		associatedScreens.add(97);
 		associatedScreens.add(98);
-		screenIndex.put(indexNumber, newScreenTemplate(82, true, true, true, true));
-		associatedScreensIndex.put(indexNumber, associatedScreens);
+		screenIndex.put(index, newScreenTemplate(82, true, true, true, true));
+		associatedScreensIndex.put(index, associatedScreens);
 		
 		// AUTO OTAR OFF SCREEN
 		// LAST SCREEN = OTAR SWITCH AUTO SCREEN (INDEX = 98)
-		indexNumber = 100;
+		index = 100;
 		associatedScreens = new ArrayList<Integer>();
 		associatedScreens.add(15);
 		associatedScreens.add(93);
@@ -1369,12 +1519,12 @@ public class Screens {
 		associatedScreens.add(96);
 		associatedScreens.add(97);
 		associatedScreens.add(98);
-		screenIndex.put(indexNumber, newScreenTemplate(82, true, true, true, true));
-		associatedScreensIndex.put(indexNumber, associatedScreens);
+		screenIndex.put(index, newScreenTemplate(82, true, true, true, true));
+		associatedScreensIndex.put(index, associatedScreens);
 		
 		// SELECT SAT (SINGLE CURRENT DL) SCREEN
 		// LAST SCREEN = OTAR SINGLE CURRENT SCREEN (INDEX = 96) OR OTAR SINGLE FUTURE SCREEN (INDEX = 97)
-		indexNumber = 101;
+		index = 101;
         newPromptArea = 
                 "--------------------------------------------------------------------------------\r\n" + 
                 "     SELECT SAT                                                                 \r\n" + 
@@ -1399,12 +1549,12 @@ public class Screens {
 		associatedScreens.add(126);
 		associatedScreens.add(127);
 		associatedScreens.add(111);
-		screenIndex.put(indexNumber, newScreenTemplate(82, true, true, false, false));
-		associatedScreensIndex.put(indexNumber, associatedScreens);
+		screenIndex.put(index, newScreenTemplate(82, true, true, false, false));
+		associatedScreensIndex.put(index, associatedScreens);
 		
 		// SELECT SAT (SINGLE CURRENT UL T1) SCREEN
 		// LAST SCREEN = OTAR SINGLE CURRENT SCREEN (INDEX = 96) OR OTAR SINGLE FUTURE SCREEN (INDEX = 97)
-		indexNumber = 102;
+		index = 102;
 		associatedScreens = new ArrayList<Integer>();
 		associatedScreens.add(121);
 		associatedScreens.add(122);
@@ -1414,12 +1564,12 @@ public class Screens {
 		associatedScreens.add(126);
 		associatedScreens.add(127);
 		associatedScreens.add(112);
-		screenIndex.put(indexNumber, newScreenTemplate(101, true, true, true, true));
-		associatedScreensIndex.put(indexNumber, associatedScreens);
+		screenIndex.put(index, newScreenTemplate(101, true, true, true, true));
+		associatedScreensIndex.put(index, associatedScreens);
 		
 		// SELECT SAT (SINGLE CURRENT UL T2) SCREEN
 		// LAST SCREEN = OTAR SINGLE CURRENT SCREEN (INDEX = 96) OR OTAR SINGLE FUTURE SCREEN (INDEX = 97)
-		indexNumber = 103;
+		index = 103;
 		associatedScreens = new ArrayList<Integer>();
 		associatedScreens.add(121);
 		associatedScreens.add(122);
@@ -1429,12 +1579,12 @@ public class Screens {
 		associatedScreens.add(126);
 		associatedScreens.add(127);
 		associatedScreens.add(113);
-		screenIndex.put(indexNumber, newScreenTemplate(101, true, true, true, true));
-		associatedScreensIndex.put(indexNumber, associatedScreens);
+		screenIndex.put(index, newScreenTemplate(101, true, true, true, true));
+		associatedScreensIndex.put(index, associatedScreens);
 		
 		// SELECT SAT (SINGLE CURRENT UL ST) SCREEN
 		// LAST SCREEN = OTAR SINGLE CURRENT SCREEN (INDEX = 96) OR OTAR SINGLE FUTURE SCREEN (INDEX = 97)
-		indexNumber = 104;
+		index = 104;
 		associatedScreens = new ArrayList<Integer>();
 		associatedScreens.add(121);
 		associatedScreens.add(122);
@@ -1444,12 +1594,12 @@ public class Screens {
 		associatedScreens.add(126);
 		associatedScreens.add(127);
 		associatedScreens.add(114);
-		screenIndex.put(indexNumber, newScreenTemplate(101, true, true, true, true));
-		associatedScreensIndex.put(indexNumber, associatedScreens);
+		screenIndex.put(index, newScreenTemplate(101, true, true, true, true));
+		associatedScreensIndex.put(index, associatedScreens);
 		
 		// SELECT SAT (SINGLE CURRENT COVER) SCREEN
 		// LAST SCREEN = OTAR SINGLE CURRENT SCREEN (INDEX = 96) OR OTAR SINGLE FUTURE SCREEN (INDEX = 97)
-		indexNumber = 105;
+		index = 105;
 		associatedScreens = new ArrayList<Integer>();
 		associatedScreens.add(121);
 		associatedScreens.add(122);
@@ -1459,12 +1609,12 @@ public class Screens {
 		associatedScreens.add(126);
 		associatedScreens.add(127);
 		associatedScreens.add(115);
-		screenIndex.put(indexNumber, newScreenTemplate(101, true, true, true, true));
-		associatedScreensIndex.put(indexNumber, associatedScreens);
+		screenIndex.put(index, newScreenTemplate(101, true, true, true, true));
+		associatedScreensIndex.put(index, associatedScreens);
 		
 		// SELECT SAT (SINGLE FUTURE DL) SCREEN
 		// LAST SCREEN = OTAR SINGLE CURRENT SCREEN (INDEX = 96) OR OTAR SINGLE FUTURE SCREEN (INDEX = 97)
-		indexNumber = 106;
+		index = 106;
 		associatedScreens = new ArrayList<Integer>();
 		associatedScreens.add(121);
 		associatedScreens.add(122);
@@ -1474,12 +1624,12 @@ public class Screens {
 		associatedScreens.add(126);
 		associatedScreens.add(127);
 		associatedScreens.add(116);
-		screenIndex.put(indexNumber, newScreenTemplate(101, true, true, true, true));
-		associatedScreensIndex.put(indexNumber, associatedScreens);
+		screenIndex.put(index, newScreenTemplate(101, true, true, true, true));
+		associatedScreensIndex.put(index, associatedScreens);
 		
 		// SELECT SAT (SINGLE FUTURE UL T1) SCREEN
 		// LAST SCREEN = OTAR SINGLE CURRENT SCREEN (INDEX = 96) OR OTAR SINGLE FUTURE SCREEN (INDEX = 97)
-		indexNumber = 107;
+		index = 107;
 		associatedScreens = new ArrayList<Integer>();
 		associatedScreens.add(121);
 		associatedScreens.add(122);
@@ -1489,12 +1639,12 @@ public class Screens {
 		associatedScreens.add(126);
 		associatedScreens.add(127);
 		associatedScreens.add(117);
-		screenIndex.put(indexNumber, newScreenTemplate(101, true, true, true, true));
-		associatedScreensIndex.put(indexNumber, associatedScreens);
+		screenIndex.put(index, newScreenTemplate(101, true, true, true, true));
+		associatedScreensIndex.put(index, associatedScreens);
 		
 		// SELECT SAT (SINGLE FUTURE UL T2) SCREEN
 		// LAST SCREEN = OTAR SINGLE CURRENT SCREEN (INDEX = 96) OR OTAR SINGLE FUTURE SCREEN (INDEX = 97)
-		indexNumber = 108;
+		index = 108;
 		associatedScreens = new ArrayList<Integer>();
 		associatedScreens.add(121);
 		associatedScreens.add(122);
@@ -1504,12 +1654,12 @@ public class Screens {
 		associatedScreens.add(126);
 		associatedScreens.add(127);
 		associatedScreens.add(118);
-		screenIndex.put(indexNumber, newScreenTemplate(101, true, true, true, true));
-		associatedScreensIndex.put(indexNumber, associatedScreens);
+		screenIndex.put(index, newScreenTemplate(101, true, true, true, true));
+		associatedScreensIndex.put(index, associatedScreens);
 		
 		// SELECT SAT (SINGLE FUTURE UL ST) SCREEN
 		// LAST SCREEN = OTAR SINGLE CURRENT SCREEN (INDEX = 96) OR OTAR SINGLE FUTURE SCREEN (INDEX = 97)
-		indexNumber = 109;
+		index = 109;
 		associatedScreens = new ArrayList<Integer>();
 		associatedScreens.add(121);
 		associatedScreens.add(122);
@@ -1519,12 +1669,12 @@ public class Screens {
 		associatedScreens.add(126);
 		associatedScreens.add(127);
 		associatedScreens.add(119);
-		screenIndex.put(indexNumber, newScreenTemplate(101, true, true, true, true));
-		associatedScreensIndex.put(indexNumber, associatedScreens);
+		screenIndex.put(index, newScreenTemplate(101, true, true, true, true));
+		associatedScreensIndex.put(index, associatedScreens);
 		
 		// SELECT SAT (SINGLE FUTURE COVER) SCREEN
 		// LAST SCREEN = OTAR SINGLE CURRENT SCREEN (INDEX = 96) OR OTAR SINGLE FUTURE SCREEN (INDEX = 97)
-		indexNumber = 110;
+		index = 110;
 		associatedScreens = new ArrayList<Integer>();
 		associatedScreens.add(121);
 		associatedScreens.add(122);
@@ -1534,12 +1684,12 @@ public class Screens {
 		associatedScreens.add(126);
 		associatedScreens.add(127);
 		associatedScreens.add(120);
-		screenIndex.put(indexNumber, newScreenTemplate(101, true, true, true, true));
-		associatedScreensIndex.put(indexNumber, associatedScreens);
+		screenIndex.put(index, newScreenTemplate(101, true, true, true, true));
+		associatedScreensIndex.put(index, associatedScreens);
 		
 		// SELECT SAT CONT (SINGLE CURRENT DL) SCREEN
 		// LAST SCREEN = SELECT SAT (SINGLE CURRENT DL) SCREEN (INDEX = 101)
-		indexNumber = 111;
+		index = 111;
 		newOptionsArea =
 				"-------------------------------** UNCLASSIFIED **-------------------------------\r\n" + 
 				"   _______________    _______________    _______________    _______________     \r\n" + 
@@ -1555,118 +1705,118 @@ public class Screens {
 		associatedScreens.add(128);
 		associatedScreens.add(129);
 		associatedScreens.add(130);
-		screenIndex.put(indexNumber, newScreenTemplate(101, true, true, true, false));
-		associatedScreensIndex.put(indexNumber, associatedScreens);
+		screenIndex.put(index, newScreenTemplate(101, true, true, true, false));
+		associatedScreensIndex.put(index, associatedScreens);
 		
 		// SELECT SAT CONT (SINGLE CURRENT UL T1) SCREEN
 		// LAST SCREEN = SELECT SAT (SINGLE CURRENT UL T1) SCREEN (INDEX = 102)
-		indexNumber = 112;
+		index = 112;
 		associatedScreens = new ArrayList<Integer>();
 		associatedScreens.add(102);
 		associatedScreens.add(128);
 		associatedScreens.add(129);
 		associatedScreens.add(130);
-		screenIndex.put(indexNumber, newScreenTemplate(111, true, true, true, true));
-		associatedScreensIndex.put(indexNumber, associatedScreens);
+		screenIndex.put(index, newScreenTemplate(111, true, true, true, true));
+		associatedScreensIndex.put(index, associatedScreens);
 		
 		// SELECT SAT CONT (SINGLE CURRENT UL T2) SCREEN
 		// LAST SCREEN = SELECT SAT (SINGLE CURRENT UL T2) SCREEN (INDEX = 103)
-		indexNumber = 113;
+		index = 113;
 		associatedScreens = new ArrayList<Integer>();
 		associatedScreens.add(103);
 		associatedScreens.add(128);
 		associatedScreens.add(129);
 		associatedScreens.add(130);
-		screenIndex.put(indexNumber, newScreenTemplate(111, true, true, true, true));
-		associatedScreensIndex.put(indexNumber, associatedScreens);
+		screenIndex.put(index, newScreenTemplate(111, true, true, true, true));
+		associatedScreensIndex.put(index, associatedScreens);
 		
 		// SELECT SAT CONT (SINGLE CURRENT UL ST) SCREEN
 		// LAST SCREEN = SELECT SAT (SINGLE CURRENT UL ST) SCREEN (INDEX = 104)
-		indexNumber = 114;
+		index = 114;
 		associatedScreens = new ArrayList<Integer>();
 		associatedScreens.add(104);
 		associatedScreens.add(128);
 		associatedScreens.add(129);
 		associatedScreens.add(130);
-		screenIndex.put(indexNumber, newScreenTemplate(111, true, true, true, true));
-		associatedScreensIndex.put(indexNumber, associatedScreens);
+		screenIndex.put(index, newScreenTemplate(111, true, true, true, true));
+		associatedScreensIndex.put(index, associatedScreens);
 		
 		// SELECT SAT CONT (SINGLE CURRENT COVER) SCREEN
 		// LAST SCREEN = SELECT SAT (SINGLE CURRENT COVER) SCREEN (INDEX = 105)
-		indexNumber = 115;
+		index = 115;
 		associatedScreens = new ArrayList<Integer>();
 		associatedScreens.add(105);
 		associatedScreens.add(128);
 		associatedScreens.add(129);
 		associatedScreens.add(130);
-		screenIndex.put(indexNumber, newScreenTemplate(111, true, true, true, true));
-		associatedScreensIndex.put(indexNumber, associatedScreens);
+		screenIndex.put(index, newScreenTemplate(111, true, true, true, true));
+		associatedScreensIndex.put(index, associatedScreens);
 		
 		// SELECT SAT CONT (SINGLE FUTURE DL) SCREEN
 		// LAST SCREEN = SELECT SAT (SINGLE FUTURE DL) SCREEN (INDEX = 106)
-		indexNumber = 116;
+		index = 116;
 		associatedScreens = new ArrayList<Integer>();
 		associatedScreens.add(106);
 		associatedScreens.add(128);
 		associatedScreens.add(129);
 		associatedScreens.add(130);
-		screenIndex.put(indexNumber, newScreenTemplate(111, true, true, true, true));
-		associatedScreensIndex.put(indexNumber, associatedScreens);
+		screenIndex.put(index, newScreenTemplate(111, true, true, true, true));
+		associatedScreensIndex.put(index, associatedScreens);
 		
 		// SELECT SAT CONT (SINGLE FUTURE UL T1) SCREEN
 		// LAST SCREEN = SELECT SAT (SINGLE FUTURE UL T1) SCREEN (INDEX = 107)
-		indexNumber = 117;
+		index = 117;
 		associatedScreens = new ArrayList<Integer>();
 		associatedScreens.add(107);
 		associatedScreens.add(128);
 		associatedScreens.add(129);
 		associatedScreens.add(130);
-		screenIndex.put(indexNumber, newScreenTemplate(111, true, true, true, true));
-		associatedScreensIndex.put(indexNumber, associatedScreens);
+		screenIndex.put(index, newScreenTemplate(111, true, true, true, true));
+		associatedScreensIndex.put(index, associatedScreens);
 		
 		// SELECT SAT CONT (SINGLE FUTURE UL T2) SCREEN
 		// LAST SCREEN = SELECT SAT (SINGLE FUTURE UL T2) SCREEN (INDEX = 108)
-		indexNumber = 118;
+		index = 118;
 		associatedScreens = new ArrayList<Integer>();
 		associatedScreens.add(108);
 		associatedScreens.add(128);
 		associatedScreens.add(129);
 		associatedScreens.add(130);
-		screenIndex.put(indexNumber, newScreenTemplate(111, true, true, true, true));
-		associatedScreensIndex.put(indexNumber, associatedScreens);
+		screenIndex.put(index, newScreenTemplate(111, true, true, true, true));
+		associatedScreensIndex.put(index, associatedScreens);
 		
 		// SELECT SAT CONT (SINGLE FUTURE UL ST) SCREEN
 		// LAST SCREEN = SELECT SAT (SINGLE FUTURE UL ST) SCREEN (INDEX = 109)
-		indexNumber = 119;
+		index = 119;
 		associatedScreens = new ArrayList<Integer>();
 		associatedScreens.add(109);
 		associatedScreens.add(128);
 		associatedScreens.add(129);
 		associatedScreens.add(130);
-		screenIndex.put(indexNumber, newScreenTemplate(111, true, true, true, true));
-		associatedScreensIndex.put(indexNumber, associatedScreens);
+		screenIndex.put(index, newScreenTemplate(111, true, true, true, true));
+		associatedScreensIndex.put(index, associatedScreens);
 		
 		// SELECT SAT CONT (SINGLE FUTURE COVER) SCREEN
 		// LAST SCREEN = SELECT SAT (SINGLE FUTURE COVER) SCREEN (INDEX = 110)
-		indexNumber = 120;
+		index = 120;
 		associatedScreens = new ArrayList<Integer>();
 		associatedScreens.add(110);
 		associatedScreens.add(128);
 		associatedScreens.add(129);
 		associatedScreens.add(130);
-		screenIndex.put(indexNumber, newScreenTemplate(111, true, true, true, true));
-		associatedScreensIndex.put(indexNumber, associatedScreens);
+		screenIndex.put(index, newScreenTemplate(111, true, true, true, true));
+		associatedScreensIndex.put(index, associatedScreens);
 		
 		// INDEXES 121 - 130 SELECTED SATS
 		// LAST SCREEN = INDEXES 101 - 120
 		for (int i = 121; i < 131; i++) {
-			indexNumber = i;
-			screenIndex.put(indexNumber, newScreenTemplate(93, true, true, true, true));
+			index = i;
+			screenIndex.put(index, newScreenTemplate(93, true, true, true, true));
 		}
 		
 		// NOT LOGGED ON OTAR SCREEN
 		// LAST SCREEN = INDEXES 121 - 130 SELECTED SATS
-		indexNumber = 131;
+		index = 131;
 		newPromptArea = 
 				"--------------------------------------------------------------------------------\r\n" + 
 				"     SELECT OTAR OPTION                                                         \r\n" + 
@@ -1680,12 +1830,12 @@ public class Screens {
 		associatedScreens.add(96);
 		associatedScreens.add(97);
 		associatedScreens.add(98);
-		screenIndex.put(indexNumber, newScreenTemplate(82, true, true, false, true));
-		associatedScreensIndex.put(indexNumber, associatedScreens);
+		screenIndex.put(index, newScreenTemplate(82, true, true, false, true));
+		associatedScreensIndex.put(index, associatedScreens);
 		
 		// NOT LOGGED ON BUILT-IN TEST SCREEN
 		// LAST SCREEN = MAIN SCREEN (INDEX = 0)
-		indexNumber = 132;
+		index = 132;
 		newOptionsArea = 
 				"-------------------------------** UNCLASSIFIED **-------------------------------\r\n" + 
 				"   _______________    _______________    _______________    _______________     \r\n" + 
@@ -1701,14 +1851,12 @@ public class Screens {
 		associatedScreens.add(32);
 		associatedScreens.add(33);
 		associatedScreens.add(34);
-		screenIndex.put(indexNumber, newScreenTemplate(5, true, true, true, false));
-		associatedScreensIndex.put(indexNumber, associatedScreens);
-		
-		
+		screenIndex.put(index, newScreenTemplate(5, true, true, true, false));
+		associatedScreensIndex.put(index, associatedScreens);
 		
 		// UPDATE SAT SCREEN
 		// LAST SCREEN = EHF SATS SCREEN
-		indexNumber = 136;  // NOT REAL VALUE JUST FOR TEST
+		index = 136;  // NOT REAL VALUE JUST FOR TEST
 		newOptionsArea =
 				"-------------------------------** UNCLASSIFIED **-------------------------------\r\n" + 
 				"   _______________    _______________    _______________    _______________     \r\n" + 
@@ -1728,12 +1876,12 @@ public class Screens {
 		associatedScreens.add(165);  // NOT REAL VALUE JUST FOR TEST
 		associatedScreens.add(166);  // NOT REAL VALUE JUST FOR TEST
 		associatedScreens.add(170);  // NOT REAL VALUE JUST FOR TEST
-		screenIndex.put(indexNumber, newScreenTemplate(29, true, true, true, false));
-		associatedScreensIndex.put(indexNumber, associatedScreens);
+		screenIndex.put(index, newScreenTemplate(29, true, true, true, false));
+		associatedScreensIndex.put(index, associatedScreens);
 		
 		// FAULT LOG EMPTY SCREEN
 		// LAST SCREEN = FAULY LOG SCREEN (INDEX = 34)
-		indexNumber = 141;
+		index = 141;
 		newPromptArea =
 				"--------------------------------------------------------------------------------\r\n" + 
 				"     SELECT OPTION                                                              \r\n" + 
@@ -1745,36 +1893,36 @@ public class Screens {
 		associatedScreens.add(34);   // IS CORRECT
 		associatedScreens.add(142);  // NOT REAL VALUE JUST FOR TEST
 		associatedScreens.add(143);  // NOT REAL VALUE JUST FOR TEST
-		screenIndex.put(indexNumber, newScreenTemplate(34, true, true, false, true));
-		associatedScreensIndex.put(indexNumber, associatedScreens);
+		screenIndex.put(index, newScreenTemplate(34, true, true, false, true));
+		associatedScreensIndex.put(index, associatedScreens);
 		
 		// PRINT ON DEMAND SCREEN
 		// LAST PAGE = FAULT LOG SCREEN (INDEX = 34)
-		indexNumber = 142;
+		index = 142;
 		associatedScreens = new ArrayList<Integer>();
 		associatedScreens.add(5);
 		associatedScreens.add(141);  // NOT REAL VALUE JUST FOR TEST
 		associatedScreens.add(142);   // IS CORRECT
 		associatedScreens.add(143);  // NOT REAL VALUE JUST FOR TEST
 		associatedScreens.add(144);  // NOT REAL VALUE JUST FOR TEST
-		screenIndex.put(indexNumber, newScreenTemplate(34, true, true, true, true));
-		associatedScreensIndex.put(indexNumber, associatedScreens);
+		screenIndex.put(index, newScreenTemplate(34, true, true, true, true));
+		associatedScreensIndex.put(index, associatedScreens);
 		
 		// PRINT IMMEDIATE SCREEN
 		// LAST PAGE = FAULT LOG SCREEN (INDEX = 34)
-		indexNumber = 143;
+		index = 143;
 		associatedScreens = new ArrayList<Integer>();
 		associatedScreens.add(5);
 		associatedScreens.add(141);  // NOT REAL VALUE JUST FOR TEST
 		associatedScreens.add(142);   // IS CORRECT
 		associatedScreens.add(143);  // NOT REAL VALUE JUST FOR TEST
 		associatedScreens.add(144);  // NOT REAL VALUE JUST FOR TEST
-		screenIndex.put(indexNumber, newScreenTemplate(34, true, true, true, true));
-		associatedScreensIndex.put(indexNumber, associatedScreens);
+		screenIndex.put(index, newScreenTemplate(34, true, true, true, true));
+		associatedScreensIndex.put(index, associatedScreens);
 		
 		// CHANGE PARAMETERS SCREEN
 		// LAST SCREEN = POINTING DATA SCREEN (INDEX = 30)
-		indexNumber = 145;
+		index = 145;
 		newPromptArea =
 				"--------------------------------------------------------------------------------\r\n" + 
 				"     SELECT PARAMETER TO CHANGE                                                 \r\n" + 
@@ -1798,12 +1946,12 @@ public class Screens {
 		associatedScreens.add(149);
 		associatedScreens.add(150);
 		associatedScreens.add(30);
-		screenIndex.put(indexNumber, newScreenTemplate(30, true, true, false, false));
-		associatedScreensIndex.put(indexNumber, associatedScreens);
+		screenIndex.put(index, newScreenTemplate(30, true, true, false, false));
+		associatedScreensIndex.put(index, associatedScreens);
 		
 		// MANUAL AZIMUTH SCREEN
 		// LAST SCREEN = CHANGE PARAMETERS SCREEN (INDEX = 145)
-		indexNumber = 146;
+		index = 146;
 		newPromptArea =
 				"--------------------------------------------------------------------------------\r\n" + 
 				"     SELECT AZIMUTH OPTION                                                      \r\n" + 
@@ -1822,12 +1970,12 @@ public class Screens {
 		associatedScreens = new ArrayList<Integer>();
 		associatedScreens.add(151);
 		associatedScreens.add(156);
-		screenIndex.put(indexNumber, newScreenTemplate(145, true, true, false, false));
-		associatedScreensIndex.put(indexNumber, associatedScreens);
+		screenIndex.put(index, newScreenTemplate(145, true, true, false, false));
+		associatedScreensIndex.put(index, associatedScreens);
 		
 		// MANUAL ELEVATION SCREEN
 		// LAST SCREEN = CHANGE PARAMETERS SCREEN (INDEX = 145)
-		indexNumber = 147;
+		index = 147;
 		newPromptArea =
 				"--------------------------------------------------------------------------------\r\n" + 
 				"     SELECT ELEVATION OPTION                                                    \r\n" + 
@@ -1836,12 +1984,12 @@ public class Screens {
 		associatedScreens = new ArrayList<Integer>();
 		associatedScreens.add(152);
 		associatedScreens.add(157);
-		screenIndex.put(indexNumber, newScreenTemplate(146, true, true, false, true));
-		associatedScreensIndex.put(indexNumber, associatedScreens);
+		screenIndex.put(index, newScreenTemplate(146, true, true, false, true));
+		associatedScreensIndex.put(index, associatedScreens);
 		
 		// MANUAL RANGE SCREEN
 		// LAST SCREEN = CHANGE PARAMETERS SCREEN (INDEX = 145)
-		indexNumber = 148;
+		index = 148;
 		newPromptArea =
 				"--------------------------------------------------------------------------------\r\n" + 
 				"     SELECT RANGE OPTION                                                        \r\n" + 
@@ -1850,12 +1998,12 @@ public class Screens {
 		associatedScreens = new ArrayList<Integer>();
 		associatedScreens.add(153);
 		associatedScreens.add(158);
-		screenIndex.put(indexNumber, newScreenTemplate(146, true, true, false, true));
-		associatedScreensIndex.put(indexNumber, associatedScreens);
+		screenIndex.put(index, newScreenTemplate(146, true, true, false, true));
+		associatedScreensIndex.put(index, associatedScreens);
 		
 		// MANUAL RANGE RATE SCREEN
 		// LAST SCREEN = CHANGE PARAMETERS SCREEN (INDEX = 145)
-		indexNumber = 149;
+		index = 149;
 		newPromptArea =
 				"--------------------------------------------------------------------------------\r\n" + 
 				"     SELECT RANGE RATE OPTION                                                   \r\n" + 
@@ -1864,12 +2012,12 @@ public class Screens {
 		associatedScreens = new ArrayList<Integer>();
 		associatedScreens.add(154);
 		associatedScreens.add(159);
-		screenIndex.put(indexNumber, newScreenTemplate(146, true, true, false, true));
-		associatedScreensIndex.put(indexNumber, associatedScreens);
+		screenIndex.put(index, newScreenTemplate(146, true, true, false, true));
+		associatedScreensIndex.put(index, associatedScreens);
 		
 		// ACQ MODE SCREEN
 		// LAST SCREEN = CHANGE PARAMETERS SCREEN (INDEX = 145)
-		indexNumber = 150;
+		index = 150;
 		newPromptArea =
 				"--------------------------------------------------------------------------------\r\n" + 
 				"     SELECT ACQ MODE OPTION                                                     \r\n" + 
@@ -1889,12 +2037,12 @@ public class Screens {
 		associatedScreens.add(155);
 		associatedScreens.add(182);
 		associatedScreens.add(183);
-		screenIndex.put(indexNumber, newScreenTemplate(146, true, true, false, false));
-		associatedScreensIndex.put(indexNumber, associatedScreens);
+		screenIndex.put(index, newScreenTemplate(146, true, true, false, false));
+		associatedScreensIndex.put(index, associatedScreens);
 		
 		// AUTO OPTIONS
 		for (int i = 151; i < 156; i++) {
-			indexNumber = i;
+			index = i;
 			associatedScreens = new ArrayList<Integer>();
 			associatedScreens.add(184);
 			associatedScreens.add(146);
@@ -1903,15 +2051,15 @@ public class Screens {
 			associatedScreens.add(149);
 			associatedScreens.add(150);
 			associatedScreens.add(30);
-			screenIndex.put(indexNumber, newScreenTemplate(145, true, true, true, true));
-			associatedScreensIndex.put(indexNumber, associatedScreens);
+			screenIndex.put(index, newScreenTemplate(145, true, true, true, true));
+			associatedScreensIndex.put(index, associatedScreens);
 		}
 		
 		// MANUAL POINTING DATA 156 - 159
 		
 		// ENTER AZIMUTH SCREEN
 		// LAST SCREEN = MANUAL AZIMUTH SCREEN (INDEX = 146)
-		indexNumber = 156;
+		index = 156;
 		newPromptArea =
 				"--------------------------------------------------------------------------------\r\n" + 
 				"     ENTER AZIMUTH (DEG)                                                        \r\n" + 
@@ -1927,37 +2075,37 @@ public class Screens {
 				"  ¦               ¦  ¦               ¦  ¦               ¦  ¦               ¦    \r\n" + 
 				"  ¦               ¦  ¦               ¦  ¦               ¦  ¦               ¦    \r\n" + 
 				"   ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯    ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯    ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯    ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯     \r\n";
-		screenIndex.put(indexNumber, newScreenTemplate(146, true, true, false, false));
+		screenIndex.put(index, newScreenTemplate(146, true, true, false, false));
 		
 		// ENTER ELEVATION SCREEN
 		// LAST SCREEN = MANUAL ELEVATION SCREEN (INDEX = 147)
-		indexNumber = 157;
+		index = 157;
 		newPromptArea =
 				"--------------------------------------------------------------------------------\r\n" + 
 				"     ENTER ELEVATION (DEG)                                                      \r\n" + 
 				"                                                                                \r\n" + 
 				"                                                                                \r\n";
-		screenIndex.put(indexNumber, newScreenTemplate(156, true, true, false, true));
+		screenIndex.put(index, newScreenTemplate(156, true, true, false, true));
 		
 		// ENTER RANGE SCREEN
 		// LAST SCREEN = MANUAL RANGE SCREEN (INDEX = 148)
-		indexNumber = 158;
+		index = 158;
 		newPromptArea =
 				"--------------------------------------------------------------------------------\r\n" + 
 				"     ENTER RANGE (KM)                                                           \r\n" + 
 				"                                                                                \r\n" + 
 				"                                                                                \r\n";
-		screenIndex.put(indexNumber, newScreenTemplate(156, true, true, false, true));
+		screenIndex.put(index, newScreenTemplate(156, true, true, false, true));
 		
 		// ENTER RANGE RATE SCREEN
 		// LAST SCREEN = MANUAL RANGE RATE SCREEN (INDEX = 149)
-		indexNumber = 159;
+		index = 159;
 		newPromptArea =
 				"--------------------------------------------------------------------------------\r\n" + 
 				"     ENTER RANGE RATE (M/S)                                                     \r\n" + 
 				"                                                                                \r\n" + 
 				"                                                                                \r\n";
-		screenIndex.put(indexNumber, newScreenTemplate(156, true, true, false, true));
+		screenIndex.put(index, newScreenTemplate(156, true, true, false, true));
 		
 		
         /*
@@ -1965,7 +2113,7 @@ public class Screens {
          */
 		// UPDATE SELECTED SAT SCREEN
 		// LAST SCREEN = UPDATE SAT SCREEN/ UPDATE SCAT SCREEN CONT
-		indexNumber = 160;
+		index = 160;
 		newOptionsArea =
 				"-------------------------------** UNCLASSIFIED **-------------------------------\r\n" + 
 				"   _______________    _______________    _______________    _______________     \r\n" + 
@@ -1981,40 +2129,40 @@ public class Screens {
 		associatedScreens.add(171);  // NOT REAL VALUE JUST FOR TEST
 		associatedScreens.add(172);  // NOT REAL VALUE JUST FOR TEST
 		associatedScreens.add(173);  // NOT REAL VALUE JUST FOR TEST
-		screenIndex.put(indexNumber, newScreenTemplate(136, true, true, true, false));
-		associatedScreensIndex.put(indexNumber, associatedScreens);
+		screenIndex.put(index, newScreenTemplate(136, true, true, true, false));
+		associatedScreensIndex.put(index, associatedScreens);
 		
-		indexNumber = 161;
-		screenIndex.put(indexNumber, newScreenTemplate(160, true, true, true, true));
-		associatedScreensIndex.put(indexNumber, associatedScreens);
-		indexNumber = 162;
-		screenIndex.put(indexNumber, newScreenTemplate(160, true, true, true, true));
-		associatedScreensIndex.put(indexNumber, associatedScreens);
-		indexNumber = 163;
-		screenIndex.put(indexNumber, newScreenTemplate(160, true, true, true, true));
-		associatedScreensIndex.put(indexNumber, associatedScreens);
-		indexNumber = 164;
-		screenIndex.put(indexNumber, newScreenTemplate(160, true, true, true, true));
-		associatedScreensIndex.put(indexNumber, associatedScreens);
-		indexNumber = 165;
-		screenIndex.put(indexNumber, newScreenTemplate(160, true, true, true, true));
-		associatedScreensIndex.put(indexNumber, associatedScreens);
-		indexNumber = 166;
-		screenIndex.put(indexNumber, newScreenTemplate(160, true, true, true, true));
-		associatedScreensIndex.put(indexNumber, associatedScreens);
-		indexNumber = 167;
-		screenIndex.put(indexNumber, newScreenTemplate(160, true, true, true, true));
-		associatedScreensIndex.put(indexNumber, associatedScreens);
-		indexNumber = 168;
-		screenIndex.put(indexNumber, newScreenTemplate(160, true, true, true, true));
-		associatedScreensIndex.put(indexNumber, associatedScreens);
-		indexNumber = 169;
-		screenIndex.put(indexNumber, newScreenTemplate(160, true, true, true, true));
-		associatedScreensIndex.put(indexNumber, associatedScreens);
+		index = 161;
+		screenIndex.put(index, newScreenTemplate(160, true, true, true, true));
+		associatedScreensIndex.put(index, associatedScreens);
+		index = 162;
+		screenIndex.put(index, newScreenTemplate(160, true, true, true, true));
+		associatedScreensIndex.put(index, associatedScreens);
+		index = 163;
+		screenIndex.put(index, newScreenTemplate(160, true, true, true, true));
+		associatedScreensIndex.put(index, associatedScreens);
+		index = 164;
+		screenIndex.put(index, newScreenTemplate(160, true, true, true, true));
+		associatedScreensIndex.put(index, associatedScreens);
+		index = 165;
+		screenIndex.put(index, newScreenTemplate(160, true, true, true, true));
+		associatedScreensIndex.put(index, associatedScreens);
+		index = 166;
+		screenIndex.put(index, newScreenTemplate(160, true, true, true, true));
+		associatedScreensIndex.put(index, associatedScreens);
+		index = 167;
+		screenIndex.put(index, newScreenTemplate(160, true, true, true, true));
+		associatedScreensIndex.put(index, associatedScreens);
+		index = 168;
+		screenIndex.put(index, newScreenTemplate(160, true, true, true, true));
+		associatedScreensIndex.put(index, associatedScreens);
+		index = 169;
+		screenIndex.put(index, newScreenTemplate(160, true, true, true, true));
+		associatedScreensIndex.put(index, associatedScreens);
 		
 		// UPDATE SAT SCREEN CONT
 		// LAST SCREEN = UPDATE SAT SCREEN
-		indexNumber = 170;  // NOT REAL VALUE JUST FOR TEST
+		index = 170;  // NOT REAL VALUE JUST FOR TEST
 		newOptionsArea =
 				"-------------------------------** UNCLASSIFIED **-------------------------------\r\n" + 
 				"   _______________    _______________    _______________    _______________     \r\n" + 
@@ -2030,12 +2178,12 @@ public class Screens {
 		associatedScreens.add(167);
 		associatedScreens.add(168);
 		associatedScreens.add(169);
-		screenIndex.put(indexNumber, newScreenTemplate(136, true, true, true, false));
-		associatedScreensIndex.put(indexNumber, associatedScreens);
+		screenIndex.put(index, newScreenTemplate(136, true, true, true, false));
+		associatedScreensIndex.put(index, associatedScreens);
 
 		// AUTHORIZE SAT SCREEN
 		// LAST SCREEN = UPDATE SELECTED SAT SCREEN (INDEX = 160)
-		indexNumber = 171;
+		index = 171;
 		newPromptArea =
 				"--------------------------------------------------------------------------------\r\n" + 
 				"     SELECT AUTHORIZATION                                                       \r\n" + 
@@ -2054,12 +2202,12 @@ public class Screens {
 		associatedScreens = new ArrayList<Integer>();
 		associatedScreens.add(180);  // NOT REAL VALUE JUST FOR TEST
 		associatedScreens.add(181);  // NOT REAL VALUE JUST FOR TEST
-		screenIndex.put(indexNumber, newScreenTemplate(136, true, true, false, false));
-		associatedScreensIndex.put(indexNumber, associatedScreens);
+		screenIndex.put(index, newScreenTemplate(136, true, true, false, false));
+		associatedScreensIndex.put(index, associatedScreens);
 		
 		// REQUEST EPHEMERIS SCREEN
 		// LAST SCREEN = UPDATE SELECTED SAT SCREEN
-		indexNumber = 172;
+		index = 172;
 		newPromptArea =
 				"--------------------------------------------------------------------------------\r\n" + 
 				"     VERIFY TO REQUEST NEW EPHEMERIS                                            \r\n" + 
@@ -2075,11 +2223,11 @@ public class Screens {
 				"  ¦               ¦  ¦               ¦  ¦               ¦  ¦               ¦    \r\n" + 
 				"  ¦               ¦  ¦               ¦  ¦               ¦  ¦               ¦    \r\n" + 
 				"   ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯    ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯    ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯    ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯     \r\n";
-		screenIndex.put(indexNumber, newScreenTemplate(136, true, true, false, false));
+		screenIndex.put(index, newScreenTemplate(136, true, true, false, false));
 		
 		// VERIFIED NEW EPHEMERIS SCREEN
 		// LAST SCREEN = REQUEST EPHEMERIS SCREEN (INDEX = 172)
-		indexNumber = 174;
+		index = 174;
 		newPromptArea =
 				"--------------------------------------------------------------------------------\r\n" + 
 				"     SELECT OPTION                                                              \r\n" + 
@@ -2090,12 +2238,12 @@ public class Screens {
 		associatedScreens.add(171);
 		associatedScreens.add(172);
 		associatedScreens.add(173);
-		screenIndex.put(indexNumber, newScreenTemplate(160, true, true, false, true));
-		associatedScreensIndex.put(indexNumber, associatedScreens);
+		screenIndex.put(index, newScreenTemplate(160, true, true, false, true));
+		associatedScreensIndex.put(index, associatedScreens);
 		
 		// NOT LOGGED ON REQUEST EPHEMERIS SCREEN
 		// LAST SCREEN = REQUEST EPHEMERIS SCREEN (INDEX = 172)
-		indexNumber = 175;
+		index = 175;
 		newPromptArea =
 				"--------------------------------------------------------------------------------\r\n" + 
 				"     SELECT OPTION                                                              \r\n" + 
@@ -2106,25 +2254,25 @@ public class Screens {
 		associatedScreens.add(171);
 		associatedScreens.add(172);
 		associatedScreens.add(173);
-		screenIndex.put(indexNumber, newScreenTemplate(160, true, true, false, true));
-		associatedScreensIndex.put(indexNumber, associatedScreens);
+		screenIndex.put(index, newScreenTemplate(160, true, true, false, true));
+		associatedScreensIndex.put(index, associatedScreens);
 		
 		// SAT AUTHORIZED SCREEN
 		// LAST SCREEN = AUTHORIZE SAT SCREEN (163)
-		indexNumber = 180;
-		screenIndex.put(indexNumber, newScreenTemplate(160, true, true, true, true));
-		associatedScreensIndex.put(indexNumber, associatedScreens);
+		index = 180;
+		screenIndex.put(index, newScreenTemplate(160, true, true, true, true));
+		associatedScreensIndex.put(index, associatedScreens);
 		
 		// SAT NOT AUTHORIZED SCEEN
 		// LAST SCREEN = AUTHORIZE SAT SCREEN (163)
-		indexNumber = 181;
-		screenIndex.put(indexNumber, newScreenTemplate(160, true, true, true, true));
-		associatedScreensIndex.put(indexNumber, associatedScreens);
+		index = 181;
+		screenIndex.put(index, newScreenTemplate(160, true, true, true, true));
+		associatedScreensIndex.put(index, associatedScreens);
 		
 		// ACQ MODES 182 -183
 		// LAST SCREEN = ACQ MODE SCREEN (INDEX = 150)
 		for (int i = 182; i < 184; i++) {
-			indexNumber = i;
+			index = i;
 			associatedScreens = new ArrayList<Integer>();
 			associatedScreens.add(184);
 			associatedScreens.add(146);
@@ -2133,116 +2281,755 @@ public class Screens {
 			associatedScreens.add(149);
 			associatedScreens.add(150);
 			associatedScreens.add(30);
-			screenIndex.put(indexNumber, newScreenTemplate(145, true, true, true, true));
-			associatedScreensIndex.put(indexNumber, associatedScreens);
+			screenIndex.put(index, newScreenTemplate(145, true, true, true, true));
+			associatedScreensIndex.put(index, associatedScreens);
 		}
-		
 		
 		// SAVE MANUAL POINTING DATA CHANGES SCREEN
 		// LAST SCREEN = CHANGE PARAMETERS SCREEN (INDEX = 145)
-		indexNumber = 184;
+		index = 184;
 		associatedScreens = new ArrayList<Integer>();
 		associatedScreens.add(4);
 		associatedScreens.add(145);
-		screenIndex.put(indexNumber, newScreenTemplate(30, true, true, true, true));
-		associatedScreensIndex.put(indexNumber, associatedScreens);
+		screenIndex.put(index, newScreenTemplate(30, true, true, true, true));
+		associatedScreensIndex.put(index, associatedScreens);
 		
 		// INVALID POINTING DATA ENTRIES  185 - 188
-		indexNumber = 185;
+		index = 185;
 		newPromptArea =
 				"--------------------------------------------------------------------------------\r\n" + 
 				"     ENTER AZIMUTH (DEG)                                                        \r\n" + 
 				"                                                                                \r\n" + 
 				"                                 INVALID ENTRY                                  \r\n";
-		screenIndex.put(indexNumber, newScreenTemplate(156, true, true, false, true));
+		screenIndex.put(index, newScreenTemplate(156, true, true, false, true));
 		
-		indexNumber = 186;
+		index = 186;
 		newPromptArea =
 				"--------------------------------------------------------------------------------\r\n" + 
 				"     ENTER ELEVATION (DEG)                                                      \r\n" + 
 				"                                                                                \r\n" + 
 				"                                 INVALID ENTRY                                  \r\n";
-		screenIndex.put(indexNumber, newScreenTemplate(157, true, true, false, true));
+		screenIndex.put(index, newScreenTemplate(157, true, true, false, true));
 		
-		indexNumber = 187;
+		index = 187;
 		newPromptArea =
 				"--------------------------------------------------------------------------------\r\n" + 
 				"     ENTER RANGE (KM)                                                           \r\n" + 
 				"                                                                                \r\n" + 
 				"                                 INVALID ENTRY                                  \r\n";
-		screenIndex.put(indexNumber, newScreenTemplate(158, true, true, false, true));
+		screenIndex.put(index, newScreenTemplate(158, true, true, false, true));
 		
-		indexNumber = 188;
+		index = 188;
 		newPromptArea =
 				"--------------------------------------------------------------------------------\r\n" + 
 				"     ENTER RANGE RATE (M/S)                                                     \r\n" + 
 				"                                                                                \r\n" + 
 				"                                 INVALID ENTRY                                  \r\n";
-		screenIndex.put(indexNumber, newScreenTemplate(159, true, true, false, true));
+		screenIndex.put(index, newScreenTemplate(159, true, true, false, true));
 		
+		// 189 & 190 saved FOR MANUAL POINTING DATA SCREENS
+	
 		// INVALID NAV DATA SCREENS 201 - 206
-		indexNumber = 201;
+		index = 201;
 		newPromptArea = 
 				"--------------------------------------------------------------------------------\r\n" + 
 				"     ENTER LATITUDE (DEG MIN N/S)                                               \r\n" + 
 				"                                                                                \r\n" + 
 				"                                 INVALID ENTRY                                  \r\n";
-		screenIndex.put(indexNumber, newScreenTemplate(71, true, true, false, true));
+		screenIndex.put(index, newScreenTemplate(71, true, true, false, true));
 		
-		indexNumber = 202;
+		index = 202;
 		newPromptArea = 
 				"--------------------------------------------------------------------------------\r\n" + 
 				"     ENTER LONGITUDE (DEG MIN E/W)                                              \r\n" + 
 				"                                                                                \r\n" + 
 				"                                 INVALID ENTRY                                  \r\n";
-		screenIndex.put(indexNumber, newScreenTemplate(72, true, true, false, true));
+		screenIndex.put(index, newScreenTemplate(72, true, true, false, true));
 		
-		indexNumber = 203;
+		index = 203;
 		newPromptArea = 
 				"--------------------------------------------------------------------------------\r\n" + 
 				"     ENTER ALTITUDE (FT)                                                        \r\n" + 
 				"                                                                                \r\n" + 
 				"                                 INVALID ENTRY                                  \r\n";
-		screenIndex.put(indexNumber, newScreenTemplate(73, true, true, false, true));
+		screenIndex.put(index, newScreenTemplate(73, true, true, false, true));
 		
-		indexNumber = 204;
+		index = 204;
 		newPromptArea = 
 				"--------------------------------------------------------------------------------\r\n" + 
 				"     ENTER HEADING (DEG)                                                        \r\n" + 
 				"                                                                                \r\n" + 
 				"                                 INVALID ENTRY                                  \r\n";
-		screenIndex.put(indexNumber, newScreenTemplate(77, true, true, false, true));
+		screenIndex.put(index, newScreenTemplate(77, true, true, false, true));
 		
-		indexNumber = 205;
+		index = 205;
 		newPromptArea = 
 				"--------------------------------------------------------------------------------\r\n" + 
 				"     ENTER PITCH (DEG)                                                          \r\n" + 
 				"                                                                                \r\n" + 
 				"                                 INVALID ENTRY                                  \r\n";
-		screenIndex.put(indexNumber, newScreenTemplate(78, true, true, false, true));
+		screenIndex.put(index, newScreenTemplate(78, true, true, false, true));
 		
-		indexNumber = 206;
+		index = 206;
 		newPromptArea = 
 				"--------------------------------------------------------------------------------\r\n" + 
 				"     ENTER ROLL (DEG)                                                           \r\n" + 
 				"                                                                                \r\n" + 
 				"                                 INVALID ENTRY                                  \r\n";
-		screenIndex.put(indexNumber, newScreenTemplate(79, true, true, false, true));
+		screenIndex.put(index, newScreenTemplate(79, true, true, false, true));
+		
+		/*
+		 * COMSEC SCREENS
+		 */
+		
+		// COMSEC OTAR SCREEN
+		// LAST SCREEN = COMSEC SCREEN (INDEX = 81)
+		index = 207;
+		newPromptArea = 
+				"--------------------------------------------------------------------------------\r\n" + 
+				"     SELECT OTAR OPTION                                                         \r\n" + 
+				"                                                                                \r\n" + 
+				"                                                                                \r\n";
+        newOptionsArea =
+	            "----------------------------------** SECRET **----------------------------------\r\n" + 
+	            "   _______________    _______________    _______________    _______________     \r\n" + 
+	            "  ¦     EXIT      ¦  ¦  FUTURE KEYS  ¦  ¦SINGLE CURRENT ¦  ¦ SINGLE FUTURE ¦    \r\n" + 
+	            "  ¦               ¦  ¦               ¦  ¦               ¦  ¦               ¦    \r\n" + 
+	            "   ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯    ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯    ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯    ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯     \r\n" + 
+	            "   _______________    _______________    _______________    _______________     \r\n" +  
+	            "  ¦               ¦  ¦               ¦  ¦               ¦  ¦               ¦    \r\n" + 
+	            "  ¦               ¦  ¦               ¦  ¦               ¦  ¦               ¦    \r\n" + 
+	            "   ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯    ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯    ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯    ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯     \r\n";
+		associatedScreens = new ArrayList<Integer>();
+		associatedScreens.add(81);
+		associatedScreens.add(210);
+		associatedScreens.add(211);
+		associatedScreens.add(212);
+		screenIndex.put(index, newScreenTemplate(81, true, true, false, false));
+        associatedScreensIndex.put(index, associatedScreens);
+        
+        // COMPROMISE ROLLOVER SCREEN
+        // LAST SCREEN = COMSEC SCREEN (INDEX = 81)
+        index = 208;
+		newPromptArea = 
+				"--------------------------------------------------------------------------------\r\n" + 
+				"     VERIFY TO DO COMPROMISE ROLLOVER                                           \r\n" + 
+				"                                                                                \r\n" + 
+				"                                                                                \r\n";
+        newOptionsArea =
+	            "----------------------------------** SECRET **----------------------------------\r\n" + 
+	            "   _______________    _______________    _______________    _______________     \r\n" + 
+	            "  ¦               ¦  ¦               ¦  ¦               ¦  ¦               ¦    \r\n" + 
+	            "  ¦               ¦  ¦               ¦  ¦               ¦  ¦               ¦    \r\n" + 
+	            "   ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯    ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯    ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯    ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯     \r\n" + 
+	            "   _______________    _______________    _______________    _______________     \r\n" +  
+	            "  ¦               ¦  ¦               ¦  ¦               ¦  ¦               ¦    \r\n" + 
+	            "  ¦               ¦  ¦               ¦  ¦               ¦  ¦               ¦    \r\n" + 
+	            "   ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯    ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯    ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯    ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯     \r\n";
+        screenIndex.put(index, newScreenTemplate(81, true, true, false, false));
+        
+        // UPDATE KEYS SCREEN
+        // LAST SCREEN = COMSEC SCREEN (INDEX = 81)
+        index = 209;
+		newPromptArea = 
+				"--------------------------------------------------------------------------------\r\n" + 
+				"     ENTER KEY CONSTELLATION AND ID (CCC DDD)                                   \r\n" + 
+				"                                                                                \r\n" + 
+				"                                                                                \r\n";
+		screenIndex.put(index, newScreenTemplate(208, true, true, false, true));
+        
+        // VERIFY COMSEC FUTURE KEYS SCREEN
+        // LAST SCREEN = COMSEC OTAR SCREEN (INDEX = 207)
+        index = 210;
+		newPromptArea = 
+				"--------------------------------------------------------------------------------\r\n" + 
+				"     VERIFY TO REQUEST OTAR                                                     \r\n" + 
+				"                                                                                \r\n" + 
+				"                                                                                \r\n";
+        newOptionsArea =
+	            "----------------------------------** SECRET **----------------------------------\r\n" + 
+	            "   _______________    _______________    _______________    _______________     \r\n" + 
+	            "  ¦               ¦  ¦               ¦  ¦               ¦  ¦               ¦    \r\n" + 
+	            "  ¦               ¦  ¦               ¦  ¦               ¦  ¦               ¦    \r\n" + 
+	            "   ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯    ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯    ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯    ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯     \r\n" + 
+	            "   _______________    _______________    _______________    _______________     \r\n" +  
+	            "  ¦               ¦  ¦               ¦  ¦               ¦  ¦               ¦    \r\n" + 
+	            "  ¦               ¦  ¦               ¦  ¦               ¦  ¦               ¦    \r\n" + 
+	            "   ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯    ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯    ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯    ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯     \r\n";
+        screenIndex.put(index, newScreenTemplate(207, true, true, false, false));
+        
+        // COMSEC SINGLE CURRENT SCREEN
+        // LAST SCREEN = COMSEC OTAR SCREEN (INDEX = 207)
+        index = 211;
+		newPromptArea = 
+				"--------------------------------------------------------------------------------\r\n" + 
+				"     ENTER KEY ID                                                               \r\n" + 
+				"                                                                                \r\n" + 
+				"                                                                                \r\n";
+		screenIndex.put(index, newScreenTemplate(210, true, true, false, true));
+		
+		// COMSEC SINGLE FUTURE SCREEN
+		// LAST SCREEN = COMSEC OTAR SCREEN (INDEX = 207)
+		index = 212;
+		screenIndex.put(index, newScreenTemplate(211, true, true, true, true));
+		
+		// COMSEC SINGLE CURRENT INVALID ENTRY SCREEN
+		// LAST SCREEN =  COMSEC SINGLE CURRENT SCREEN (INDEX = 211) or COMSEC SINGLE CURRENT INVALID ENTRY SCREEN (INDEX = 213)
+		index = 213;
+		newPromptArea = 
+				"--------------------------------------------------------------------------------\r\n" + 
+				"     ENTER KEY ID                                                               \r\n" + 
+				"                                                                                \r\n" + 
+				"                                 INVALID ENTRY                                  \r\n";
+		screenIndex.put(index, newScreenTemplate(211, true, true, false, true));
+        
+		// COMSEC SINGLE FUTURE INVALID ENTRY SCREEN
+		// LAST SCREEN =  COMSEC SINGLE FUTURE SCREEN (INDEX = 212) or COMSEC SINGLE FUTURE INVALID ENTRY SCREEN (INDEX = 214)
+		index = 214;
+		screenIndex.put(index, newScreenTemplate(213, true, true, true, true));
+        
+		// VERIFY COMSEC SINGLE CURRENT SCREEN
+		// LAST SCREEN = COMSEC SINGLE CURRENT SCREEN (INDEX = 211) or COMSEC SINGLE CURRENT INVALID ENTRY SCREEN (INDEX = 213)
+		index = 215;
+		screenIndex.put(index, newScreenTemplate(210, true, true, true, true));
+		
+		// VERIFY COMSEC SINGLE FUTURE SCREEN
+		// LAST SCREEN = COMSEC SINGLE FUTURE SCREEN (INDEX = 212) or COMSEC SINGLE FUTURE INVALID ENTRY SCREEN (INDEX = 214)
+		index = 216;
+		screenIndex.put(index, newScreenTemplate(210, true, true, true, true));
+		
+		// COMSEC OTAR NOT LOGGED ON SCREEN
+		// LAST SCREEN = COMSEC OTAR SCREEN (INDEX = 207) or COMSEC OTAR NOT LOGGED ON SCREEN (INDEX = 217)
+		index = 217;
+		newPromptArea = 
+				"--------------------------------------------------------------------------------\r\n" + 
+				"     SELECT OTAR OPTION                                                         \r\n" + 
+				"                                                                                \r\n" + 
+				"                                 NOT LOGGED ON                                  \r\n";
+		associatedScreens = new ArrayList<Integer>();
+		associatedScreens.add(81);
+		associatedScreens.add(210);
+		associatedScreens.add(211);
+		associatedScreens.add(212);
+        associatedScreensIndex.put(index, associatedScreens);
+		screenIndex.put(index, newScreenTemplate(207, true, true, false, true));
+		
+		// COMSEC NOT LOGGED ON SCREEN
+		// LAST SCREEN = COMSEC SCREEN (INDEX = 81) or COMSEC NOT LOGGED ON SCREEN (INDEX = 218)
+		index = 218;
+		newPromptArea =
+				"--------------------------------------------------------------------------------\r\n" + 
+				"     SELECT OPTION                                                              \r\n" + 
+				"                                                                                \r\n" + 
+				"                                 NOT LOGGED ON                                  \r\n";
+		associatedScreens = new ArrayList<Integer>();
+		associatedScreens.add(15);
+		associatedScreens.add(207);
+		associatedScreens.add(208);
+		associatedScreens.add(209);
+		screenIndex.put(index, newScreenTemplate(81, true, true, false, true));
+		associatedScreensIndex.put(index, associatedScreens);
+		
+		/*
+		 * LOGON PARAMETER SCREENS
+		 */
+		
+		// C2 ROBUSTNESS SCREEN
+		// LAST SCREEN = LOGON PARAMETERS SCREEN (INDEX = 28)
+		index = 230;
+		newPromptArea = 
+				"--------------------------------------------------------------------------------\r\n" + 
+				"     SELECT LOGON C2 ROBUSTNESS                                                 \r\n" + 
+				"                                                                                \r\n" + 
+				"                                                                                \r\n";
+		newOptionsArea =
+				"-------------------------------** UNCLASSIFIED **-------------------------------\r\n" + 
+				"   _______________    _______________    _______________    _______________     \r\n" + 
+				"  ¦     HHR 8     ¦  ¦    HHR 16     ¦  ¦    HHR 32     ¦  ¦    HHR 256    ¦    \r\n" + 
+				"  ¦               ¦  ¦               ¦  ¦               ¦  ¦               ¦    \r\n" + 
+				"   ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯    ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯    ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯    ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯     \r\n" + 
+				"   _______________    _______________    _______________    _______________     \r\n" +  
+				"  ¦               ¦  ¦               ¦  ¦               ¦  ¦               ¦    \r\n" + 
+				"  ¦               ¦  ¦               ¦  ¦               ¦  ¦               ¦    \r\n" + 
+				"   ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯    ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯    ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯    ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯     \r\n";
+		associatedScreens = new ArrayList<Integer>();
+		associatedScreens.add(234);
+		associatedScreens.add(235);
+		associatedScreens.add(236);
+		associatedScreens.add(237);
+		screenIndex.put(index, newScreenTemplate(28, true, true, false, false));
+		associatedScreensIndex.put(index, associatedScreens);
+		
+		// C2 CYCLE PERIOD SCREEN
+		// LAST SCREEN = LOGON PARAMETERS SCREEN (INDEX = 28) or // C2 ROBUSTNESS SCREEN (INDEX = 230)
+		index = 231;
+		newPromptArea = 
+				"--------------------------------------------------------------------------------\r\n" + 
+				"     SELECT LOGON C2 CYCLE PERIOD                                               \r\n" + 
+				"                                                                                \r\n" + 
+				"                                                                                \r\n";
+		newOptionsArea =
+				"-------------------------------** UNCLASSIFIED **-------------------------------\r\n" + 
+				"   _______________    _______________    _______________    _______________     \r\n" + 
+				"  ¦      ANY      ¦  ¦    0.48       ¦  ¦    0.96       ¦  ¦    1.92       ¦    \r\n" + 
+				"  ¦               ¦  ¦               ¦  ¦               ¦  ¦               ¦    \r\n" + 
+				"   ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯    ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯    ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯    ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯     \r\n" + 
+				"   _______________    _______________    _______________    _______________     \r\n" +  
+				"  ¦    2.40       ¦  ¦    3.84       ¦  ¦    4.80       ¦  ¦ MORE OPTIONS  ¦    \r\n" + 
+				"  ¦               ¦  ¦               ¦  ¦               ¦  ¦               ¦    \r\n" + 
+				"   ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯    ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯    ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯    ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯     \r\n";
+		associatedScreens = new ArrayList<Integer>();
+		associatedScreens.add(238);
+		associatedScreens.add(239);
+		associatedScreens.add(240);
+		associatedScreens.add(241);
+		associatedScreens.add(242);
+		associatedScreens.add(243);
+		associatedScreens.add(244);
+		associatedScreens.add(232);
+		screenIndex.put(index, newScreenTemplate(28, true, true, false, false));
+		associatedScreensIndex.put(index, associatedScreens);
+		
+		// C2 CYCLE PERIOD SCREEN CONT
+		// LAST SCREEN = C2 CYCLE PERIOD SCREEN (INDEX = 231)
+		index = 232;
+		newOptionsArea =
+				"-------------------------------** UNCLASSIFIED **-------------------------------\r\n" + 
+				"   _______________    _______________    _______________    _______________     \r\n" + 
+				"  ¦ PREV OPTIONS  ¦  ¦    7.68       ¦  ¦    9.60       ¦  ¦    19.20      ¦    \r\n" + 
+				"  ¦               ¦  ¦               ¦  ¦               ¦  ¦               ¦    \r\n" + 
+				"   ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯    ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯    ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯    ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯     \r\n" + 
+				"   _______________    _______________    _______________    _______________     \r\n" +  
+				"  ¦    38.40      ¦  ¦               ¦  ¦               ¦  ¦               ¦    \r\n" + 
+				"  ¦               ¦  ¦               ¦  ¦               ¦  ¦               ¦    \r\n" + 
+				"   ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯    ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯    ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯    ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯     \r\n";
+		associatedScreens = new ArrayList<Integer>();
+		associatedScreens.add(231);
+		associatedScreens.add(245);
+		associatedScreens.add(246);
+		associatedScreens.add(247);
+		associatedScreens.add(248);
+		screenIndex.put(index, newScreenTemplate(231, true, true, true, false));
+		associatedScreensIndex.put(index, associatedScreens);
+		
+		// C3 MODE SCREEN
+		// LAST SCREEN = LOGON PARAMETERS SCREEN (INDEX = 28)
+		index = 233;
+		newPromptArea = 
+				"--------------------------------------------------------------------------------\r\n" + 
+				"     SELECT LOGON C3 MODE                                                       \r\n" + 
+				"                                                                                \r\n" + 
+				"                                                                                \r\n";
+		newOptionsArea =
+				"-------------------------------** UNCLASSIFIED **-------------------------------\r\n" + 
+				"   _______________    _______________    _______________    _______________     \r\n" + 
+				"  ¦     MOST      ¦  ¦    MEDIUM     ¦  ¦     LEAST     ¦  ¦    BOMBER     ¦    \r\n" + 
+				"  ¦               ¦  ¦               ¦  ¦               ¦  ¦               ¦    \r\n" + 
+				"   ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯    ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯    ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯    ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯     \r\n" + 
+				"   _______________    _______________    _______________    _______________     \r\n" +  
+				"  ¦     AUTO      ¦  ¦               ¦  ¦               ¦  ¦               ¦    \r\n" + 
+				"  ¦               ¦  ¦               ¦  ¦               ¦  ¦               ¦    \r\n" + 
+				"   ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯    ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯    ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯    ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯     \r\n";
+		associatedScreens = new ArrayList<Integer>();
+		associatedScreens.add(249);
+		associatedScreens.add(250);
+		associatedScreens.add(251);
+		associatedScreens.add(252);
+		associatedScreens.add(253);
+		screenIndex.put(index, newScreenTemplate(28, true, true, false, false));
+		associatedScreensIndex.put(index, associatedScreens);
+		
+		// C2 ROBUSTNESS OPTIONS 234-237
+        for (int i = 234; i < 238; i++) {
+        	index = i;
+    		associatedScreens = new ArrayList<Integer>();
+    		associatedScreens.add(238);
+    		associatedScreens.add(239);
+    		associatedScreens.add(240);
+    		associatedScreens.add(241);
+    		associatedScreens.add(242);
+    		associatedScreens.add(243);
+    		associatedScreens.add(244);
+    		associatedScreens.add(232);
+    		screenIndex.put(index, newScreenTemplate(231, true, true, true, true));
+    		associatedScreensIndex.put(index, associatedScreens);
+        }
+		
+        // LOGON C2 CYCLE PERIOD OPTIONS 238-248
+		// VERIFY C2 CYCLE PERIOD SCREEN
+        // LAST SCREEN = C2 CYCLE PERIOD SCREEN (INDEX = 231) or C2 CYCLE PERIOD CONT SCREEN (INDEX = 232)
+        index = 238;
+		newPromptArea = 
+				"--------------------------------------------------------------------------------\r\n" + 
+				"     VERIFY TO CHANGE C2 LOGON SLOT                                             \r\n" + 
+				"                                                                                \r\n" + 
+				"                                                                                \r\n";
+		newOptionsArea =
+				"-------------------------------** UNCLASSIFIED **-------------------------------\r\n" + 
+				"   _______________    _______________    _______________    _______________     \r\n" + 
+				"  ¦               ¦  ¦               ¦  ¦               ¦  ¦               ¦    \r\n" + 
+				"  ¦               ¦  ¦               ¦  ¦               ¦  ¦               ¦    \r\n" + 
+				"   ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯    ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯    ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯    ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯     \r\n" + 
+				"   _______________    _______________    _______________    _______________     \r\n" +  
+				"  ¦               ¦  ¦               ¦  ¦               ¦  ¦               ¦    \r\n" + 
+				"  ¦               ¦  ¦               ¦  ¦               ¦  ¦               ¦    \r\n" + 
+				"   ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯    ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯    ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯    ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯     \r\n";
+		screenIndex.put(index, newScreenTemplate(231, true, true, false, false));
+        for (int i = 239; i < 249; i++) {
+        	index = i;
+    		screenIndex.put(index, newScreenTemplate(238, true, true, true, true));
+        }
+		
+        // LOGON C3 MODE OPTIONS 249-253
+		// VERIFY C3 MODE SCREEN
+        // LAST SCREEN = C2 CYCLE PERIOD SCREEN (INDEX = 231) or C2 CYCLE PERIOD CONT SCREEN (INDEX = 232)
+        index = 249;
+		newPromptArea = 
+				"--------------------------------------------------------------------------------\r\n" + 
+				"     VERIFY TO CHANGE C3 MODE                                                   \r\n" + 
+				"                                                                                \r\n" + 
+				"                                                                                \r\n";
+		screenIndex.put(index, newScreenTemplate(238, true, true, false, true));
+        for (int i = 250; i < 254; i++) {
+        	index = i;
+    		screenIndex.put(index, newScreenTemplate(249, true, true, true, true));
+        }
+		
+		// SWITCHES SCREEN
+		// LAST SCREEN = EHF ACQ/LOGON SCREEN CONT (INEDX = 31)
+        index = 254;
+		newPromptArea = 
+				"--------------------------------------------------------------------------------\r\n" + 
+				"     SELECT SWITCH                                                              \r\n" + 
+				"                                                                                \r\n" + 
+				"                                                                                \r\n";
+		newOptionsArea =
+				"-------------------------------** UNCLASSIFIED **-------------------------------\r\n" + 
+				"   _______________    _______________    _______________    _______________     \r\n" + 
+				"  ¦     EXIT      ¦  ¦XFER IF BLOCKED¦  ¦ ACQ ON DETECT ¦  ¦  STRESS MODE  ¦    \r\n" + 
+				"  ¦               ¦  ¦               ¦  ¦               ¦  ¦               ¦    \r\n" + 
+				"   ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯    ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯    ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯    ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯     \r\n" + 
+				"   _______________    _______________    _______________    _______________     \r\n" +  
+				"  ¦REPEAT JAM MODE¦  ¦ RECEIVE ONLY  ¦  ¦  SCINT MODE   ¦  ¦               ¦    \r\n" + 
+				"  ¦               ¦  ¦               ¦  ¦               ¦  ¦               ¦    \r\n" + 
+				"   ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯    ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯    ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯    ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯     \r\n";
+		associatedScreens = new ArrayList<Integer>();
+		associatedScreens.add(31);
+		associatedScreens.add(255);
+		associatedScreens.add(256);
+		associatedScreens.add(257);
+		associatedScreens.add(258);
+		associatedScreens.add(259);
+		associatedScreens.add(261);
+		screenIndex.put(index, newScreenTemplate(31, true, true, false, false));
+		associatedScreensIndex.put(index, associatedScreens);
+		
+		// XFER IF BLOCKED SCREEN
+		// LAST SCREEN = SWITCHES SCREEN (INDEX = 254)
+		index = 255;
+		newPromptArea = 
+				"--------------------------------------------------------------------------------\r\n" + 
+				"     SAT TRANSFER IF BLOCKED                                                    \r\n" + 
+				"                                                                                \r\n" + 
+				"                                                                                \r\n";
+		newOptionsArea =
+				"-------------------------------** UNCLASSIFIED **-------------------------------\r\n" + 
+				"   _______________    _______________    _______________    _______________     \r\n" + 
+				"  ¦      ON       ¦  ¦      OFF      ¦  ¦               ¦  ¦               ¦    \r\n" + 
+				"  ¦               ¦  ¦               ¦  ¦               ¦  ¦               ¦    \r\n" + 
+				"   ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯    ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯    ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯    ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯     \r\n" + 
+				"   _______________    _______________    _______________    _______________     \r\n" +  
+				"  ¦               ¦  ¦               ¦  ¦               ¦  ¦               ¦    \r\n" + 
+				"  ¦               ¦  ¦               ¦  ¦               ¦  ¦               ¦    \r\n" + 
+				"   ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯    ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯    ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯    ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯     \r\n";
+		associatedScreens = new ArrayList<Integer>();
+		associatedScreens.add(262);
+		associatedScreens.add(263);
+		screenIndex.put(index, newScreenTemplate(254, true, true, false, false));
+		associatedScreensIndex.put(index, associatedScreens);
+		
+		// ACQ ON DETECT SCREEN
+		// LAST SCREEN = SWITCHES SCREEN (INDEX = 254)
+		index = 256;
+		newPromptArea = 
+				"--------------------------------------------------------------------------------\r\n" + 
+				"     ACQ ON DETECTION                                                           \r\n" + 
+				"                                                                                \r\n" + 
+				"                                                                                \r\n";
+		associatedScreens = new ArrayList<Integer>();
+		associatedScreens.add(264);
+		associatedScreens.add(265);
+		screenIndex.put(index, newScreenTemplate(255, true, true, false, true));
+		associatedScreensIndex.put(index, associatedScreens);
+		
+		// STRESS MODE SCREEN
+		// LAST SCREEN = SWITCHES SCREEN (INDEX = 254)
+		index = 257;
+		newPromptArea = 
+				"--------------------------------------------------------------------------------\r\n" + 
+				"     STRESS MODE                                                                \r\n" + 
+				"                                                                                \r\n" + 
+				"                                                                                \r\n";
+		associatedScreens = new ArrayList<Integer>();
+		associatedScreens.add(266);
+		associatedScreens.add(267);
+		screenIndex.put(index, newScreenTemplate(255, true, true, false, true));
+		associatedScreensIndex.put(index, associatedScreens);
+		
+		// REPEAT JAM MODE SCREEN
+		// LAST SCREEN = SWITCHES SCREEN (INDEX = 254)
+		index = 258;
+		newPromptArea = 
+				"--------------------------------------------------------------------------------\r\n" + 
+				"     REPEAT JAM MODE                                                            \r\n" + 
+				"                                                                                \r\n" + 
+				"                                                                                \r\n";
+		associatedScreens = new ArrayList<Integer>();
+		associatedScreens.add(268);
+		associatedScreens.add(269);
+		screenIndex.put(index, newScreenTemplate(255, true, true, false, true));
+		associatedScreensIndex.put(index, associatedScreens);
+		
+		// RECEIVE ONLY MODE SCREEN
+		// LAST SCREEN = SWITCHES SCREEN (INDEX = 254)
+		index = 259;
+		newPromptArea = 
+				"--------------------------------------------------------------------------------\r\n" + 
+				"     RECEIVE ONLY MODE                                                          \r\n" + 
+				"                                                                                \r\n" + 
+				"                                                                                \r\n";
+		associatedScreens = new ArrayList<Integer>();
+		associatedScreens.add(270);
+		associatedScreens.add(271);
+		screenIndex.put(index, newScreenTemplate(255, true, true, false, true));
+		associatedScreensIndex.put(index, associatedScreens);
+		
+		// RECEIVE ONLY MODE NOT LOGGED OFF SCREEN
+		// LAST SCREEN = SWITCHES SCREEN (INDEX = 254) or RECEIVE ONLY MODE NOT LOGGED OFF SCREEN (INDEX = 260)
+		index = 260;
+		newPromptArea = 
+				"--------------------------------------------------------------------------------\r\n" + 
+				"     SELECT SWITCH                                                              \r\n" + 
+				"                                                                                \r\n" + 
+				"                                 NOT LOGGED OFF                                 \r\n";
+		associatedScreens = new ArrayList<Integer>();
+		associatedScreens.add(31);
+		associatedScreens.add(255);
+		associatedScreens.add(256);
+		associatedScreens.add(257);
+		associatedScreens.add(258);
+		associatedScreens.add(259);
+		associatedScreens.add(261);
+		screenIndex.put(index, newScreenTemplate(254, true, true, false, true));
+		associatedScreensIndex.put(index, associatedScreens);
+		
+		// SCINT MODE SCREEN
+		// LAST SCREEN = SWITCHES SCREEN (INDEX = 254)
+		index = 261;
+		newPromptArea = 
+				"--------------------------------------------------------------------------------\r\n" + 
+				"     SCINTILLATION MODE                                                         \r\n" + 
+				"                                                                                \r\n" + 
+				"                                                                                \r\n";
+		newOptionsArea =
+				"-------------------------------** UNCLASSIFIED **-------------------------------\r\n" + 
+				"   _______________    _______________    _______________    _______________     \r\n" + 
+				"  ¦   MANUAL ON   ¦  ¦     AUTO      ¦  ¦               ¦  ¦               ¦    \r\n" + 
+				"  ¦               ¦  ¦               ¦  ¦               ¦  ¦               ¦    \r\n" + 
+				"   ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯    ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯    ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯    ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯     \r\n" + 
+				"   _______________    _______________    _______________    _______________     \r\n" +  
+				"  ¦               ¦  ¦               ¦  ¦               ¦  ¦               ¦    \r\n" + 
+				"  ¦               ¦  ¦               ¦  ¦               ¦  ¦               ¦    \r\n" + 
+				"   ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯    ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯    ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯    ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯     \r\n";
+		associatedScreens = new ArrayList<Integer>();
+		associatedScreens.add(272);
+		associatedScreens.add(273);
+		screenIndex.put(index, newScreenTemplate(254, true, true, false, false));
+		associatedScreensIndex.put(index, associatedScreens);
+		
+		// 262 - 273 SWITCHES OPTIONS
+		for (int i = 262; i < 274; i++) {
+			index = i;
+			associatedScreens = new ArrayList<Integer>();
+			associatedScreens.add(31);
+			associatedScreens.add(255);
+			associatedScreens.add(256);
+			associatedScreens.add(257);
+			associatedScreens.add(258);
+			associatedScreens.add(259);
+			associatedScreens.add(261);
+			screenIndex.put(index, newScreenTemplate(254, true, true, true, true));
+			associatedScreensIndex.put(index, associatedScreens);
+		}
+		
+		// AGILE BEAM STATUS SCREEN
+		// LAST SCREEN = EHF ACQ/LOGON SCREEN CONT (INDEX = 31)
+		index = 274;
+		newMainArea =
+				"MAIN:EHF ACQ/TRACK:AGILES-------------------------------------------------------\r\n" + 
+				"                                                                                \r\n" + 
+				"                                                                                \r\n" + 
+				"                                                                                \r\n" + 
+				"   LOGON BEAM    SB                                                             \r\n" + 
+				"                                                                                \r\n" + 
+				"   CURR AG BEAM               CURR BEST AG BEAM           BEST AG BEAM AT TT/2  \r\n" + 
+				"                                                                                \r\n" + 
+				"       34                            34                            34           \r\n" +
+				"                                                                                \r\n" +
+				"   CURR AG RVL ESTSNR        BEAM TRANSITION TIME        BEAM DETERMINE METHOD  \r\n" + 
+				"                                                                                \r\n" +
+				"         40.0 dB                     54 SEC                      SLRSL          \r\n" +
+				"                                                                                \r\n" + 
+				"   EPH PREDICTED BEST FUTURE AG BEAMS        34      17      18                 \r\n" + 
+				"                                                                                \r\n" + 
+				"                                                                                \r\n" +
+				"                        ADJ AGILE BEAM CROSSOVER TIME                           \r\n" + 
+				"                                                                                \r\n" + 
+				"   AG BEAM     17         18         33         35                              \r\n" + 
+				"                                                                                \r\n" + 
+				"   TIME        011200     011200     011200     011200                          \r\n" + 
+				"                                                                                \r\n" +
+				"                                                                                \r\n" + 
+				"   SERVICES USING AG BEAM     0                                                 \r\n" + 
+				"                                                                                \r\n" + 
+				"   SERVICES ON CURR AG BEAM   0                                                 \r\n" + 
+				"                                                                                \r\n" + 
+				"                                                                                \r\n" + 
+				"                                                                                \r\n" + 
+				"                                                                                \r\n";
+		newPromptArea = 
+				"--------------------------------------------------------------------------------\r\n" + 
+				"     SELECT OPTION TO LEAVE DISPLAY                                             \r\n" + 
+				"                                                                                \r\n" + 
+				"                                                                                \r\n";
+		newOptionsArea = 
+				"----------------------------------** SECRET **----------------------------------\r\n" + 
+				"   _______________    _______________    _______________    _______________     \r\n" + 
+				"  ¦ EXIT DISPLAY  ¦  ¦               ¦  ¦               ¦  ¦               ¦    \r\n" + 
+				"  ¦               ¦  ¦               ¦  ¦               ¦  ¦               ¦    \r\n" + 
+				"   ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯    ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯    ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯    ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯     \r\n" + 
+				"   _______________    _______________    _______________    _______________     \r\n" +  
+				"  ¦               ¦  ¦               ¦  ¦               ¦  ¦               ¦    \r\n" + 
+				"  ¦               ¦  ¦               ¦  ¦               ¦  ¦               ¦    \r\n" + 
+				"   ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯    ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯    ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯    ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯     \r\n";
+		associatedScreens = new ArrayList<Integer>();
+		associatedScreens.add(31);
+		screenIndex.put(index, newScreenTemplate(3, true, false, false, false));
+		associatedScreensIndex.put(index, associatedScreens);
+		
+		// CHANGE STATUS SCREEN
+		// LAST SCREEN = DATA RECORDING SCREEN (INDEX = 20)
+		index = 275;
+		newOptionsArea =
+				"-------------------------------** UNCLASSIFIED **-------------------------------\r\n" + 
+				"   _______________    _______________    _______________    _______________     \r\n" + 
+				"  ¦     EXIT      ¦  ¦TOGGLE CATEGORY¦  ¦  DISABLE ALL  ¦  ¦               ¦    \r\n" + 
+				"  ¦               ¦  ¦               ¦  ¦               ¦  ¦               ¦    \r\n" + 
+				"   ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯    ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯    ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯    ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯     \r\n" + 
+				"   _______________    _______________    _______________    _______________     \r\n" +  
+				"  ¦               ¦  ¦               ¦  ¦               ¦  ¦               ¦    \r\n" + 
+				"  ¦               ¦  ¦               ¦  ¦               ¦  ¦               ¦    \r\n" + 
+				"   ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯    ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯    ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯    ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯     \r\n";
+		associatedScreens = new ArrayList<Integer>();
+		associatedScreens.add(20);
+		associatedScreens.add(277);
+		associatedScreens.add(279);
+		screenIndex.put(index, newScreenTemplate(20, true, true, true, false));
+		associatedScreensIndex.put(index, associatedScreens);
+		
+		// CHANGE SETUP SCREEN
+		// LAST SCREEN = DATA RECORDING SCREEN (INDEX = 20)
+		index = 276;
+		newPromptArea = 
+				"--------------------------------------------------------------------------------\r\n" + 
+				"     ENTER CATEGORY NUM                                                         \r\n" + 
+				"                                                                                \r\n" + 
+				"                                                                                \r\n";
+		newOptionsArea =
+				"-------------------------------** UNCLASSIFIED **-------------------------------\r\n" + 
+				"   _______________    _______________    _______________    _______________     \r\n" + 
+				"  ¦               ¦  ¦               ¦  ¦               ¦  ¦               ¦    \r\n" + 
+				"  ¦               ¦  ¦               ¦  ¦               ¦  ¦               ¦    \r\n" + 
+				"   ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯    ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯    ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯    ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯     \r\n" + 
+				"   _______________    _______________    _______________    _______________     \r\n" +  
+				"  ¦               ¦  ¦               ¦  ¦               ¦  ¦               ¦    \r\n" + 
+				"  ¦               ¦  ¦               ¦  ¦               ¦  ¦               ¦    \r\n" + 
+				"   ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯    ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯    ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯    ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯     \r\n";
+		screenIndex.put(index, newScreenTemplate(275, true, true, false, false));
+		
+		// TOGGLE CATEGORY SCREEN
+		// LAST SCREEN = CHANGE STATUS SCREEN (INDEX = 275)
+		index = 277;
+		screenIndex.put(index, newScreenTemplate(276, true, true, true, true));
+		
+		// TOGGLE CATEGORY INVALID ENTRY SCREEN
+		// LAST SCREEN = TOGGLE CATEGORY SCREEN (INDEX = 277) or TOGGLE CATEGORY INVALID ENTRY SCREEN (INDEX = 278)
+		index = 278;
+		newPromptArea = 
+				"--------------------------------------------------------------------------------\r\n" + 
+				"     ENTER CATEGORY NUM                                                         \r\n" + 
+				"                                                                                \r\n" + 
+				"                                 INVALID ENTRY                                  \r\n";
+		screenIndex.put(index, newScreenTemplate(276, true, true, false, true));
+		
+		// ENTER LOCKOUT PASSWORD AGAIN SCREEN
+		// LAST SCREEN = KB LOCKOUT SCREEN (INDEX = 18)
+		index = 280;
+		newPromptArea = 
+				"--------------------------------------------------------------------------------\r\n" + 
+				"     ENTER LOCKOUT PASSWORD AGAIN                                               \r\n" + 
+				"                                                                                \r\n" + 
+				"                                                                                \r\n";
+		screenIndex.put(index, newScreenTemplate(18, true, true, false, true));
+		
+		// INVALID KEYBOARD PASSWORD LOCK SCREEN
+		// LAST SCREEN = ENTER LOCKOUT PASSWORD AGAIN SCREEN (INDEX = 280) or INVALID KEYBOARD PASSWORD LOCK SCREEN (INDEX = 281)
+		index = 281;
+		newPromptArea = 
+				"--------------------------------------------------------------------------------\r\n" + 
+				"     ENTER LOCKOUT PASSWORD AGAIN                                               \r\n" + 
+				"                                                                                \r\n" + 
+				"                           INVALID KEYBOARD PASSWORD                            \r\n";
+		screenIndex.put(index, newScreenTemplate(18, true, true, false, true));
+		
+		// UNLOCK KB SCREEN
+		// LAST SCREEN = ENTER LOCKOUT PASSWORD AGAIN SCREEN (INDEX = 280) or INVALID KEYBOARD PASSWORD LOCK SCREEN (INDEX = 281)
+		index = 282;
+		newPromptArea = 
+				"--------------------------------------------------------------------------------\r\n" + 
+				"     ENTER PASSWORD TO UNLOCK KB                                                \r\n" + 
+				"                                                                                \r\n" + 
+				"                                                                                \r\n";
+		screenIndex.put(index, newScreenTemplate(18, true, true, false, true));
+		
+		// INVALID KEYBOARD PASSWORD UNLOCK SCREEN
+		// LAST SCREEN = UNLOCK KB SCREEN (INDEX = 282) or INVALID KEYBOARD PASSWORD UNLOCK SCREEN (INDEX = 283)
+		index = 283;
+		newPromptArea = 
+				"--------------------------------------------------------------------------------\r\n" + 
+				"     ENTER PASSWORD TO UNLOCK KB                                                \r\n" + 
+				"                                                                                \r\n" + 
+				"                           INVALID KEYBOARD PASSWORD                            \r\n";
+		screenIndex.put(index, newScreenTemplate(18, true, true, false, true));
+		
+		/*
+		 * NET SCREENS
+		 */
 		
 		// INVALID ENTRY NET SCREEN
 		// LAST SCREEN = ENTER NET NUMBER SCREEN (INDEX = 21)
-		indexNumber = 299;
+		index = 299;
 		newPromptArea = 
 				"--------------------------------------------------------------------------------\r\n" + 
 				"     ENTER NET NUMBER                                                           \r\n" +  
 				"                                                                                \r\n" + 
 				"                                 INVALID ENTRY                                  \r\n";
-		screenIndex.put(indexNumber, newScreenTemplate(21, true, true, false, true));
-		associatedScreensIndex.put(indexNumber, associatedScreens);
+		screenIndex.put(index, newScreenTemplate(21, true, true, false, true));
+		associatedScreensIndex.put(index, associatedScreens);
 		
 		// ENTERED NET SCREEN
 		// LAST SCREEN = ENTER NET NUMBER SCREEN (INDEX = 21)
-		indexNumber = 300;
+		index = 300;
 		newMainArea = 
 				"MAIN:EHF:NET--------------------------------------------------------------------\r\n" + 
 				"                                             SETUP CAPABLE      NO              \r\n" + 
@@ -2290,12 +3077,12 @@ public class Screens {
 		associatedScreens.add(301);
 		associatedScreens.add(302);
 		associatedScreens.add(303);
-		screenIndex.put(indexNumber, newScreenTemplate(3, true, false, true, false));
-        associatedScreensIndex.put(indexNumber, associatedScreens);
+		screenIndex.put(index, newScreenTemplate(3, true, false, true, false));
+        associatedScreensIndex.put(index, associatedScreens);
 		
         // ENTERED NET NUMBER SCREEN
         // LAST SCREEN = NETS SCREEN (INDEX = 21)
-        indexNumber = 301; // NOT REAL VALUE JUST FOR TEST
+        index = 301; // NOT REAL VALUE JUST FOR TEST
         newOptionsArea =
 	            "----------------------------------** SECRET **----------------------------------\r\n" + 
 	            "   _______________    _______________    _______________    _______________     \r\n" + 
@@ -2313,12 +3100,12 @@ public class Screens {
 		associatedScreens.add(306);
 		associatedScreens.add(307);
 		associatedScreens.add(308);
-		screenIndex.put(indexNumber, newScreenTemplate(300, true, true, true, false));
-        associatedScreensIndex.put(indexNumber, associatedScreens);
+		screenIndex.put(index, newScreenTemplate(300, true, true, true, false));
+        associatedScreensIndex.put(index, associatedScreens);
         
         // NET MANAGEMENT SCREEN
         // LAST SCREEN = ENTERED NET SCREEN (INDEX = 300)
-        indexNumber = 302;
+        index = 302;
         newOptionsArea =
 	            "----------------------------------** SECRET **----------------------------------\r\n" + 
 	            "   _______________    _______________    _______________    _______________     \r\n" + 
@@ -2335,12 +3122,12 @@ public class Screens {
 		associatedScreens.add(311);
 		associatedScreens.add(312);
 		associatedScreens.add(313);
-		screenIndex.put(indexNumber, newScreenTemplate(300, true, true, true, false));
-        associatedScreensIndex.put(indexNumber, associatedScreens);
+		screenIndex.put(index, newScreenTemplate(300, true, true, true, false));
+        associatedScreensIndex.put(index, associatedScreens);
         
         // NET PARAMETERS SCREEN
         // LAST SCREEN = ENTERED NET SCREEN (INDEX = 300)
-        indexNumber = 303;
+        index = 303;
         newOptionsArea =
 	            "----------------------------------** SECRET **----------------------------------\r\n" + 
 	            "   _______________    _______________    _______________    _______________     \r\n" + 
@@ -2359,12 +3146,12 @@ public class Screens {
 		associatedScreens.add(318);
 		associatedScreens.add(319);
 		associatedScreens.add(320);
-		screenIndex.put(indexNumber, newScreenTemplate(300, true, true, true, false));
-        associatedScreensIndex.put(indexNumber, associatedScreens);
+		screenIndex.put(index, newScreenTemplate(300, true, true, true, false));
+        associatedScreensIndex.put(index, associatedScreens);
         
         // JOIN NET SCREEN
         // LAST SCREEN = ENERED NET NUMBER SCREEN (INDEX = 301)
-        indexNumber = 304;
+        index = 304;
         newPromptArea = 
                 "--------------------------------------------------------------------------------\r\n" + 
                 "     VERIFY TO JOIN NET                                                         \r\n" + 
@@ -2380,17 +3167,17 @@ public class Screens {
 	            "  ¦               ¦  ¦               ¦  ¦               ¦  ¦               ¦    \r\n" + 
 	            "  ¦               ¦  ¦               ¦  ¦               ¦  ¦               ¦    \r\n" + 
 	            "   ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯    ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯    ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯    ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯     \r\n";
-        screenIndex.put(indexNumber, newScreenTemplate(300, true, true, false, false));
+        screenIndex.put(index, newScreenTemplate(300, true, true, false, false));
         
         // EXIT NET SCREEN
         // LAST SCREEN = ENERED NET NUMBER SCREEN (INDEX = 301)
-        indexNumber = 305;
+        index = 305;
         newPromptArea = 
                 "--------------------------------------------------------------------------------\r\n" + 
                 "     VERIFY TO EXIT NET                                                         \r\n" + 
                 "                                                                                \r\n" + 
                 "                                                                                \r\n";
-        screenIndex.put(indexNumber, newScreenTemplate(304, true, true, false, true));
+        screenIndex.put(index, newScreenTemplate(304, true, true, false, true));
         
         // TX BEAM C3 MODE SCREEN
         // LAST SCREEN = ENTERED NET NUMBER SCREEN (INDEX = 301)
@@ -2398,7 +3185,7 @@ public class Screens {
         
         // NOT LOGGED ON JOIN NET SCREEN
         // LAST SCREEN = ENTERED NET NUMBER SCREEN (INDEX = 301)
-        indexNumber = 309;
+        index = 309;
 		newPromptArea =
 				"--------------------------------------------------------------------------------\r\n" + 
 				"     SELECT OPTION                                                              \r\n" + 
@@ -2411,13 +3198,13 @@ public class Screens {
 		associatedScreens.add(306);
 		associatedScreens.add(307);
 		associatedScreens.add(308);
-		screenIndex.put(indexNumber, newScreenTemplate(301, true, true, false, true));
-        associatedScreensIndex.put(indexNumber, associatedScreens);
+		screenIndex.put(index, newScreenTemplate(301, true, true, false, true));
+        associatedScreensIndex.put(index, associatedScreens);
         
         // 310 onwards for nets (delete later)
         // SAVE NET PARAMETERS SCREEN
         // LAST SCREEN = NET PARAMETERS SCREEN (INDEX = 303)
-        indexNumber = 314;
+        index = 314;
         newPromptArea = 
                 "--------------------------------------------------------------------------------\r\n" + 
                 "     VERIFY TO SAVE CHANGES                                                     \r\n" + 
@@ -2433,11 +3220,11 @@ public class Screens {
 	            "  ¦               ¦  ¦               ¦  ¦               ¦  ¦               ¦    \r\n" + 
 	            "  ¦               ¦  ¦               ¦  ¦               ¦  ¦               ¦    \r\n" + 
 	            "   ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯    ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯    ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯    ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯     \r\n";
-        screenIndex.put(indexNumber, newScreenTemplate(303, true, true, false, false));
+        screenIndex.put(index, newScreenTemplate(303, true, true, false, false));
         
         // NET PORTS SCREEN
         // LAST SCREEN = NET PARAMETERS SCREEN (INDEX = 303)
-        indexNumber = 315;
+        index = 315;
         newOptionsArea =
 	            "----------------------------------** SECRET **----------------------------------\r\n" + 
 	            "   _______________    _______________    _______________    _______________     \r\n" + 
@@ -2452,12 +3239,12 @@ public class Screens {
 		associatedScreens.add(303);
 		associatedScreens.add(321);
 		associatedScreens.add(322);
-		screenIndex.put(indexNumber, newScreenTemplate(303, true, true, true, false));
-        associatedScreensIndex.put(indexNumber, associatedScreens);
+		screenIndex.put(index, newScreenTemplate(303, true, true, true, false));
+        associatedScreensIndex.put(index, associatedScreens);
         
         // TERMINAL PARAMETERS SCREEN
         // LAST SCREEN = NET PARAMETERS SCREEN (INDEX = 303)
-        indexNumber = 316;
+        index = 316;
         newPromptArea = 
                 "--------------------------------------------------------------------------------\r\n" + 
                 "     SELECT TERMINAL PARAMETER                                                  \r\n" + 
@@ -2480,12 +3267,12 @@ public class Screens {
 		associatedScreens.add(327);
 		associatedScreens.add(328);
 		associatedScreens.add(329);
-		screenIndex.put(indexNumber, newScreenTemplate(303, true, true, false, false));
-        associatedScreensIndex.put(indexNumber, associatedScreens);
+		screenIndex.put(index, newScreenTemplate(303, true, true, false, false));
+        associatedScreensIndex.put(index, associatedScreens);
         
         // SERV PARAMS 1 SCREEN
         // LAST SCREEN = NET PARAMETERS SCREEN (INDEX = 303)
-        indexNumber = 317;
+        index = 317;
         newPromptArea = 
                 "--------------------------------------------------------------------------------\r\n" + 
                 "     SELECT SERVICE PARAMETER                                                   \r\n" + 
@@ -2510,12 +3297,12 @@ public class Screens {
 		associatedScreens.add(359);
 		associatedScreens.add(360);
 		associatedScreens.add(361);
-		screenIndex.put(indexNumber, newScreenTemplate(303, true, true, false, false));
-        associatedScreensIndex.put(indexNumber, associatedScreens);
+		screenIndex.put(index, newScreenTemplate(303, true, true, false, false));
+        associatedScreensIndex.put(index, associatedScreens);
         
         // SERV PARAMS 2 SCREEN
         // LAST SCREEN = NET PARAMETERS SCREEN (INDEX = 303)
-        indexNumber = 318;
+        index = 318;
         newOptionsArea =
 	            "----------------------------------** SECRET **----------------------------------\r\n" + 
 	            "   _______________    _______________    _______________    _______________     \r\n" + 
@@ -2534,12 +3321,12 @@ public class Screens {
 		associatedScreens.add(399);
 		associatedScreens.add(400);
 		associatedScreens.add(401);
-		screenIndex.put(indexNumber, newScreenTemplate(317, true, true, true, false));
-        associatedScreensIndex.put(indexNumber, associatedScreens);
+		screenIndex.put(index, newScreenTemplate(317, true, true, true, false));
+        associatedScreensIndex.put(index, associatedScreens);
         
         // INTERRUPTIBLE NET PARAM SCREEN
         // LAST SCREEN = NET PORTS SCREEN (INDEX = 315)
-        indexNumber = 321;
+        index = 321;
         newOptionsArea =
 	            "----------------------------------** SECRET **----------------------------------\r\n" + 
 	            "   _______________    _______________    _______________    _______________     \r\n" + 
@@ -2553,12 +3340,12 @@ public class Screens {
 		associatedScreens = new ArrayList<Integer>();
 		associatedScreens.add(323);
 		associatedScreens.add(324);
-		screenIndex.put(indexNumber, newScreenTemplate(315, true, true, true, false));
-        associatedScreensIndex.put(indexNumber, associatedScreens);
+		screenIndex.put(index, newScreenTemplate(315, true, true, true, false));
+        associatedScreensIndex.put(index, associatedScreens);
         
         // TX PORT NET PARAM SCREEN
         // LAST SCREEN = NET PORTS SCREEN (INDEX = 315)
-        indexNumber = 322;
+        index = 322;
         newPromptArea = 
                 "--------------------------------------------------------------------------------\r\n" + 
                 "     SELECT TX PORT                                                             \r\n" + 
@@ -2583,34 +3370,34 @@ public class Screens {
 		associatedScreens.add(456);  // NOT REAL VALUE CHANGE LATER FOR REAL!!!
 		associatedScreens.add(457);  // NOT REAL VALUE CHANGE LATER FOR REAL!!!
 		associatedScreens.add(458);  // NOT REAL VALUE CHANGE LATER FOR REAL!!!
-		screenIndex.put(indexNumber, newScreenTemplate(315, true, true, false, false));
-        associatedScreensIndex.put(indexNumber, associatedScreens);
+		screenIndex.put(index, newScreenTemplate(315, true, true, false, false));
+        associatedScreensIndex.put(index, associatedScreens);
         
         
         
         // INTERRUPTIBLE YES NET PARAM SCREEN
         // LAST SCREEN = INTERRUPTIBLE NET PARAM SCREEN (INDEX = 321)
-        indexNumber = 323;
+        index = 323;
 		associatedScreens = new ArrayList<Integer>();
 		associatedScreens.add(303);
 		associatedScreens.add(321);
 		associatedScreens.add(322);
-		screenIndex.put(indexNumber, newScreenTemplate(315, true, true, true, true));
-        associatedScreensIndex.put(indexNumber, associatedScreens);
+		screenIndex.put(index, newScreenTemplate(315, true, true, true, true));
+        associatedScreensIndex.put(index, associatedScreens);
         
         // INTERRUPTIBLE NO NET PARAM SCREEN 
         // LAST SCREEN = INTERRUPTIBLE NET PARAM SCREEN (INDEX = 321)
-        indexNumber = 324;
+        index = 324;
 		associatedScreens = new ArrayList<Integer>();
 		associatedScreens.add(303);
 		associatedScreens.add(321);
 		associatedScreens.add(322);
-		screenIndex.put(indexNumber, newScreenTemplate(315, true, true, true, true));
-        associatedScreensIndex.put(indexNumber, associatedScreens);
+		screenIndex.put(index, newScreenTemplate(315, true, true, true, true));
+        associatedScreensIndex.put(index, associatedScreens);
         
         // TX BEAM TERMINAL PARAMETER SCREEN
         // LAST SCREEN = TERMINAL PARAMETERS SCREEN (INDEX = 316)
-        indexNumber = 325;
+        index = 325;
         newPromptArea = 
                 "--------------------------------------------------------------------------------\r\n" + 
                 "     SELECT TX BEAM                                                             \r\n" + 
@@ -2633,12 +3420,12 @@ public class Screens {
 		associatedScreens.add(333);
 		associatedScreens.add(334);
 		associatedScreens.add(335);
-		screenIndex.put(indexNumber, newScreenTemplate(316, true, true, false, false));
-        associatedScreensIndex.put(indexNumber, associatedScreens);
+		screenIndex.put(index, newScreenTemplate(316, true, true, false, false));
+        associatedScreensIndex.put(index, associatedScreens);
         
         // TX BEAM C3 MODE SCREEN
         // LAST SCREEN = TERMINAL PARAMETERS SCREEN (INDEX = 316)
-        indexNumber = 326;
+        index = 326;
         newPromptArea = 
                 "--------------------------------------------------------------------------------\r\n" + 
                 "     SELECT TX BEAM C3 MODE                                                     \r\n" + 
@@ -2659,12 +3446,12 @@ public class Screens {
 		associatedScreens.add(337);
 		associatedScreens.add(338);
 		associatedScreens.add(339);
-		screenIndex.put(indexNumber, newScreenTemplate(316, true, true, false, false));
-        associatedScreensIndex.put(indexNumber, associatedScreens);
+		screenIndex.put(index, newScreenTemplate(316, true, true, false, false));
+        associatedScreensIndex.put(index, associatedScreens);
         
         // UL SLOT SCREEN
         // LAST SCREEN = TERMINAL PARAMETERS SCREEN (INDEX = 316)
-        indexNumber = 327;
+        index = 327;
         newPromptArea = 
                 "--------------------------------------------------------------------------------\r\n" + 
                 "     SELECT UL SLOT                                                             \r\n" + 
@@ -2688,12 +3475,12 @@ public class Screens {
 		associatedScreens.add(344);
 		associatedScreens.add(345);
 		associatedScreens.add(346);
-		screenIndex.put(indexNumber, newScreenTemplate(316, true, true, false, false));
-        associatedScreensIndex.put(indexNumber, associatedScreens);
+		screenIndex.put(index, newScreenTemplate(316, true, true, false, false));
+        associatedScreensIndex.put(index, associatedScreens);
         
         // RX BEAM TERMINAL PARAMETER SCREEN
         // LAST SCREEN = TERMINAL PARAMETERS SCREEN (INDEX = 316)
-        indexNumber = 328;
+        index = 328;
         newPromptArea = 
                 "--------------------------------------------------------------------------------\r\n" + 
                 "     SELECT RX BEAM                                                             \r\n" + 
@@ -2706,12 +3493,12 @@ public class Screens {
 		associatedScreens.add(350);
 		associatedScreens.add(351);
 		associatedScreens.add(352);
-		screenIndex.put(indexNumber, newScreenTemplate(325, true, true, false, true));
-        associatedScreensIndex.put(indexNumber, associatedScreens);
+		screenIndex.put(index, newScreenTemplate(325, true, true, false, true));
+        associatedScreensIndex.put(index, associatedScreens);
         
         // AUTO JOIN NET PARAM SCREEN
         // LAST SCREEN = TERMINAL PARAMETERS SCREEN (INDEX = 316)
-        indexNumber = 329;
+        index = 329;
         newPromptArea = 
                 "--------------------------------------------------------------------------------\r\n" + 
                 "     SELECT AUTO JOIN                                                           \r\n" + 
@@ -2730,12 +3517,12 @@ public class Screens {
 		associatedScreens = new ArrayList<Integer>();
 		associatedScreens.add(353);
 		associatedScreens.add(354);
-		screenIndex.put(indexNumber, newScreenTemplate(316, true, true, false, false));
-        associatedScreensIndex.put(indexNumber, associatedScreens);
+		screenIndex.put(index, newScreenTemplate(316, true, true, false, false));
+        associatedScreensIndex.put(index, associatedScreens);
         
         // SELECTED TX BEAM SCREENS
         // LAST SCREEN = TX BEAM TERMINAL PARAMETER SCREEN (INDEX = 325)
-        indexNumber = 330;
+        index = 330;
 		associatedScreens = new ArrayList<Integer>();
 		associatedScreens.add(303);
 		associatedScreens.add(325);
@@ -2743,10 +3530,10 @@ public class Screens {
 		associatedScreens.add(327);
 		associatedScreens.add(328);
 		associatedScreens.add(329);
-		screenIndex.put(indexNumber, newScreenTemplate(316, true, true, true, true));
-        associatedScreensIndex.put(indexNumber, associatedScreens);
+		screenIndex.put(index, newScreenTemplate(316, true, true, true, true));
+        associatedScreensIndex.put(index, associatedScreens);
         
-        indexNumber = 331;
+        index = 331;
 		associatedScreens = new ArrayList<Integer>();
 		associatedScreens.add(303);
 		associatedScreens.add(325);
@@ -2754,10 +3541,10 @@ public class Screens {
 		associatedScreens.add(327);
 		associatedScreens.add(328);
 		associatedScreens.add(329);
-		screenIndex.put(indexNumber, newScreenTemplate(316, true, true, true, true));
-        associatedScreensIndex.put(indexNumber, associatedScreens);
+		screenIndex.put(index, newScreenTemplate(316, true, true, true, true));
+        associatedScreensIndex.put(index, associatedScreens);
         
-        indexNumber = 332;
+        index = 332;
 		associatedScreens = new ArrayList<Integer>();
 		associatedScreens.add(303);
 		associatedScreens.add(325);
@@ -2765,10 +3552,10 @@ public class Screens {
 		associatedScreens.add(327);
 		associatedScreens.add(328);
 		associatedScreens.add(329);
-		screenIndex.put(indexNumber, newScreenTemplate(316, true, true, true, true));
-        associatedScreensIndex.put(indexNumber, associatedScreens);
+		screenIndex.put(index, newScreenTemplate(316, true, true, true, true));
+        associatedScreensIndex.put(index, associatedScreens);
         
-        indexNumber = 333;
+        index = 333;
 		associatedScreens = new ArrayList<Integer>();
 		associatedScreens.add(303);
 		associatedScreens.add(325);
@@ -2776,10 +3563,10 @@ public class Screens {
 		associatedScreens.add(327);
 		associatedScreens.add(328);
 		associatedScreens.add(329);
-		screenIndex.put(indexNumber, newScreenTemplate(316, true, true, true, true));
-        associatedScreensIndex.put(indexNumber, associatedScreens);
+		screenIndex.put(index, newScreenTemplate(316, true, true, true, true));
+        associatedScreensIndex.put(index, associatedScreens);
         
-        indexNumber = 334;
+        index = 334;
 		associatedScreens = new ArrayList<Integer>();
 		associatedScreens.add(303);
 		associatedScreens.add(325);
@@ -2787,10 +3574,10 @@ public class Screens {
 		associatedScreens.add(327);
 		associatedScreens.add(328);
 		associatedScreens.add(329);
-		screenIndex.put(indexNumber, newScreenTemplate(316, true, true, true, true));
-        associatedScreensIndex.put(indexNumber, associatedScreens);
+		screenIndex.put(index, newScreenTemplate(316, true, true, true, true));
+        associatedScreensIndex.put(index, associatedScreens);
         
-        indexNumber = 335;
+        index = 335;
 		associatedScreens = new ArrayList<Integer>();
 		associatedScreens.add(303);
 		associatedScreens.add(325);
@@ -2798,11 +3585,11 @@ public class Screens {
 		associatedScreens.add(327);
 		associatedScreens.add(328);
 		associatedScreens.add(329);
-		screenIndex.put(indexNumber, newScreenTemplate(316, true, true, true, true));
-        associatedScreensIndex.put(indexNumber, associatedScreens);
+		screenIndex.put(index, newScreenTemplate(316, true, true, true, true));
+        associatedScreensIndex.put(index, associatedScreens);
         
         // TX BEAM C3 MODE
-        indexNumber = 336;
+        index = 336;
 		associatedScreens = new ArrayList<Integer>();
 		associatedScreens.add(303);
 		associatedScreens.add(325);
@@ -2810,10 +3597,10 @@ public class Screens {
 		associatedScreens.add(327);
 		associatedScreens.add(328);
 		associatedScreens.add(329);
-		screenIndex.put(indexNumber, newScreenTemplate(316, true, true, true, true));
-        associatedScreensIndex.put(indexNumber, associatedScreens);
+		screenIndex.put(index, newScreenTemplate(316, true, true, true, true));
+        associatedScreensIndex.put(index, associatedScreens);
         
-        indexNumber = 337;
+        index = 337;
 		associatedScreens = new ArrayList<Integer>();
 		associatedScreens.add(303);
 		associatedScreens.add(325);
@@ -2821,10 +3608,10 @@ public class Screens {
 		associatedScreens.add(327);
 		associatedScreens.add(328);
 		associatedScreens.add(329);
-		screenIndex.put(indexNumber, newScreenTemplate(316, true, true, true, true));
-        associatedScreensIndex.put(indexNumber, associatedScreens);
+		screenIndex.put(index, newScreenTemplate(316, true, true, true, true));
+        associatedScreensIndex.put(index, associatedScreens);
         
-        indexNumber = 338;
+        index = 338;
 		associatedScreens = new ArrayList<Integer>();
 		associatedScreens.add(303);
 		associatedScreens.add(325);
@@ -2832,10 +3619,10 @@ public class Screens {
 		associatedScreens.add(327);
 		associatedScreens.add(328);
 		associatedScreens.add(329);
-		screenIndex.put(indexNumber, newScreenTemplate(316, true, true, true, true));
-        associatedScreensIndex.put(indexNumber, associatedScreens);
+		screenIndex.put(index, newScreenTemplate(316, true, true, true, true));
+        associatedScreensIndex.put(index, associatedScreens);
         
-        indexNumber = 339;
+        index = 339;
 		associatedScreens = new ArrayList<Integer>();
 		associatedScreens.add(303);
 		associatedScreens.add(325);
@@ -2843,12 +3630,12 @@ public class Screens {
 		associatedScreens.add(327);
 		associatedScreens.add(328);
 		associatedScreens.add(329);
-		screenIndex.put(indexNumber, newScreenTemplate(316, true, true, true, true));
-        associatedScreensIndex.put(indexNumber, associatedScreens);
+		screenIndex.put(index, newScreenTemplate(316, true, true, true, true));
+        associatedScreensIndex.put(index, associatedScreens);
         
         // 340 - 346 UL SLOT OPTIONS
         
-        indexNumber = 340;
+        index = 340;
 		associatedScreens = new ArrayList<Integer>();
 		associatedScreens.add(303);
 		associatedScreens.add(325);
@@ -2856,10 +3643,10 @@ public class Screens {
 		associatedScreens.add(327);
 		associatedScreens.add(328);
 		associatedScreens.add(329);
-		screenIndex.put(indexNumber, newScreenTemplate(316, true, true, true, true));
-        associatedScreensIndex.put(indexNumber, associatedScreens);
+		screenIndex.put(index, newScreenTemplate(316, true, true, true, true));
+        associatedScreensIndex.put(index, associatedScreens);
         
-        indexNumber = 341;
+        index = 341;
 		associatedScreens = new ArrayList<Integer>();
 		associatedScreens.add(303);
 		associatedScreens.add(325);
@@ -2867,10 +3654,10 @@ public class Screens {
 		associatedScreens.add(327);
 		associatedScreens.add(328);
 		associatedScreens.add(329);
-		screenIndex.put(indexNumber, newScreenTemplate(316, true, true, true, true));
-        associatedScreensIndex.put(indexNumber, associatedScreens);
+		screenIndex.put(index, newScreenTemplate(316, true, true, true, true));
+        associatedScreensIndex.put(index, associatedScreens);
         
-        indexNumber = 342;
+        index = 342;
 		associatedScreens = new ArrayList<Integer>();
 		associatedScreens.add(303);
 		associatedScreens.add(325);
@@ -2878,10 +3665,10 @@ public class Screens {
 		associatedScreens.add(327);
 		associatedScreens.add(328);
 		associatedScreens.add(329);
-		screenIndex.put(indexNumber, newScreenTemplate(316, true, true, true, true));
-        associatedScreensIndex.put(indexNumber, associatedScreens);
+		screenIndex.put(index, newScreenTemplate(316, true, true, true, true));
+        associatedScreensIndex.put(index, associatedScreens);
         
-        indexNumber = 343;
+        index = 343;
 		associatedScreens = new ArrayList<Integer>();
 		associatedScreens.add(303);
 		associatedScreens.add(325);
@@ -2889,10 +3676,10 @@ public class Screens {
 		associatedScreens.add(327);
 		associatedScreens.add(328);
 		associatedScreens.add(329);
-		screenIndex.put(indexNumber, newScreenTemplate(316, true, true, true, true));
-        associatedScreensIndex.put(indexNumber, associatedScreens);
+		screenIndex.put(index, newScreenTemplate(316, true, true, true, true));
+        associatedScreensIndex.put(index, associatedScreens);
         
-        indexNumber = 344;
+        index = 344;
 		associatedScreens = new ArrayList<Integer>();
 		associatedScreens.add(303);
 		associatedScreens.add(325);
@@ -2900,10 +3687,10 @@ public class Screens {
 		associatedScreens.add(327);
 		associatedScreens.add(328);
 		associatedScreens.add(329);
-		screenIndex.put(indexNumber, newScreenTemplate(316, true, true, true, true));
-        associatedScreensIndex.put(indexNumber, associatedScreens);
+		screenIndex.put(index, newScreenTemplate(316, true, true, true, true));
+        associatedScreensIndex.put(index, associatedScreens);
         
-        indexNumber = 345;
+        index = 345;
 		associatedScreens = new ArrayList<Integer>();
 		associatedScreens.add(303);
 		associatedScreens.add(325);
@@ -2911,10 +3698,10 @@ public class Screens {
 		associatedScreens.add(327);
 		associatedScreens.add(328);
 		associatedScreens.add(329);
-		screenIndex.put(indexNumber, newScreenTemplate(316, true, true, true, true));
-        associatedScreensIndex.put(indexNumber, associatedScreens);
+		screenIndex.put(index, newScreenTemplate(316, true, true, true, true));
+        associatedScreensIndex.put(index, associatedScreens);
         
-        indexNumber = 346;
+        index = 346;
 		associatedScreens = new ArrayList<Integer>();
 		associatedScreens.add(303);
 		associatedScreens.add(325);
@@ -2922,11 +3709,11 @@ public class Screens {
 		associatedScreens.add(327);
 		associatedScreens.add(328);
 		associatedScreens.add(329);
-		screenIndex.put(indexNumber, newScreenTemplate(316, true, true, true, true));
-        associatedScreensIndex.put(indexNumber, associatedScreens);
+		screenIndex.put(index, newScreenTemplate(316, true, true, true, true));
+        associatedScreensIndex.put(index, associatedScreens);
         
         // RX BEAMS
-        indexNumber = 347;
+        index = 347;
 		associatedScreens = new ArrayList<Integer>();
 		associatedScreens.add(303);
 		associatedScreens.add(325);
@@ -2934,10 +3721,10 @@ public class Screens {
 		associatedScreens.add(327);
 		associatedScreens.add(328);
 		associatedScreens.add(329);
-		screenIndex.put(indexNumber, newScreenTemplate(316, true, true, true, true));
-        associatedScreensIndex.put(indexNumber, associatedScreens);
+		screenIndex.put(index, newScreenTemplate(316, true, true, true, true));
+        associatedScreensIndex.put(index, associatedScreens);
         
-        indexNumber = 348;
+        index = 348;
 		associatedScreens = new ArrayList<Integer>();
 		associatedScreens.add(303);
 		associatedScreens.add(325);
@@ -2945,10 +3732,10 @@ public class Screens {
 		associatedScreens.add(327);
 		associatedScreens.add(328);
 		associatedScreens.add(329);
-		screenIndex.put(indexNumber, newScreenTemplate(316, true, true, true, true));
-        associatedScreensIndex.put(indexNumber, associatedScreens);
+		screenIndex.put(index, newScreenTemplate(316, true, true, true, true));
+        associatedScreensIndex.put(index, associatedScreens);
         
-        indexNumber = 349;
+        index = 349;
 		associatedScreens = new ArrayList<Integer>();
 		associatedScreens.add(303);
 		associatedScreens.add(325);
@@ -2956,10 +3743,10 @@ public class Screens {
 		associatedScreens.add(327);
 		associatedScreens.add(328);
 		associatedScreens.add(329);
-		screenIndex.put(indexNumber, newScreenTemplate(316, true, true, true, true));
-        associatedScreensIndex.put(indexNumber, associatedScreens);
+		screenIndex.put(index, newScreenTemplate(316, true, true, true, true));
+        associatedScreensIndex.put(index, associatedScreens);
         
-        indexNumber = 350;
+        index = 350;
 		associatedScreens = new ArrayList<Integer>();
 		associatedScreens.add(303);
 		associatedScreens.add(325);
@@ -2967,10 +3754,10 @@ public class Screens {
 		associatedScreens.add(327);
 		associatedScreens.add(328);
 		associatedScreens.add(329);
-		screenIndex.put(indexNumber, newScreenTemplate(316, true, true, true, true));
-        associatedScreensIndex.put(indexNumber, associatedScreens);
+		screenIndex.put(index, newScreenTemplate(316, true, true, true, true));
+        associatedScreensIndex.put(index, associatedScreens);
         
-        indexNumber = 351;
+        index = 351;
 		associatedScreens = new ArrayList<Integer>();
 		associatedScreens.add(303);
 		associatedScreens.add(325);
@@ -2978,10 +3765,10 @@ public class Screens {
 		associatedScreens.add(327);
 		associatedScreens.add(328);
 		associatedScreens.add(329);
-		screenIndex.put(indexNumber, newScreenTemplate(316, true, true, true, true));
-        associatedScreensIndex.put(indexNumber, associatedScreens);
+		screenIndex.put(index, newScreenTemplate(316, true, true, true, true));
+        associatedScreensIndex.put(index, associatedScreens);
         
-        indexNumber = 352;
+        index = 352;
 		associatedScreens = new ArrayList<Integer>();
 		associatedScreens.add(303);
 		associatedScreens.add(325);
@@ -2989,11 +3776,11 @@ public class Screens {
 		associatedScreens.add(327);
 		associatedScreens.add(328);
 		associatedScreens.add(329);
-		screenIndex.put(indexNumber, newScreenTemplate(316, true, true, true, true));
-        associatedScreensIndex.put(indexNumber, associatedScreens);
+		screenIndex.put(index, newScreenTemplate(316, true, true, true, true));
+        associatedScreensIndex.put(index, associatedScreens);
         
         // NET AUTO JOIN 353 AND 354
-        indexNumber = 353;
+        index = 353;
 		associatedScreens = new ArrayList<Integer>();
 		associatedScreens.add(303);
 		associatedScreens.add(325);
@@ -3001,10 +3788,10 @@ public class Screens {
 		associatedScreens.add(327);
 		associatedScreens.add(328);
 		associatedScreens.add(329);
-		screenIndex.put(indexNumber, newScreenTemplate(316, true, true, true, true));
-        associatedScreensIndex.put(indexNumber, associatedScreens);
+		screenIndex.put(index, newScreenTemplate(316, true, true, true, true));
+        associatedScreensIndex.put(index, associatedScreens);
         
-        indexNumber = 354;
+        index = 354;
 		associatedScreens = new ArrayList<Integer>();
 		associatedScreens.add(303);
 		associatedScreens.add(325);
@@ -3012,22 +3799,22 @@ public class Screens {
 		associatedScreens.add(327);
 		associatedScreens.add(328);
 		associatedScreens.add(329);
-		screenIndex.put(indexNumber, newScreenTemplate(316, true, true, true, true));
-        associatedScreensIndex.put(indexNumber, associatedScreens);
+		screenIndex.put(index, newScreenTemplate(316, true, true, true, true));
+        associatedScreensIndex.put(index, associatedScreens);
         
         // NAME SERVICE PARAMETER SCREEN
         // LAST SCREEN = SERV PARAMS 1 SCREEN (INDEX = 317)
-        indexNumber = 355;
+        index = 355;
         newPromptArea = 
                 "--------------------------------------------------------------------------------\r\n" + 
                 "     ENTER NET NAME                                                             \r\n" + 
                 "                                                                                \r\n" + 
                 "                                                                                \r\n";
-		screenIndex.put(indexNumber, newScreenTemplate(314, true, true, false, true));
+		screenIndex.put(index, newScreenTemplate(314, true, true, false, true));
 
         // NET CONSTELLATION SERVICE PARAMETER SCREEN
 		// LAST SCREEN = SERV PARAMS 1 SCREEN (INDEX = 317)
-		indexNumber = 356;
+		index = 356;
         newPromptArea = 
                 "--------------------------------------------------------------------------------\r\n" + 
                 "     SELECT NET CONSTELLATION                                                   \r\n" + 
@@ -3048,22 +3835,22 @@ public class Screens {
 		associatedScreens.add(363);
 		associatedScreens.add(364);
 		associatedScreens.add(365);
-		screenIndex.put(indexNumber, newScreenTemplate(317, true, true, false, false));
-        associatedScreensIndex.put(indexNumber, associatedScreens);
+		screenIndex.put(index, newScreenTemplate(317, true, true, false, false));
+        associatedScreensIndex.put(index, associatedScreens);
         
         // SERVICE ID SERVICE PARAMETER SCREEN
         // LAST SCREEN = SERV PARAMS 1 SCREEN (INDEX = 317)
-        indexNumber = 357;
+        index = 357;
         newPromptArea = 
                 "--------------------------------------------------------------------------------\r\n" + 
                 "     ENTER SERVICE ID                                                           \r\n" + 
                 "                                                                                \r\n" + 
                 "                                                                                \r\n";
-        screenIndex.put(indexNumber, newScreenTemplate(314, true, true, false, true));
+        screenIndex.put(index, newScreenTemplate(314, true, true, false, true));
         
         // SERVICE TYPE SERVICE PARAMETER SCREEN
         // LAST SCREEN = SERV PARAMS 1 SCREEN (INDEX = 317)
-        indexNumber = 358;
+        index = 358;
         newPromptArea = 
                 "--------------------------------------------------------------------------------\r\n" + 
                 "     SELECT SERVICE TYPE                                                        \r\n" + 
@@ -3088,12 +3875,12 @@ public class Screens {
 		associatedScreens.add(371);
 		associatedScreens.add(372);
 		associatedScreens.add(381);
-		screenIndex.put(indexNumber, newScreenTemplate(317, true, true, false, false));
-        associatedScreensIndex.put(indexNumber, associatedScreens);
+		screenIndex.put(index, newScreenTemplate(317, true, true, false, false));
+        associatedScreensIndex.put(index, associatedScreens);
         
         // DATA RATE SERVICE PARAMETER SCREEN
         // LAST SCREEN = SERV PARAMS 1 SCREEN (INDEX = 317)
-        indexNumber = 359;
+        index = 359;
         newPromptArea = 
                 "--------------------------------------------------------------------------------\r\n" + 
                 "     SELECT DATA RATE                                                           \r\n" + 
@@ -3116,12 +3903,12 @@ public class Screens {
 		associatedScreens.add(386);
 		associatedScreens.add(387);
 		associatedScreens.add(388);
-		screenIndex.put(indexNumber, newScreenTemplate(317, true, true, false, false));
-        associatedScreensIndex.put(indexNumber, associatedScreens);
+		screenIndex.put(index, newScreenTemplate(317, true, true, false, false));
+        associatedScreensIndex.put(index, associatedScreens);
         
         // UL SUBCHANNEL SERVICE PARAMETER SCREEN
         // LAST SCREEN = SERV PARAMS 1 SCREEN (INDEX = 317)
-        indexNumber = 360;
+        index = 360;
         newPromptArea = 
                 "--------------------------------------------------------------------------------\r\n" + 
                 "     SELECT UL SUBCHANNEL                                                       \r\n" + 
@@ -3140,12 +3927,12 @@ public class Screens {
 		associatedScreens = new ArrayList<Integer>();
 		associatedScreens.add(389);
 		associatedScreens.add(390);
-		screenIndex.put(indexNumber, newScreenTemplate(317, true, true, false, false));
-        associatedScreensIndex.put(indexNumber, associatedScreens);
+		screenIndex.put(index, newScreenTemplate(317, true, true, false, false));
+        associatedScreensIndex.put(index, associatedScreens);
         
         // INTERLEAVE SERVICE PARAMETER SCREEN
         // LAST SCREEN = SERV PARAMS 1 SCREEN (INDEX = 317)
-        indexNumber = 361;
+        index = 361;
         newPromptArea = 
                 "--------------------------------------------------------------------------------\r\n" + 
                 "     SELECT TX PORT                                                             \r\n" + 
@@ -3167,12 +3954,12 @@ public class Screens {
 		associatedScreens.add(393);
 		associatedScreens.add(394);
 		associatedScreens.add(395);
-		screenIndex.put(indexNumber, newScreenTemplate(317, true, true, false, false));
-        associatedScreensIndex.put(indexNumber, associatedScreens);
+		screenIndex.put(index, newScreenTemplate(317, true, true, false, false));
+        associatedScreensIndex.put(index, associatedScreens);
         
         // NET CONSTELLATIONS 362-365
         for (int i = 362; i < 366; i++) {
-        	indexNumber = i;
+        	index = i;
     		associatedScreens = new ArrayList<Integer>();
     		associatedScreens.add(303);
     		associatedScreens.add(355);
@@ -3182,13 +3969,13 @@ public class Screens {
     		associatedScreens.add(359);
     		associatedScreens.add(360);
     		associatedScreens.add(361);
-    		screenIndex.put(indexNumber, newScreenTemplate(317, true, true, true, true));
-            associatedScreensIndex.put(indexNumber, associatedScreens);
+    		screenIndex.put(index, newScreenTemplate(317, true, true, true, true));
+            associatedScreensIndex.put(index, associatedScreens);
         }
         
         // SERVICE TYPES 366-380
         for (int i = 366; i < 381; i++) {
-        	indexNumber = i;
+        	index = i;
     		associatedScreens = new ArrayList<Integer>();
     		associatedScreens.add(303);
     		associatedScreens.add(355);
@@ -3198,13 +3985,13 @@ public class Screens {
     		associatedScreens.add(359);
     		associatedScreens.add(360);
     		associatedScreens.add(361);
-    		screenIndex.put(indexNumber, newScreenTemplate(317, true, true, true, true));
-            associatedScreensIndex.put(indexNumber, associatedScreens);
+    		screenIndex.put(index, newScreenTemplate(317, true, true, true, true));
+            associatedScreensIndex.put(index, associatedScreens);
         }
         
         // SERVICE TYPE SERVICE PARAMETER SCREEN CONT
         // LAST SCREEN = SERVICE TYPE SERVICE PARAMETER SCREEN (INDEX = 358)
-        indexNumber = 381;
+        index = 381;
         newOptionsArea =
 	            "----------------------------------** SECRET **----------------------------------\r\n" + 
 	            "   _______________    _______________    _______________    _______________     \r\n" + 
@@ -3224,12 +4011,12 @@ public class Screens {
 		associatedScreens.add(377);
 		associatedScreens.add(378);
 		associatedScreens.add(382);
-		screenIndex.put(indexNumber, newScreenTemplate(358, true, true, true, false));
-        associatedScreensIndex.put(indexNumber, associatedScreens);
+		screenIndex.put(index, newScreenTemplate(358, true, true, true, false));
+        associatedScreensIndex.put(index, associatedScreens);
         
         // SERVICE TYPE SERVICE PARAMETER SCREEN CONT CONT
         // LAST SCREEN = SERVICE TYPE SERVICE PARAMETER SCREEN CONT (INDEX = 381)
-        indexNumber = 382;
+        index = 382;
         newOptionsArea =
 	            "----------------------------------** SECRET **----------------------------------\r\n" + 
 	            "   _______________    _______________    _______________    _______________     \r\n" + 
@@ -3244,12 +4031,12 @@ public class Screens {
 		associatedScreens.add(381);
 		associatedScreens.add(379);
 		associatedScreens.add(380);
-		screenIndex.put(indexNumber, newScreenTemplate(358, true, true, true, false));
-        associatedScreensIndex.put(indexNumber, associatedScreens);
+		screenIndex.put(index, newScreenTemplate(358, true, true, true, false));
+        associatedScreensIndex.put(index, associatedScreens);
 		
         // DATA RATES 383 - 388 (CAN COMBINE THE ONES BELOW!!!!!!)
         for (int i = 383; i < 389; i++) {
-        	indexNumber = i;
+        	index = i;
     		associatedScreens = new ArrayList<Integer>();
     		associatedScreens.add(303);
     		associatedScreens.add(355);
@@ -3259,13 +4046,13 @@ public class Screens {
     		associatedScreens.add(359);
     		associatedScreens.add(360);
     		associatedScreens.add(361);
-    		screenIndex.put(indexNumber, newScreenTemplate(317, true, true, true, true));
-            associatedScreensIndex.put(indexNumber, associatedScreens);
+    		screenIndex.put(index, newScreenTemplate(317, true, true, true, true));
+            associatedScreensIndex.put(index, associatedScreens);
         }
         
         // UL SUBCHANNELS 389-390
         for (int i = 389; i < 391; i++) {
-        	indexNumber = i;
+        	index = i;
     		associatedScreens = new ArrayList<Integer>();
     		associatedScreens.add(303);
     		associatedScreens.add(355);
@@ -3275,13 +4062,13 @@ public class Screens {
     		associatedScreens.add(359);
     		associatedScreens.add(360);
     		associatedScreens.add(361);
-    		screenIndex.put(indexNumber, newScreenTemplate(317, true, true, true, true));
-            associatedScreensIndex.put(indexNumber, associatedScreens);
+    		screenIndex.put(index, newScreenTemplate(317, true, true, true, true));
+            associatedScreensIndex.put(index, associatedScreens);
         }
         
         // INTERLEAVES 391-395
         for (int i = 391; i < 396; i++) {
-        	indexNumber = i;
+        	index = i;
     		associatedScreens = new ArrayList<Integer>();
     		associatedScreens.add(303);
     		associatedScreens.add(355);
@@ -3291,13 +4078,13 @@ public class Screens {
     		associatedScreens.add(359);
     		associatedScreens.add(360);
     		associatedScreens.add(361);
-    		screenIndex.put(indexNumber, newScreenTemplate(317, true, true, true, true));
-            associatedScreensIndex.put(indexNumber, associatedScreens);
+    		screenIndex.put(index, newScreenTemplate(317, true, true, true, true));
+            associatedScreensIndex.put(index, associatedScreens);
         }
         
         // BMT CONTROLLED SERVICE PARAMETER SCREEN
         // LAST SCREEN = SERV PARAMS 2 SCREEN (INDEX = 318)
-        indexNumber = 396;
+        index = 396;
         newPromptArea = 
                 "--------------------------------------------------------------------------------\r\n" + 
                 "     SELECT WHETHER BMT CONTROLLED                                              \r\n" + 
@@ -3316,12 +4103,12 @@ public class Screens {
 		associatedScreens = new ArrayList<Integer>();
 		associatedScreens.add(403);
 		associatedScreens.add(404);
-		screenIndex.put(indexNumber, newScreenTemplate(318, true, true, false, false));
-        associatedScreensIndex.put(indexNumber, associatedScreens);
+		screenIndex.put(index, newScreenTemplate(318, true, true, false, false));
+        associatedScreensIndex.put(index, associatedScreens);
         
         // CINC SERVICE PARAMETER SCREEN
         // LAST SCREEN = SERV PARAMS 2 SCREEN (INDEX = 318)
-        indexNumber = 397;
+        index = 397;
         newPromptArea = 
                 "--------------------------------------------------------------------------------\r\n" + 
                 "     SELECT CINC                                                                \r\n" + 
@@ -3346,12 +4133,12 @@ public class Screens {
 		associatedScreens.add(410);
 		associatedScreens.add(411);
 		associatedScreens.add(402);
-		screenIndex.put(indexNumber, newScreenTemplate(318, true, true, false, false));
-        associatedScreensIndex.put(indexNumber, associatedScreens);
+		screenIndex.put(index, newScreenTemplate(318, true, true, false, false));
+        associatedScreensIndex.put(index, associatedScreens);
         
         // CRYPTO KEY SERVICE PARAMETER SCREEN
         // LAST SCREEN = SERV PARAMS 2 SCREEN (INDEX = 318)
-        indexNumber = 398;
+        index = 398;
         newPromptArea = 
                 "--------------------------------------------------------------------------------\r\n" + 
                 "     ENTER CRYPTO KEY                                                           \r\n" + 
@@ -3367,11 +4154,11 @@ public class Screens {
 	            "  ¦               ¦  ¦               ¦  ¦               ¦  ¦               ¦    \r\n" + 
 	            "  ¦               ¦  ¦               ¦  ¦               ¦  ¦               ¦    \r\n" + 
 	            "   ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯    ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯    ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯    ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯     \r\n";
-        screenIndex.put(indexNumber, newScreenTemplate(318, true, true, false, false));
+        screenIndex.put(index, newScreenTemplate(318, true, true, false, false));
         
         // PRECEDENCE SERVICE PARAMETER SCREEN
         // LAST SCREEN = SERV PARAMS 2 SCREEN (INDEX = 318)
-        indexNumber = 399;
+        index = 399;
         newPromptArea = 
                 "--------------------------------------------------------------------------------\r\n" + 
                 "     SELECT PRECEDENCE                                                          \r\n" + 
@@ -3392,12 +4179,12 @@ public class Screens {
 		associatedScreens.add(416);
 		associatedScreens.add(417);
 		associatedScreens.add(418);
-		screenIndex.put(indexNumber, newScreenTemplate(318, true, true, false, false));
-        associatedScreensIndex.put(indexNumber, associatedScreens);
+		screenIndex.put(index, newScreenTemplate(318, true, true, false, false));
+        associatedScreensIndex.put(index, associatedScreens);
         
         // SUBFS SERVICE PARAMETER SCREEN
         // LAST SCREEN = SERV PARAMS 2 SCREEN (INDEX = 318)
-        indexNumber = 400;
+        index = 400;
         newPromptArea = 
                 "--------------------------------------------------------------------------------\r\n" + 
                 "     SELECT WHETHER SUBFS                                                       \r\n" + 
@@ -3406,12 +4193,12 @@ public class Screens {
 		associatedScreens = new ArrayList<Integer>();
 		associatedScreens.add(419);
 		associatedScreens.add(420);
-		screenIndex.put(indexNumber, newScreenTemplate(396, true, true, false, true));
-        associatedScreensIndex.put(indexNumber, associatedScreens);
+		screenIndex.put(index, newScreenTemplate(396, true, true, false, true));
+        associatedScreensIndex.put(index, associatedScreens);
         
         // BOMBER C3 CAPABLE SERVICE PARAMETER SCREEN
         // LAST SCREEN = SERV PARAMS 2 SCREEN (INDEX = 318)
-        indexNumber = 401;
+        index = 401;
         newPromptArea = 
                 "--------------------------------------------------------------------------------\r\n" + 
                 "     SELECT WHETHER BOMBER C3 CAPABLE                                           \r\n" + 
@@ -3420,12 +4207,12 @@ public class Screens {
 		associatedScreens = new ArrayList<Integer>();
 		associatedScreens.add(421);
 		associatedScreens.add(422);
-		screenIndex.put(indexNumber, newScreenTemplate(400, true, true, false, true));
-        associatedScreensIndex.put(indexNumber, associatedScreens);
+		screenIndex.put(index, newScreenTemplate(400, true, true, false, true));
+        associatedScreensIndex.put(index, associatedScreens);
         
         // CINC SERVICE PARAMETER SCREEN CONT
         // LAST SCREEN = CINC SERVICE PARAMETER SCREEN (INDEX = 397)
-        indexNumber = 402;
+        index = 402;
         newOptionsArea =
 	            "----------------------------------** SECRET **----------------------------------\r\n" + 
 	            "   _______________    _______________    _______________    _______________     \r\n" + 
@@ -3441,12 +4228,12 @@ public class Screens {
 		associatedScreens.add(412);
 		associatedScreens.add(413);
 		associatedScreens.add(414);
-		screenIndex.put(indexNumber, newScreenTemplate(397, true, true, true, false));
-        associatedScreensIndex.put(indexNumber, associatedScreens);
+		screenIndex.put(index, newScreenTemplate(397, true, true, true, false));
+        associatedScreensIndex.put(index, associatedScreens);
         
         // BMT CONTROLLED? 403-404
         for (int i = 403; i < 405; i++) {
-        	indexNumber = i;
+        	index = i;
     		associatedScreens = new ArrayList<Integer>();
     		associatedScreens.add(303);
     		associatedScreens.add(396);
@@ -3455,13 +4242,13 @@ public class Screens {
     		associatedScreens.add(399);
     		associatedScreens.add(400);
     		associatedScreens.add(401);
-    		screenIndex.put(indexNumber, newScreenTemplate(318, true, true, true, true));
-            associatedScreensIndex.put(indexNumber, associatedScreens);
+    		screenIndex.put(index, newScreenTemplate(318, true, true, true, true));
+            associatedScreensIndex.put(index, associatedScreens);
         }
         
         // CINC 405 - 414
         for (int i = 405; i < 415; i++) {
-        	indexNumber = i;
+        	index = i;
     		associatedScreens = new ArrayList<Integer>();
     		associatedScreens.add(303);
     		associatedScreens.add(396);
@@ -3470,13 +4257,13 @@ public class Screens {
     		associatedScreens.add(399);
     		associatedScreens.add(400);
     		associatedScreens.add(401);
-    		screenIndex.put(indexNumber, newScreenTemplate(318, true, true, true, true));
-            associatedScreensIndex.put(indexNumber, associatedScreens);
+    		screenIndex.put(index, newScreenTemplate(318, true, true, true, true));
+            associatedScreensIndex.put(index, associatedScreens);
         }
         
         // PRECEDENCE 415-418
         for (int i = 415; i < 419; i++) {
-        	indexNumber = i;
+        	index = i;
     		associatedScreens = new ArrayList<Integer>();
     		associatedScreens.add(303);
     		associatedScreens.add(396);
@@ -3485,13 +4272,13 @@ public class Screens {
     		associatedScreens.add(399);
     		associatedScreens.add(400);
     		associatedScreens.add(401);
-    		screenIndex.put(indexNumber, newScreenTemplate(318, true, true, true, true));
-            associatedScreensIndex.put(indexNumber, associatedScreens);
+    		screenIndex.put(index, newScreenTemplate(318, true, true, true, true));
+            associatedScreensIndex.put(index, associatedScreens);
         }
         
         // SUBFS 419-420
         for (int i = 419; i < 421; i++) {
-        	indexNumber = i;
+        	index = i;
     		associatedScreens = new ArrayList<Integer>();
     		associatedScreens.add(303);
     		associatedScreens.add(396);
@@ -3500,13 +4287,13 @@ public class Screens {
     		associatedScreens.add(399);
     		associatedScreens.add(400);
     		associatedScreens.add(401);
-    		screenIndex.put(indexNumber, newScreenTemplate(318, true, true, true, true));
-            associatedScreensIndex.put(indexNumber, associatedScreens);
+    		screenIndex.put(index, newScreenTemplate(318, true, true, true, true));
+            associatedScreensIndex.put(index, associatedScreens);
         }
         
         // BOMBER C3 CAPABLE? 421-422
         for (int i = 421; i < 423; i++) {
-        	indexNumber = i;
+        	index = i;
     		associatedScreens = new ArrayList<Integer>();
     		associatedScreens.add(303);
     		associatedScreens.add(396);
@@ -3515,13 +4302,13 @@ public class Screens {
     		associatedScreens.add(399);
     		associatedScreens.add(400);
     		associatedScreens.add(401);
-    		screenIndex.put(indexNumber, newScreenTemplate(318, true, true, true, true));
-            associatedScreensIndex.put(indexNumber, associatedScreens);
+    		screenIndex.put(index, newScreenTemplate(318, true, true, true, true));
+            associatedScreensIndex.put(index, associatedScreens);
         }
         
         // NET ACTIVE JOIN NET SCREEN (NOT SURE IF ACCURATE!!!!!!!!)
         // LAST SCREEN = ENTERED NET NUMBER SCREEN (INDEX = 301)
-        indexNumber = 423;
+        index = 423;
 		newPromptArea =
 				"--------------------------------------------------------------------------------\r\n" + 
 				"     SELECT OPTION                                                              \r\n" + 
@@ -3534,12 +4321,12 @@ public class Screens {
 		associatedScreens.add(306);
 		associatedScreens.add(307);
 		associatedScreens.add(308);
-		screenIndex.put(indexNumber, newScreenTemplate(301, true, true, false, true));
-        associatedScreensIndex.put(indexNumber, associatedScreens);
+		screenIndex.put(index, newScreenTemplate(301, true, true, false, true));
+        associatedScreensIndex.put(index, associatedScreens);
         
         // NET NOT ACTIVE EXIT NET SCREEN
         // LAST SCREEN = ENTERED NET NUMBER SCREEN (INDEX = 301)
-        indexNumber = 424;
+        index = 424;
 		newPromptArea =
 				"--------------------------------------------------------------------------------\r\n" + 
 				"     SELECT OPTION                                                              \r\n" + 
@@ -3552,8 +4339,8 @@ public class Screens {
 		associatedScreens.add(306);
 		associatedScreens.add(307);
 		associatedScreens.add(308);
-		screenIndex.put(indexNumber, newScreenTemplate(301, true, true, false, true));
-        associatedScreensIndex.put(indexNumber, associatedScreens);
+		screenIndex.put(index, newScreenTemplate(301, true, true, false, true));
+        associatedScreensIndex.put(index, associatedScreens);
         
         /*
          * VALUES SHOULD BE CHANGED FOR TX PORTS
@@ -3561,85 +4348,85 @@ public class Screens {
         
         // TX PORT NET PARAM SCREENS (INDEX NUMBER VALUES NEED TO BE CHANGED LATER!!!!!!!!)
         // LAST SCREEN = TX PORT NET PARAM SCREEN (INDEX = 322)
-        indexNumber = 451; // R01
+        index = 451; // R01
 		associatedScreens = new ArrayList<Integer>();
 		associatedScreens.add(303);
 		associatedScreens.add(321);
 		associatedScreens.add(322);
-		screenIndex.put(indexNumber, newScreenTemplate(315, true, true, true, true));
-        associatedScreensIndex.put(indexNumber, associatedScreens);
+		screenIndex.put(index, newScreenTemplate(315, true, true, true, true));
+        associatedScreensIndex.put(index, associatedScreens);
         
-        indexNumber = 452; // R02
+        index = 452; // R02
 		associatedScreens = new ArrayList<Integer>();
 		associatedScreens.add(303);
 		associatedScreens.add(321);
 		associatedScreens.add(322);
-		screenIndex.put(indexNumber, newScreenTemplate(315, true, true, true, true));
-        associatedScreensIndex.put(indexNumber, associatedScreens);
+		screenIndex.put(index, newScreenTemplate(315, true, true, true, true));
+        associatedScreensIndex.put(index, associatedScreens);
         
-        indexNumber = 453; // R03
+        index = 453; // R03
 		associatedScreens = new ArrayList<Integer>();
 		associatedScreens.add(303);
 		associatedScreens.add(321);
 		associatedScreens.add(322);
-		screenIndex.put(indexNumber, newScreenTemplate(315, true, true, true, true));
-        associatedScreensIndex.put(indexNumber, associatedScreens);
+		screenIndex.put(index, newScreenTemplate(315, true, true, true, true));
+        associatedScreensIndex.put(index, associatedScreens);
         
-        indexNumber = 454; // R04
+        index = 454; // R04
 		associatedScreens = new ArrayList<Integer>();
 		associatedScreens.add(303);
 		associatedScreens.add(321);
 		associatedScreens.add(322);
-		screenIndex.put(indexNumber, newScreenTemplate(315, true, true, true, true));
-        associatedScreensIndex.put(indexNumber, associatedScreens);
+		screenIndex.put(index, newScreenTemplate(315, true, true, true, true));
+        associatedScreensIndex.put(index, associatedScreens);
         
-        indexNumber = 455; // R06
+        index = 455; // R06
 		associatedScreens = new ArrayList<Integer>();
 		associatedScreens.add(303);
 		associatedScreens.add(321);
 		associatedScreens.add(322);
-		screenIndex.put(indexNumber, newScreenTemplate(315, true, true, true, true));
-        associatedScreensIndex.put(indexNumber, associatedScreens);
+		screenIndex.put(index, newScreenTemplate(315, true, true, true, true));
+        associatedScreensIndex.put(index, associatedScreens);
         
-        indexNumber = 456; // R07
+        index = 456; // R07
 		associatedScreens = new ArrayList<Integer>();
 		associatedScreens.add(303);
 		associatedScreens.add(321);
 		associatedScreens.add(322);
-		screenIndex.put(indexNumber, newScreenTemplate(315, true, true, true, true));
-        associatedScreensIndex.put(indexNumber, associatedScreens);
+		screenIndex.put(index, newScreenTemplate(315, true, true, true, true));
+        associatedScreensIndex.put(index, associatedScreens);
         
-        indexNumber = 457; // R10
+        index = 457; // R10
 		associatedScreens = new ArrayList<Integer>();
 		associatedScreens.add(303);
 		associatedScreens.add(321);
 		associatedScreens.add(322);
-		screenIndex.put(indexNumber, newScreenTemplate(315, true, true, true, true));
-        associatedScreensIndex.put(indexNumber, associatedScreens);
+		screenIndex.put(index, newScreenTemplate(315, true, true, true, true));
+        associatedScreensIndex.put(index, associatedScreens);
         
-        indexNumber = 458; // R11
+        index = 458; // R11
 		associatedScreens = new ArrayList<Integer>();
 		associatedScreens.add(303);
 		associatedScreens.add(321);
 		associatedScreens.add(322);
-		screenIndex.put(indexNumber, newScreenTemplate(315, true, true, true, true));
-        associatedScreensIndex.put(indexNumber, associatedScreens);
+		screenIndex.put(index, newScreenTemplate(315, true, true, true, true));
+        associatedScreensIndex.put(index, associatedScreens);
         
         
 		// ENTERED PTP CALL NUMBER SCREEN
 		// LAST SCREEN = PTP CALLS SCREEN (INDEX = 22)
-		indexNumber = 500; // NOT REAL VALUE JUST FOR TEST
+		index = 500; // NOT REAL VALUE JUST FOR TEST
         newPromptArea = 
                 "--------------------------------------------------------------------------------\r\n" + 
                 "     ENTER PTP CALL NUMBER                                                      \r\n" + 
                 "                                                                                \r\n" + 
                 "                                 INVALID ENTRY                                  \r\n";
-		screenIndex.put(indexNumber, newScreenTemplate(22, true, true, false, true));
-		associatedScreensIndex.put(indexNumber, associatedScreens);
+		screenIndex.put(index, newScreenTemplate(22, true, true, false, true));
+		associatedScreensIndex.put(index, associatedScreens);
 		
 		// TERMINAL CONTROL SHUT POWER OFF SCREEN
 		// LAST SCREEN = TERMINAL CONTROL POWER DOWN SCREEN (INDEX = 19)
-        indexNumber = 800; // NOT REAL VALUE JUST FOR TEST
+        index = 800; // NOT REAL VALUE JUST FOR TEST
 		newPromptArea =
                 "--------------------------------------------------------------------------------\r\n" + 
                 "     SHUT POWER OFF                                                             \r\n" + 
@@ -3655,13 +4442,13 @@ public class Screens {
 				"  ¦               ¦  ¦               ¦  ¦               ¦  ¦               ¦    \r\n" + 
 				"  ¦               ¦  ¦               ¦  ¦               ¦  ¦               ¦    \r\n" + 
 				"   ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯    ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯    ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯    ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯     \r\n";
-		screenIndex.put(indexNumber, newScreenTemplate(19, true, true, false, false));
+		screenIndex.put(index, newScreenTemplate(19, true, true, false, false));
         
         /*
          * STARTUP SCREENS
          */
         // WORKING SCREEN
-        indexNumber = 998;
+        index = 998;
 		newPromptArea =
 				"--------------------------------------------------------------------------------\r\n" + 
 				"                                                                                \r\n" + 
@@ -3677,19 +4464,19 @@ public class Screens {
 				"  ¦               ¦  ¦               ¦  ¦               ¦  ¦               ¦    \r\n" + 
 				"  ¦               ¦  ¦               ¦  ¦               ¦  ¦               ¦    \r\n" + 
 				"   ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯    ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯    ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯    ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯     \r\n";
-		screenIndex.put(indexNumber, newScreenTemplate(0, true, true, false, false));
+		screenIndex.put(index, newScreenTemplate(0, true, true, false, false));
         
         // WORKING SCREEN CONT
-        indexNumber = 999;
+        index = 999;
 		newPromptArea =
 				"--------------------------------------------------------------------------------\r\n" + 
 				"                                                                                \r\n" + 
 				"                                                                                \r\n" + 
 				"                                                                                \r\n";
-		screenIndex.put(indexNumber, newScreenTemplate(998, true, true, false, true));
+		screenIndex.put(index, newScreenTemplate(998, true, true, false, true));
         
         // STARTUP SCREEN
-        indexNumber = 1000;
+        index = 1000;
 		newPromptArea =
 				"--------------------------------------------------------------------------------\r\n" + 
 				"     PRESS VERIFY TO START UP                                                   \r\n" + 
@@ -3705,11 +4492,11 @@ public class Screens {
 				"  ¦               ¦  ¦               ¦  ¦               ¦  ¦               ¦    \r\n" + 
 				"  ¦               ¦  ¦               ¦  ¦               ¦  ¦               ¦    \r\n" + 
 				"   ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯    ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯    ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯    ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯     \r\n";	
-		screenIndex.put(indexNumber, newScreenTemplate(0, true, true, false, false));
+		screenIndex.put(index, newScreenTemplate(0, true, true, false, false));
         
         // STARTUP SCREEN CONT
         // LAST SCREEN = STARTUP SCREEN (INDEX = 1000)
-        indexNumber = 1001;
+        index = 1001;
         newOptionsArea = 
 				"-------------------------------** UNCLASSIFIED **-------------------------------\r\n" + 
 				"   _______________    _______________    _______________    _______________     \r\n" + 
@@ -3723,12 +4510,12 @@ public class Screens {
 		associatedScreens = new ArrayList<Integer>();
 		associatedScreens.add(1002);
 		associatedScreens.add(33); // OR 1003?
-		screenIndex.put(indexNumber, newScreenTemplate(0, true, true, true, false));
-        associatedScreensIndex.put(indexNumber, associatedScreens);
+		screenIndex.put(index, newScreenTemplate(0, true, true, true, false));
+        associatedScreensIndex.put(index, associatedScreens);
         
         // OPERATIONAL SCREEN
         // LAST SCREEN = STARTUP SCREEN CONT (INDEX = 1001)
-        indexNumber = 1002;
+        index = 1002;
         newOptionsArea = 
 				"-------------------------------** UNCLASSIFIED **-------------------------------\r\n" + 
 				"   _______________    _______________    _______________    _______________     \r\n" + 
@@ -3743,12 +4530,12 @@ public class Screens {
 		associatedScreens.add(0);  // NEEDS TO GO THROUGH KGV-11 STEPS
 		associatedScreens.add(1004);
 		associatedScreens.add(1006);
-		screenIndex.put(indexNumber, newScreenTemplate(1001, true, true, true, false));
-        associatedScreensIndex.put(indexNumber, associatedScreens);
+		screenIndex.put(index, newScreenTemplate(1001, true, true, true, false));
+        associatedScreensIndex.put(index, associatedScreens);
         
         // NEED TIME UPDATE SCREEN
         // LAST SCREEN = OPERATIONAL SCREEN (INDEX = 1002)
-        indexNumber = 1004;
+        index = 1004;
 		newPromptArea =
 				"--------------------------------------------------------------------------------\r\n" + 
 				"     SELECT OPTION                                                              \r\n" + 
@@ -3758,12 +4545,12 @@ public class Screens {
 		associatedScreens.add(0);  // NEEDS TO GO THROUGH KGV-11 STEPS
 		associatedScreens.add(1004);
 		associatedScreens.add(1006);
-		screenIndex.put(indexNumber, newScreenTemplate(1002, true, true, false, true));
-        associatedScreensIndex.put(indexNumber, associatedScreens);
+		screenIndex.put(index, newScreenTemplate(1002, true, true, false, true));
+        associatedScreensIndex.put(index, associatedScreens);
         
         // PARAM CHANGE SCREEN
         // LAST SCREEN = OPERATIONAL SCREEN (INDEX = 1002)
-        indexNumber = 1005;
+        index = 1005;
 		newPromptArea =
 				"--------------------------------------------------------------------------------\r\n" + 
 				"     SELECT DBASE SOURCE                                                        \r\n" + 
@@ -3783,59 +4570,59 @@ public class Screens {
 		associatedScreens.add(1020);
 		associatedScreens.add(1020);
 		associatedScreens.add(1020);
-		screenIndex.put(indexNumber, newScreenTemplate(1002, true, true, false, false));
-        associatedScreensIndex.put(indexNumber, associatedScreens);
+		screenIndex.put(index, newScreenTemplate(1002, true, true, false, false));
+        associatedScreensIndex.put(index, associatedScreens);
         
         // SET TIME SCREEN
         // LAST SCREEN = OPERATIONAL SCREEN (INDEX = 1002)
-        indexNumber = 1006;
+        index = 1006;
 		newPromptArea =
 				"--------------------------------------------------------------------------------\r\n" + 
 				"     ENTER DATE - TIME (DD-HHMMSSZ-MMMYY)                                       \r\n" + 
 				"                                                                                \r\n" + 
 				"                                                                                \r\n";
-		screenIndex.put(indexNumber, newScreenTemplate(1000, true, true, false, true));
+		screenIndex.put(index, newScreenTemplate(1000, true, true, false, true));
         
 		// INVALID TIME SCREEN
 		// LAST SCREEN = SET TIME SCREEN (INDEX = 1006)
-		indexNumber = 1007;
+		index = 1007;
 		newPromptArea =
 				"--------------------------------------------------------------------------------\r\n" + 
 				"     ENTER DATE - TIME (DD-HHMMSSZ-MMMYY)                                       \r\n" + 
 				"                                                                                \r\n" + 
 				"                                 INVALID ENTRY                                  \r\n";
-		screenIndex.put(indexNumber, newScreenTemplate(1006, true, true, false, true));
+		screenIndex.put(index, newScreenTemplate(1006, true, true, false, true));
 		
 		// VERIFY AT TIME SCREEN
-		indexNumber = 1008;
+		index = 1008;
 		newPromptArea =
 				"--------------------------------------------------------------------------------\r\n" + 
 				"     VERIFY AT TIME =                                                           \r\n" + 
 				"                                                                                \r\n" + 
 				"                                                                                \r\n";
-		screenIndex.put(indexNumber, newScreenTemplate(1006, true, true, false, true));
+		screenIndex.put(index, newScreenTemplate(1006, true, true, false, true));
 		
 		// VERIFY AT TIME WORKING SCREEN
-		indexNumber = 1009;
+		index = 1009;
 		newPromptArea =
 				"--------------------------------------------------------------------------------\r\n" + 
 				"     VERIFY AT TIME =                                                           \r\n" + 
 				"                                    WORKING                                     \r\n" +
 				"                                                                                \r\n";
-		screenIndex.put(indexNumber, newScreenTemplate(1008, true, true, false, true));
+		screenIndex.put(index, newScreenTemplate(1008, true, true, false, true));
 		
 		// VERIFY AT TIME WORKING CONT SCREEN
-		indexNumber = 1010;
+		index = 1010;
 		newPromptArea =
 				"--------------------------------------------------------------------------------\r\n" + 
 				"     VERIFY AT TIME =                                                           \r\n" + 
 				"                                                                                \r\n" +
 				"                                                                                \r\n";
-		screenIndex.put(indexNumber, newScreenTemplate(1008, true, true, true, true));
+		screenIndex.put(index, newScreenTemplate(1008, true, true, true, true));
 		
 		// SET ACCURACY OF TIME SCREEN
 		// LAST SCREEN = VERIFY AT TIME SCREEN
-		indexNumber = 1012;
+		index = 1012;
 		newPromptArea =
 				"--------------------------------------------------------------------------------\r\n" + 
 				"     SELECT ACCURACY OF TIME                                                    \r\n" + 
@@ -3855,22 +4642,22 @@ public class Screens {
 		associatedScreens.add(1013);
 		associatedScreens.add(1013);
 		associatedScreens.add(1013);
-		screenIndex.put(indexNumber, newScreenTemplate(1008, true, true, false, false));
-        associatedScreensIndex.put(indexNumber, associatedScreens);
+		screenIndex.put(index, newScreenTemplate(1008, true, true, false, false));
+        associatedScreensIndex.put(index, associatedScreens);
         
         // SELECTED TIME ACCURACY SCREEN
         // LAST SCREEN = SET ACCURACY OF TIME SCREEN (INDEX = 1012)
-        indexNumber = 1013;
+        index = 1013;
 		associatedScreens = new ArrayList<Integer>();
 		associatedScreens.add(0);  // NEEDS TO GO THROUGH KGV-11 STEPS
 		associatedScreens.add(1005);
 		associatedScreens.add(1006);
-		screenIndex.put(indexNumber, newScreenTemplate(1002, true, true, true, true));
-        associatedScreensIndex.put(indexNumber, associatedScreens);
+		screenIndex.put(index, newScreenTemplate(1002, true, true, true, true));
+        associatedScreensIndex.put(index, associatedScreens);
         
         // SELECTED DBASE SOURCE SCREEN
         // LAST SCREEN = PARAM CHANGE SCREEN (INDEX = 1005)
-        indexNumber = 1020;
+        index = 1020;
 		newPromptArea =
 				"--------------------------------------------------------------------------------\r\n" + 
 				"     SELECT DBASE SOURCE                                                        \r\n" + 
@@ -3886,21 +4673,21 @@ public class Screens {
 				"  ¦               ¦  ¦               ¦  ¦               ¦  ¦               ¦    \r\n" + 
 				"  ¦               ¦  ¦               ¦  ¦               ¦  ¦               ¦    \r\n" + 
 				"   ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯    ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯    ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯    ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯     \r\n";
-		screenIndex.put(indexNumber, newScreenTemplate(1005, true, true, false, false));
+		screenIndex.put(index, newScreenTemplate(1005, true, true, false, false));
 		
 		// SELECTED DBASE SOURCE CONT SCREEN
 		// LAST SCREEN = SELECTED DBASE SOURCE SCREEN (INDEX = 1020)
-		indexNumber = 1021;
+		index = 1021;
 		newPromptArea =
 				"--------------------------------------------------------------------------------\r\n" + 
 				"     SELECT DBASE SOURCE                                                        \r\n" + 
 				"                                                                                \r\n" +  
 				"                                                                                \r\n";
-		screenIndex.put(indexNumber, newScreenTemplate(1020, true, true, false, true));
+		screenIndex.put(index, newScreenTemplate(1020, true, true, false, true));
 		
 		// SELECT PARAMETER TO BE CHANGED SCREEN
 		// LAST SCREEN = SELECTED DBASE SOURCE SCREEN (INDEX = 1020) or SELECTED DBASE CONT SCREEN (INDEX = 1021)
-		indexNumber = 1022;
+		index = 1022;
 		newPromptArea =
 				"--------------------------------------------------------------------------------\r\n" + 
 				"     SELECT PARAMETER TO BE CHANGED                                             \r\n" + 
@@ -3922,12 +4709,12 @@ public class Screens {
 		associatedScreens.add(1024);
 		associatedScreens.add(1025);
 		associatedScreens.add(1026);
-		screenIndex.put(indexNumber, newScreenTemplate(0, true, true, false, false));
-        associatedScreensIndex.put(indexNumber, associatedScreens);
+		screenIndex.put(index, newScreenTemplate(0, true, true, false, false));
+        associatedScreensIndex.put(index, associatedScreens);
 		
         // SELECT CONSTELLATION SCREEN
         // LAST SCREEN = SELECT PARAMETER TO BE CHANGED SCREEN (INDEX = 1022)
-        indexNumber = 1023;
+        index = 1023;
 		newPromptArea =
 				"--------------------------------------------------------------------------------\r\n" + 
 				"     SELECT CONSTELLATION                                                       \r\n" + 
@@ -3946,12 +4733,12 @@ public class Screens {
 		associatedScreens = new ArrayList<Integer>();
 		associatedScreens.add(1027);
 		associatedScreens.add(1028);
-		screenIndex.put(indexNumber, newScreenTemplate(1022, true, true, false, false));
-        associatedScreensIndex.put(indexNumber, associatedScreens);
+		screenIndex.put(index, newScreenTemplate(1022, true, true, false, false));
+        associatedScreensIndex.put(index, associatedScreens);
 		
         // MODE CHANGE SCREEN
         // LAST SCREEN = SELECT PARAMETER TO BE CHANGED SCREEN (INDEX = 1022)
-        indexNumber = 1024;
+        index = 1024;
 		newPromptArea =
 				"--------------------------------------------------------------------------------\r\n" + 
 				"     SELECT MODE                                                                \r\n" + 
@@ -3970,12 +4757,12 @@ public class Screens {
 		associatedScreens = new ArrayList<Integer>();
 		associatedScreens.add(1029);
 		associatedScreens.add(1030);
-		screenIndex.put(indexNumber, newScreenTemplate(1022, true, true, false, false));
-        associatedScreensIndex.put(indexNumber, associatedScreens);
+		screenIndex.put(index, newScreenTemplate(1022, true, true, false, false));
+        associatedScreensIndex.put(index, associatedScreens);
         
         // ADAPTATION DATA SCREEN
         // LAST SCREEN = SELECT PARAMETER TO BE CHANGED SCREEN (INDEX = 1022)
-        indexNumber = 1025;
+        index = 1025;
 		newMainArea = 
 				"MAIN:ADAPTATION DATA------------------------------------------------------------\r\n" + 
 				"                                                                                \r\n" + 
@@ -4026,12 +4813,12 @@ public class Screens {
 		associatedScreens = new ArrayList<Integer>();
 		associatedScreens.add(1022);
 		associatedScreens.add(1031);
-		screenIndex.put(indexNumber, newScreenTemplate(1022, true, false, false, false));
-        associatedScreensIndex.put(indexNumber, associatedScreens);
+		screenIndex.put(index, newScreenTemplate(1022, true, false, false, false));
+        associatedScreensIndex.put(index, associatedScreens);
 		
         // VERIFY MIL CONSTELLATION SCREEN
         // LAST SCREEN = SELECT CONSTELLATION SCREEN (INDEX = 1023)
-        indexNumber = 1027;
+        index = 1027;
 		newPromptArea =
 				"--------------------------------------------------------------------------------\r\n" + 
 				"     PRESS VERIFY (MAY LOSE DATA)                                               \r\n" + 
@@ -4047,40 +4834,40 @@ public class Screens {
 				"  ¦               ¦  ¦               ¦  ¦               ¦  ¦               ¦    \r\n" + 
 				"  ¦               ¦  ¦               ¦  ¦               ¦  ¦               ¦    \r\n" + 
 				"   ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯    ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯    ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯    ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯     \r\n";
-		screenIndex.put(indexNumber, newScreenTemplate(1023, true, true, false, false));
+		screenIndex.put(index, newScreenTemplate(1023, true, true, false, false));
 		
         // VERIFY UFO CONSTELLATION SCREEN
         // LAST SCREEN = SELECT CONSTELLATION SCREEN (INDEX = 1023)
-		indexNumber = 1028;
-		screenIndex.put(indexNumber, newScreenTemplate(1027, true, true, true, true));
+		index = 1028;
+		screenIndex.put(index, newScreenTemplate(1027, true, true, true, true));
 		
 		// AUTO MODE SELECTED SCREEN
 		// LAST SCREEN = MODE CHANGE SCREEN (INDEX = 1024)
-		indexNumber = 1029;
+		index = 1029;
 		associatedScreens = new ArrayList<Integer>();
 		associatedScreens.add(0);
 		associatedScreens.add(1023);
 		associatedScreens.add(1024);
 		associatedScreens.add(1025);
 		associatedScreens.add(1026);
-		screenIndex.put(indexNumber, newScreenTemplate(1022, true, true, true, true));
-        associatedScreensIndex.put(indexNumber, associatedScreens);
+		screenIndex.put(index, newScreenTemplate(1022, true, true, true, true));
+        associatedScreensIndex.put(index, associatedScreens);
 		
         // MANUAL MODE SELECTED SCREEN
 		// LAST SCREEN = MODE CHANGE SCREEN (INDEX = 1024)
-		indexNumber = 1030;
+		index = 1030;
 		associatedScreens = new ArrayList<Integer>();
 		associatedScreens.add(0);
 		associatedScreens.add(1023);
 		associatedScreens.add(1024);
 		associatedScreens.add(1025);
 		associatedScreens.add(1026);
-		screenIndex.put(indexNumber, newScreenTemplate(1022, true, true, true, true));
-        associatedScreensIndex.put(indexNumber, associatedScreens);
+		screenIndex.put(index, newScreenTemplate(1022, true, true, true, true));
+        associatedScreensIndex.put(index, associatedScreens);
 		
         // DATA ID SCREEN
         // LAST SCREEN = ADAPTATION DATA SCREEN (INDEX = 1025)
-        indexNumber = 1031;
+        index = 1031;
 		newPromptArea =
 				"--------------------------------------------------------------------------------\r\n" + 
 				"     ENTER DATA ID                                                              \r\n" + 
@@ -4096,25 +4883,25 @@ public class Screens {
 				"  ¦               ¦  ¦               ¦  ¦               ¦  ¦               ¦    \r\n" + 
 				"  ¦               ¦  ¦               ¦  ¦               ¦  ¦               ¦    \r\n" + 
 				"   ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯    ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯    ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯    ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯     \r\n";
-		screenIndex.put(indexNumber, newScreenTemplate(1025, true, true, false, false));
+		screenIndex.put(index, newScreenTemplate(1025, true, true, false, false));
 		
 		
 		
 		// WORKING VERIFY FOR DISRUPTIVE TEST SCREEN
 		// LAST SCREEN = VERIFY FOR DISRUPTIVE TEST SCREEN (INDEX = 33)
-		indexNumber = 1300; // NOT REAL VALUE
+		index = 1300; // NOT REAL VALUE
         newPromptArea = 
                 "--------------------------------------------------------------------------------\r\n" + 
                 "     VERIFY FOR DISRUPTIVE TEST                                                 \r\n" + 
 				"                                    WORKING                                     \r\n" + 
                 "                                                                                \r\n";
 		associatedScreens = new ArrayList<Integer>();
-		screenIndex.put(indexNumber, newScreenTemplate(33, true, true, false, true));
-		associatedScreensIndex.put(indexNumber, associatedScreens);
+		screenIndex.put(index, newScreenTemplate(33, true, true, false, true));
+		associatedScreensIndex.put(index, associatedScreens);
 		
 		// DISRUPTIVE BIT TEST SCREEN
 		// LAST SCREEN = VERIFY FOR DISRUPTIVE TEST SCREEN (INDEX = 33) OR WORKING VERIFY FOR DISRUPTIVE TEST SCREEN (INDEX = 1300)
-		indexNumber = 1301;
+		index = 1301;
         newOptionsArea = 
 				"-------------------------------** UNCLASSIFIED **-------------------------------\r\n" + 
 				"   _______________    _______________    _______________    _______________     \r\n" + 
@@ -4133,12 +4920,12 @@ public class Screens {
 		associatedScreens.add(1504);
 		associatedScreens.add(1505);
 		associatedScreens.add(1506);
-		screenIndex.put(indexNumber, newScreenTemplate(5, true, true, true, false));
-		associatedScreensIndex.put(indexNumber, associatedScreens);
+		screenIndex.put(index, newScreenTemplate(5, true, true, true, false));
+		associatedScreensIndex.put(index, associatedScreens);
 		
 		// STARTUP BIT TEST SCREEN
 		// LAST SCREEN = OPERATIONAL?
-		indexNumber = 1302;
+		index = 1302;
         newOptionsArea = 
 				"-------------------------------** UNCLASSIFIED **-------------------------------\r\n" + 
 				"   _______________    _______________    _______________    _______________     \r\n" + 
@@ -4157,12 +4944,12 @@ public class Screens {
 		associatedScreens.add(1504);
 		associatedScreens.add(1505);
 		associatedScreens.add(1506);
-		screenIndex.put(indexNumber, newScreenTemplate(1301, true, true, true, false));
-		associatedScreensIndex.put(indexNumber, associatedScreens);
+		screenIndex.put(index, newScreenTemplate(1301, true, true, true, false));
+		associatedScreensIndex.put(index, associatedScreens);
 		
 		// COMMON TEST SCREEN
 		// LAST SCREEN = DISRUPTIVE BIT TEST SCREEN (INDEX = 1301)
-		indexNumber = 1502;
+		index = 1502;
         newOptionsArea = 
 				"-------------------------------** UNCLASSIFIED **-------------------------------\r\n" + 
 				"   _______________    _______________    _______________    _______________     \r\n" + 
@@ -4182,12 +4969,12 @@ public class Screens {
 		associatedScreens.add(1510);
 		associatedScreens.add(1511);
 		associatedScreens.add(1512);
-		screenIndex.put(indexNumber, newScreenTemplate(5, true, true, true, false));
-		associatedScreensIndex.put(indexNumber, associatedScreens);
+		screenIndex.put(index, newScreenTemplate(5, true, true, true, false));
+		associatedScreensIndex.put(index, associatedScreens);
 		
 		// EHF TEST SCREEN
 		// LAST SCREEN = DISRUPTIVE BIT TEST SCREEN (INDEX = 1301)
-		indexNumber = 1503;
+		index = 1503;
         newOptionsArea = 
 				"-------------------------------** UNCLASSIFIED **-------------------------------\r\n" + 
 				"   _______________    _______________    _______________    _______________     \r\n" + 
@@ -4207,12 +4994,12 @@ public class Screens {
 		associatedScreens.add(1520);
 		associatedScreens.add(1521);
 		associatedScreens.add(1522);
-		screenIndex.put(indexNumber, newScreenTemplate(5, true, true, true, false));
-		associatedScreensIndex.put(indexNumber, associatedScreens);
+		screenIndex.put(index, newScreenTemplate(5, true, true, true, false));
+		associatedScreensIndex.put(index, associatedScreens);
 		
 		// I/O PORTS SCREEN
 		// LAST SCREEN = DISRUPTIVE BIT TEST SCREEN (INDEX = 1301)
-		indexNumber = 1504;
+		index = 1504;
         newOptionsArea = 
 				"-------------------------------** UNCLASSIFIED **-------------------------------\r\n" + 
 				"   _______________    _______________    _______________    _______________     \r\n" + 
@@ -4228,12 +5015,12 @@ public class Screens {
 		associatedScreens.add(1527);
 		associatedScreens.add(1528);
 		associatedScreens.add(1529);
-		screenIndex.put(indexNumber, newScreenTemplate(5, true, true, true, false)); // NEEDS TO REFERENCE PORT USAGE SCREEN
-		associatedScreensIndex.put(indexNumber, associatedScreens);
+		screenIndex.put(index, newScreenTemplate(5, true, true, true, false)); // NEEDS TO REFERENCE PORT USAGE SCREEN
+		associatedScreensIndex.put(index, associatedScreens);
 		
 		// BIT POWER DOWN SCREEN
 		// LAST SCREEN = 
-		indexNumber = 1505;
+		index = 1505;
 		newPromptArea =
                 "--------------------------------------------------------------------------------\r\n" + 
                 "     VERIFY TO POWER DOWN                                                       \r\n" + 
@@ -4249,21 +5036,21 @@ public class Screens {
 				"  ¦               ¦  ¦               ¦  ¦               ¦  ¦               ¦    \r\n" + 
 				"  ¦               ¦  ¦               ¦  ¦               ¦  ¦               ¦    \r\n" + 
 				"   ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯    ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯    ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯    ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯     \r\n";
-        screenIndex.put(indexNumber, newScreenTemplate(5, true, true, false, false));
+        screenIndex.put(index, newScreenTemplate(5, true, true, false, false));
 		
         // RESTART SYSTEM SCREEN
         // LAST SCREEN = DISRUPTIVE BIT TEST SCREEN
-        indexNumber = 1506;
+        index = 1506;
 		newPromptArea =
                 "--------------------------------------------------------------------------------\r\n" + 
                 "     VERIFY TO RESTART SYSTEM                                                   \r\n" + 
                 "                                                                                \r\n" + 
                 "                                                                                \r\n";
-		screenIndex.put(indexNumber, newScreenTemplate(1505, true, true, false, true));
+		screenIndex.put(index, newScreenTemplate(1505, true, true, false, true));
         
 		// COMMON TEST CONT SCREEN
 		// LAST SCREEN = COMMON TEST SCREEN (INDEX = 1502)
-		indexNumber = 1512;
+		index = 1512;
         newOptionsArea = 
 				"-------------------------------** UNCLASSIFIED **-------------------------------\r\n" + 
 				"   _______________    _______________    _______________    _______________     \r\n" + 
@@ -4280,12 +5067,12 @@ public class Screens {
 		associatedScreens.add(1514);
 		associatedScreens.add(1515);
 		associatedScreens.add(1516);
-		screenIndex.put(indexNumber, newScreenTemplate(5, true, true, true, false));
-		associatedScreensIndex.put(indexNumber, associatedScreens);
+		screenIndex.put(index, newScreenTemplate(5, true, true, true, false));
+		associatedScreensIndex.put(index, associatedScreens);
 		
 		// EHF TEST CONT SCREEN
 		// LAST SCREEN = EHF TEST SCREEN (INDEX = 1503)
-		indexNumber = 1522;
+		index = 1522;
         newOptionsArea = 
 				"-------------------------------** UNCLASSIFIED **-------------------------------\r\n" + 
 				"   _______________    _______________    _______________    _______________     \r\n" + 
@@ -4302,11 +5089,11 @@ public class Screens {
 		associatedScreens.add(1524);
 		associatedScreens.add(1525);
 		associatedScreens.add(1526);
-		screenIndex.put(indexNumber, newScreenTemplate(5, true, true, true, false)); 
-		associatedScreensIndex.put(indexNumber, associatedScreens);
+		screenIndex.put(index, newScreenTemplate(5, true, true, true, false)); 
+		associatedScreensIndex.put(index, associatedScreens);
 		
 		// 
-		indexNumber = 1530;
+		index = 1530;
 		// BIT SHUT POWER OFF SCREEN
 		// LAST SCREEN = BIT POWER DOWN SCREEN (INDEX = 1505)
 		newPromptArea =
@@ -4324,13 +5111,13 @@ public class Screens {
 				"  ¦               ¦  ¦               ¦  ¦               ¦  ¦               ¦    \r\n" + 
 				"  ¦               ¦  ¦               ¦  ¦               ¦  ¦               ¦    \r\n" + 
 				"   ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯    ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯    ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯    ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯     \r\n";
-		screenIndex.put(indexNumber, newScreenTemplate(1505, true, true, false, false));
+		screenIndex.put(index, newScreenTemplate(1505, true, true, false, false));
 		
 		/*
 		 * ALL BIT TEST SCREENS
 		 */
 		// VERIFY TO INIT TEST SCREEN
-		indexNumber = 1501;
+		index = 1501;
         newPromptArea = 
                 "--------------------------------------------------------------------------------\r\n" + 
                 "     VERIFY TO INIT TEST                                                        \r\n" + 
@@ -4346,67 +5133,67 @@ public class Screens {
 				"  ¦               ¦  ¦               ¦  ¦               ¦  ¦               ¦    \r\n" + 
 				"  ¦               ¦  ¦               ¦  ¦               ¦  ¦               ¦    \r\n" + 
 				"   ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯    ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯    ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯    ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯     \r\n";
-		screenIndex.put(indexNumber, newScreenTemplate(5, true, true, false, false));
-		associatedScreensIndex.put(indexNumber, associatedScreens);
+		screenIndex.put(index, newScreenTemplate(5, true, true, false, false));
+		associatedScreensIndex.put(index, associatedScreens);
 		
-		indexNumber = 1507; // 
-		screenIndex.put(indexNumber, newScreenTemplate(1501, true, true, true, true));
-		associatedScreensIndex.put(indexNumber, associatedScreens);
-		indexNumber = 1508;
-		screenIndex.put(indexNumber, newScreenTemplate(1501, true, true, true, true));
-		associatedScreensIndex.put(indexNumber, associatedScreens);
-		indexNumber = 1509;
-		screenIndex.put(indexNumber, newScreenTemplate(1501, true, true, true, true));
-		associatedScreensIndex.put(indexNumber, associatedScreens);
-		indexNumber = 1510;
-		screenIndex.put(indexNumber, newScreenTemplate(1501, true, true, true, true));
-		associatedScreensIndex.put(indexNumber, associatedScreens);
-		indexNumber = 1511;
-		screenIndex.put(indexNumber, newScreenTemplate(1501, true, true, true, true));
-		associatedScreensIndex.put(indexNumber, associatedScreens);
-		indexNumber = 1513;
-		screenIndex.put(indexNumber, newScreenTemplate(1501, true, true, true, true));
-		associatedScreensIndex.put(indexNumber, associatedScreens);
-		indexNumber = 1514;
-		screenIndex.put(indexNumber, newScreenTemplate(1501, true, true, true, true));
-		associatedScreensIndex.put(indexNumber, associatedScreens);
-		indexNumber = 1515;
-		screenIndex.put(indexNumber, newScreenTemplate(1501, true, true, true, true));
-		associatedScreensIndex.put(indexNumber, associatedScreens);
-		indexNumber = 1516;
-		screenIndex.put(indexNumber, newScreenTemplate(1501, true, true, true, true));
-		associatedScreensIndex.put(indexNumber, associatedScreens);
-		indexNumber = 1517;
-		screenIndex.put(indexNumber, newScreenTemplate(1501, true, true, true, true));
-		associatedScreensIndex.put(indexNumber, associatedScreens);
-		indexNumber = 1518;
-		screenIndex.put(indexNumber, newScreenTemplate(1501, true, true, true, true));
-		associatedScreensIndex.put(indexNumber, associatedScreens);
-		indexNumber = 1519;
-		screenIndex.put(indexNumber, newScreenTemplate(1501, true, true, true, true));
-		associatedScreensIndex.put(indexNumber, associatedScreens);
-		indexNumber = 1520;
-		screenIndex.put(indexNumber, newScreenTemplate(1501, true, true, true, true));
-		associatedScreensIndex.put(indexNumber, associatedScreens);
-		indexNumber = 1521;
-		screenIndex.put(indexNumber, newScreenTemplate(1501, true, true, true, true));
-		associatedScreensIndex.put(indexNumber, associatedScreens);
-		indexNumber = 1523;
-		screenIndex.put(indexNumber, newScreenTemplate(1501, true, true, true, true));
-		associatedScreensIndex.put(indexNumber, associatedScreens);
-		indexNumber = 1524;
-		screenIndex.put(indexNumber, newScreenTemplate(1501, true, true, true, true));
-		associatedScreensIndex.put(indexNumber, associatedScreens);
-		indexNumber = 1525;
-		screenIndex.put(indexNumber, newScreenTemplate(1501, true, true, true, true));
-		associatedScreensIndex.put(indexNumber, associatedScreens);
-		indexNumber = 1526;
-		screenIndex.put(indexNumber, newScreenTemplate(1501, true, true, true, true));
-		associatedScreensIndex.put(indexNumber, associatedScreens);
+		index = 1507; // 
+		screenIndex.put(index, newScreenTemplate(1501, true, true, true, true));
+		associatedScreensIndex.put(index, associatedScreens);
+		index = 1508;
+		screenIndex.put(index, newScreenTemplate(1501, true, true, true, true));
+		associatedScreensIndex.put(index, associatedScreens);
+		index = 1509;
+		screenIndex.put(index, newScreenTemplate(1501, true, true, true, true));
+		associatedScreensIndex.put(index, associatedScreens);
+		index = 1510;
+		screenIndex.put(index, newScreenTemplate(1501, true, true, true, true));
+		associatedScreensIndex.put(index, associatedScreens);
+		index = 1511;
+		screenIndex.put(index, newScreenTemplate(1501, true, true, true, true));
+		associatedScreensIndex.put(index, associatedScreens);
+		index = 1513;
+		screenIndex.put(index, newScreenTemplate(1501, true, true, true, true));
+		associatedScreensIndex.put(index, associatedScreens);
+		index = 1514;
+		screenIndex.put(index, newScreenTemplate(1501, true, true, true, true));
+		associatedScreensIndex.put(index, associatedScreens);
+		index = 1515;
+		screenIndex.put(index, newScreenTemplate(1501, true, true, true, true));
+		associatedScreensIndex.put(index, associatedScreens);
+		index = 1516;
+		screenIndex.put(index, newScreenTemplate(1501, true, true, true, true));
+		associatedScreensIndex.put(index, associatedScreens);
+		index = 1517;
+		screenIndex.put(index, newScreenTemplate(1501, true, true, true, true));
+		associatedScreensIndex.put(index, associatedScreens);
+		index = 1518;
+		screenIndex.put(index, newScreenTemplate(1501, true, true, true, true));
+		associatedScreensIndex.put(index, associatedScreens);
+		index = 1519;
+		screenIndex.put(index, newScreenTemplate(1501, true, true, true, true));
+		associatedScreensIndex.put(index, associatedScreens);
+		index = 1520;
+		screenIndex.put(index, newScreenTemplate(1501, true, true, true, true));
+		associatedScreensIndex.put(index, associatedScreens);
+		index = 1521;
+		screenIndex.put(index, newScreenTemplate(1501, true, true, true, true));
+		associatedScreensIndex.put(index, associatedScreens);
+		index = 1523;
+		screenIndex.put(index, newScreenTemplate(1501, true, true, true, true));
+		associatedScreensIndex.put(index, associatedScreens);
+		index = 1524;
+		screenIndex.put(index, newScreenTemplate(1501, true, true, true, true));
+		associatedScreensIndex.put(index, associatedScreens);
+		index = 1525;
+		screenIndex.put(index, newScreenTemplate(1501, true, true, true, true));
+		associatedScreensIndex.put(index, associatedScreens);
+		index = 1526;
+		screenIndex.put(index, newScreenTemplate(1501, true, true, true, true));
+		associatedScreensIndex.put(index, associatedScreens);
 		
 		// COMMON TEST SCREEN (STARTUP)
 		// LAST SCREEN = STARTUP DISRUPTIVE BIT TEST SCREEN (INDEX = 1302)
-		indexNumber = 1532;
+		index = 1532;
 		associatedScreens = new ArrayList<Integer>();
 		associatedScreens.add(1302);    // NOT REAL VALUE NEEDS TO CANCEL TEST 
 		associatedScreens.add(1532);	// WHERE DOES IT RETURN? 
@@ -4416,12 +5203,12 @@ public class Screens {
 		associatedScreens.add(1510);
 		associatedScreens.add(1511);
 		associatedScreens.add(1535);
-		screenIndex.put(indexNumber, newScreenTemplate(1502, true, true, true, true));
-		associatedScreensIndex.put(indexNumber, associatedScreens);
+		screenIndex.put(index, newScreenTemplate(1502, true, true, true, true));
+		associatedScreensIndex.put(index, associatedScreens);
 		
 		// EHF TEST SCREEN (STARTUP)
 		// LAST SCREEN = STARTUP DISRUPTIVE BIT TEST SCREEN (INDEX = 1302)
-		indexNumber = 1533;
+		index = 1533;
 		associatedScreens = new ArrayList<Integer>();
 		associatedScreens.add(1302);    // NOT REAL VALUE NEEDS TO CANCEL TEST 
 		associatedScreens.add(1533);	// WHERE DOES IT RETURN? 
@@ -4431,43 +5218,43 @@ public class Screens {
 		associatedScreens.add(1520);
 		associatedScreens.add(1521);
 		associatedScreens.add(1536);
-		screenIndex.put(indexNumber, newScreenTemplate(1503, true, true, true, true));
-		associatedScreensIndex.put(indexNumber, associatedScreens);
+		screenIndex.put(index, newScreenTemplate(1503, true, true, true, true));
+		associatedScreensIndex.put(index, associatedScreens);
 		
 		// I/O PORTS SCREEN (STARTUP)
 		// LAST SCREEN = STARTUP DISRUPTIVE BIT TEST SCREEN (INDEX = 1302)
-		indexNumber = 1534;
+		index = 1534;
 		associatedScreens = new ArrayList<Integer>();
 		associatedScreens.add(1302);
 		associatedScreens.add(1527);
 		associatedScreens.add(1528);
 		associatedScreens.add(1529);
-		screenIndex.put(indexNumber, newScreenTemplate(1504, true, true, true, true)); // NEEDS TO REFERENCE PORT USAGE SCREEN
-		associatedScreensIndex.put(indexNumber, associatedScreens);
+		screenIndex.put(index, newScreenTemplate(1504, true, true, true, true)); // NEEDS TO REFERENCE PORT USAGE SCREEN
+		associatedScreensIndex.put(index, associatedScreens);
 		
 		// COMMON TEST CONT SCREEN (STARTUP)
 		// LAST SCREEN = COMMON TEST SCREEN (STARTUP) (INDEX = 1532)
-		indexNumber = 1535;
+		index = 1535;
 		associatedScreens = new ArrayList<Integer>();
 		associatedScreens.add(1532);    // NOT REAL VALUE NEEDS TO CANCEL TEST 
 		associatedScreens.add(1513);	// WHERE DOES IT RETURN? 
 		associatedScreens.add(1514);
 		associatedScreens.add(1515);
 		associatedScreens.add(1516);
-		screenIndex.put(indexNumber, newScreenTemplate(1512, true, true, true, true));
-		associatedScreensIndex.put(indexNumber, associatedScreens);
+		screenIndex.put(index, newScreenTemplate(1512, true, true, true, true));
+		associatedScreensIndex.put(index, associatedScreens);
 		
 		// EHF TEST CONT SCREEN (STARTUP)
 		// LAST SCREEN = EHF TEST SCREEN (STARTUP) (INDEX = 1533)
-		indexNumber = 1536;
+		index = 1536;
 		associatedScreens = new ArrayList<Integer>();
 		associatedScreens.add(1533);
 		associatedScreens.add(1523);
 		associatedScreens.add(1524);
 		associatedScreens.add(1525);
 		associatedScreens.add(1526);
-		screenIndex.put(indexNumber, newScreenTemplate(1522, true, true, true, true)); 
-		associatedScreensIndex.put(indexNumber, associatedScreens);
+		screenIndex.put(index, newScreenTemplate(1522, true, true, true, true)); 
+		associatedScreensIndex.put(index, associatedScreens);
 	}
 	
 	// Prints Status of TRANSEC Keys
@@ -4508,15 +5295,60 @@ public class Screens {
 		}
 	}
 	
+	// Returns Formatted Alarm
+	private String getAlarm() {
+		if (alarmIsActive) {
+			Log logEntry = null;
+			for (int i = (log.size()-1); i >= 0; i--) {
+				if (log.get(i).getStatus() == Status.ALARM) {
+					logEntry = log.get(i);
+					break;
+				}
+			}
+			if (logEntry != null) {
+				return logEntry.getTimeStamp()+"  "+logEntry.getMessage();
+			} else {
+				return "";
+			}
+		} else {
+			return "";
+		}
+	}
+	
+	// Returns Formatted Advisory
+	private String getAdvisory() {
+		Log logEntry = null;
+		for (int i = (log.size()-1); i >= 0; i--) {
+			if (log.get(i).getStatus() == Status.ADVISORY) {
+				logEntry = log.get(i);
+				break;
+			}
+		}
+		if (logEntry == null) {
+			return "";
+		} else if (logEntry.getMessage().length() >= 52) {
+			String lineOne = "";
+			String[] words = logEntry.getMessage().split(" ");
+			lineTwo = words[words.length-1];
+			for (int i = 0; i < words.length-1; i++) {
+				lineOne += words[i]+" ";
+			}
+			return logEntry.getTimeStamp()+"  "+lineOne;
+		} else {
+			return logEntry.getTimeStamp()+"  "+logEntry.getMessage();
+		}
+	}
+	
 	// Returns Formatted Log Entries
 	private String fetchLogEntry(int i) {
 		if (log.size() >= i) {
-			if (log.get(log.size()-i).getStatus() == Status.ALARM) {
-				return log.get(log.size()-i).getTimeStamp()+"* "+log.get(log.size()-i).getMessage();
+			Log logEntry = log.get(log.size()-i);
+			if (logEntry.getStatus() == Status.ALARM) {
+				return logEntry.getTimeStamp()+"* "+logEntry.getMessage();
 			} else {
-				return log.get(log.size()-i).getTimeStamp()+"  "+log.get(log.size()-i).getMessage();
+				return logEntry.getTimeStamp()+"  "+logEntry.getMessage();
 			}
-		}  else {
+		} else {
 			return "";
 		}
 	}

@@ -17,7 +17,7 @@ public class C2C3Loopback {
 					status = Status.STARTED;
 					determineNumAttempts();
 					try {
-						Thread.sleep(4000);
+						Thread.sleep(7000);
 						status = Status.SUCCESSFUL;
 					} catch (InterruptedException e) {
 						numAttempts = 4;

@@ -2,22 +2,20 @@ import java.util.Random;
 
 public class Acquisition {
 	
-	String currentStep;
-	Status status;
-	boolean flag = false;
-	Random rand = new Random();
+	private String currentStep;
+	private Status status;
+	private boolean flag = false;
+	private Random rand = new Random();
 	
 	public Acquisition(String satStatus, String startupMode) throws InterruptedException {
 		
 		if (satStatus.equals("LOGGED ON")) {
 			Thread thread = new Thread(new Runnable() {
-
-				@Override
 				public void run() {
 					status = Status.PENDING;
 					currentStep = "LOGOFF PENDING";
 					try {
-						Thread.sleep(1000); // 10000
+						Thread.sleep(10000); // 10000
 					} catch (InterruptedException e) {
 						e.printStackTrace();
 					}
@@ -28,7 +26,6 @@ public class Acquisition {
 			thread.start();
 		} else if (satStatus.equals("DL COMPLETE")) {
 			Thread thread = new Thread(new Runnable() {
-				@Override
 				public void run() {
 					currentStep = "DL COMPLETE  -  WAITING FOR DL TRACK";
 					try {
@@ -95,13 +92,13 @@ public class Acquisition {
 					} catch (InterruptedException e) {
 						e.printStackTrace();
 					}
-					if (flag == true) {
+					if (flag) {
 						int x = rand.nextInt(18)+1; // RANDOM NUMBER BETWEEN 1 and 18
 						//System.out.println("MIN TO ACQUIRE -> "+x); // TEST PRINT
 						for (int i = 0; i < x; i++) {
 							currentStep = "DL WORKING   -   "+(28-i)+" MIN TO ACQUIRE";
 							try {
-								Thread.sleep(1000);
+								Thread.sleep(1000); // 60000
 							} catch (InterruptedException e) {
 								e.printStackTrace();
 							}
@@ -235,6 +232,7 @@ public class Acquisition {
 		this.flag = flag;
 	}
 	
+	// Returns Flag
 	public boolean getFlag() {
 		return flag;
 	}

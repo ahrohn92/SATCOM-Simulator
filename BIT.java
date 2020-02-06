@@ -22,19 +22,17 @@ public class BIT {
 			
 			public void run() {
 				
-				while(run == true) {
+				while(run) {
 					
 					System.out.print(""); // DOESN'T WORK WITHOUT THIS FOR SOME REASON
 										  // HAS TO DO WITH CONCURRENY
 					
 					if (status == Status.RUNNING) {
-	
 						try {
 							Thread.sleep(duration);
 						} catch (InterruptedException e) {
 							e.printStackTrace();
 						}
-
 						status = Status.FINISHED;
 						
 						// CONDITIONS FOR MATCHING FAULTS TO BITCODE
