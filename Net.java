@@ -1,3 +1,4 @@
+import java.text.DecimalFormat;
 
 public class Net {
 	
@@ -13,6 +14,8 @@ public class Net {
 	boolean isSelected = false;
 	boolean flag = false;
 	
+	DecimalFormat decimalFormat = new DecimalFormat("00");
+	
 	// Default Net Configurations
 	String[] terminalParameters = {"NO","R01","R01","","","LEAST","1","NO"};
 	String[] serviceParameters1 = {"XXXXXX","MIL","XX","KGV-11/DATA","2400","PRIMARY","LONG CONV"};
@@ -23,9 +26,6 @@ public class Net {
 		this.netNumber = netNumber;
 		this.netName = netName;
 
-		
-		
-		
 		// Executable Thread
 		thread = new Thread(new Runnable() {
 			@Override
@@ -37,6 +37,7 @@ public class Net {
 					  						// HAS TO DO WITH CONCURRENY
 					if (status == Status.INACTIVE && flag == true) {
 						status = Status.PENDING;
+						netStatus = "PD";
 						try {
 							Thread.sleep(20000);
 						} catch (InterruptedException e) {
@@ -47,9 +48,9 @@ public class Net {
 						netStatus = "AC";
 						flag = false;
 					}
-					
 				 	if (status == Status.ACTIVE && flag == true) {
 						status = Status.PENDING;
+						netStatus = "PD";
 						try {
 							Thread.sleep(20000);
 						} catch (InterruptedException e) {
@@ -99,7 +100,7 @@ public class Net {
 	
 	// Getter Method for Net Number
 	public String getNetNumber() {
-		return String.format("%1$-2s", netNumber);
+		return decimalFormat.format(netNumber);
 	}
 	
 	// Setter Method for Status

@@ -73,7 +73,7 @@ public class Acquisition {
 					status = Status.UL_COMPLETE;
 					currentStep = "DL COMPLETE  -  UL COMPLETE";
 					try {
-						Thread.sleep(1000); // 5000
+						Thread.sleep(5000); // 5000
 					} catch (InterruptedException e) {
 						e.printStackTrace();
 					}
