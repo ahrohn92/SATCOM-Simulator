@@ -52,7 +52,7 @@ public class Acquisition {
 					} catch (InterruptedException e) {
 						e.printStackTrace();
 					}
-					currentStep = "DL COMPLETE  -  COARSE PROBE   -  1 MIN";
+					currentStep = "DL COMPLETE  -  COARSE PROBE   1 MIN";
 					try {
 						Thread.sleep(1000); // 2000
 					} catch (InterruptedException e) {
@@ -138,7 +138,7 @@ public class Acquisition {
 							} catch (InterruptedException e) {
 								e.printStackTrace();
 							}
-							currentStep = "DL COMPLETE  -  COARSE PROBE   -  1 MIN";
+							currentStep = "DL COMPLETE  -  COARSE PROBE   1 MIN";
 							try {
 								Thread.sleep(1000); // 2000
 							} catch (InterruptedException e) {

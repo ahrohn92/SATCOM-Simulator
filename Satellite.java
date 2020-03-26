@@ -8,6 +8,10 @@ public class Satellite {
 	private double lowerAzimuth;
 	private double elevation;
 	private double upperAzimuth;
+	private String beam;
+	private String C2_Robustness;
+	private String C2_Cycle;
+	private String C3_Mode;
 	private boolean canBeAuthorized = false;
 	private boolean isAuthorized = false;
 	private boolean isEphemerisCurrent = false;
@@ -19,8 +23,13 @@ public class Satellite {
 	DecimalFormat decimalFormat = new DecimalFormat("##0.0");
 	
 	// Satellite Constructor
-	public Satellite(String satName) {
+	public Satellite(String satName, String beam, String C2_Robustness, String C2_Cycle, String C3_Mode) {
 		this.satName = satName;
+		this.beam = beam;
+		this.C2_Robustness = C2_Robustness;
+		this.C2_Cycle = C2_Cycle;
+		this.C3_Mode = C3_Mode;
+		
 		lowerAzimuth = generateRandomValue(125.0, 175.0);
 		elevation = generateRandomValue(20.0, 45.0);
 		upperAzimuth = elevation + lowerAzimuth;
@@ -45,9 +54,33 @@ public class Satellite {
 		return Math.random() * (max - min) + min;
 	}
 	
+	/*
+	 * Getter Methods
+	 */
+	
 	// Returns Name
 	public String getName() {
 		return satName;
+	}
+	
+	// Returns Tracking Beam
+	public String getBeam() {
+		return beam;
+	}
+	
+	// Returns C2 Robustness
+	public String getC2Robustness() {
+		return C2_Robustness;
+	}
+	
+	// Returns C2 Cycle
+	public String getC2Cycle() {
+		return C2_Cycle;
+	}
+	
+	// Returns C3 Mode
+	public String getC3Mode() {
+		return C3_Mode;
 	}
 	
 	// Returns Lower Azimuth
@@ -65,24 +98,14 @@ public class Satellite {
 		return decimalFormat.format(upperAzimuth);
 	}
 	
-	// Returns Whether Satellite Can Be Authorized
-	public boolean canBeAuthorized() {
-		return canBeAuthorized;
-	}
-	
-	// Sets Authorization
-	public void setAuthorization(boolean isAuthorized) {
-		this.isAuthorized = isAuthorized;
-	}
-	
 	// Returns Authorization
 	public boolean getAuthorization() {
 		return isAuthorized;
 	}
 	
-	// Sets Currentness of Ephemeris
-	public void setEphemerisCurrentness(boolean isEphemerisCurrent) {
-		this.isEphemerisCurrent = isEphemerisCurrent;
+	// Returns Whether Satellite Can Be Authorized
+	public boolean canBeAuthorized() {
+		return canBeAuthorized;
 	}
 	
 	// Returns Currentness of Ephemeris
@@ -90,13 +113,27 @@ public class Satellite {
 		return isEphemerisCurrent;
 	}
 	
-	// Sets Keys
-	public void setKeys(ArrayList<Character> keys) {
-		this.keys = keys;
-	}
-	
 	// Returns Keys
 	public ArrayList<Character> getKeys() {
 		return keys;
+	}
+	
+	/*
+	 * Setter Methods
+	 */
+	
+	// Sets Authorization
+	public void setAuthorization(boolean isAuthorized) {
+		this.isAuthorized = isAuthorized;
+	}
+	
+	// Sets Currentness of Ephemeris
+	public void setEphemerisCurrentness(boolean isEphemerisCurrent) {
+		this.isEphemerisCurrent = isEphemerisCurrent;
+	}
+	
+	// Sets Keys
+	public void setKeys(ArrayList<Character> keys) {
+		this.keys = keys;
 	}
 }

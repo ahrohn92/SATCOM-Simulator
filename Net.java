@@ -3,18 +3,25 @@ import java.text.DecimalFormat;
 public class Net {
 	
 	// Net Parameters
-//	private String TXPort;
-//	private String RXPort;
-//	private int SID;
-	int netNumber;
-	Thread thread;
-	String netName;
+
+	private int netNumber;
+	private String netName;
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	private Thread thread;
 	String netStatus = "IA";
 	Status status = Status.INACTIVE;
 	boolean isSelected = false;
 	boolean flag = false;
-	
-	DecimalFormat decimalFormat = new DecimalFormat("00");
 	
 	// Default Net Configurations
 	String[] terminalParameters = {"NO","R01","R01","","","LEAST","1","NO"};
@@ -66,7 +73,10 @@ public class Net {
 		});
 	}
 	
-	
+	// Returns Net Name
+	public String getName() {
+		return netName;
+	}
 	
 	// Setter and Getter Methods for Net Parameters
 	public void setTerminalParameters(String[] terminalParameters) {
@@ -99,8 +109,8 @@ public class Net {
 	}
 	
 	// Getter Method for Net Number
-	public String getNetNumber() {
-		return decimalFormat.format(netNumber);
+	public int getNetNumber() {
+		return netNumber;
 	}
 	
 	// Setter Method for Status

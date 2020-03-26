@@ -43,8 +43,8 @@ public class Screens {
 			String commonGroupBIT, String EHFGroupBIT, HashMap<Integer, Net> nets, int selectedNet, String tsmStatus, String timeSource,
 			String startupMode, String otarAuto, HashMap<String, Satellite> sats, String time, String beam, String[] acqIndicators, String GSData, 
 			String[] ephemeris, String[] logonParams, String[] operatorInputs, boolean loggedOnSat, char[] SRC, String mode, char[] satStatusChars,
-			String[] beams, String[] switches, String[] categoryStatus, boolean alarmIsActive, String databaseSource, String[] agileBeamTimes,
-			String agileBeamNoise) {
+			String[] switches, String[] categoryStatus, boolean alarmIsActive, String databaseSource, String[] agileBeamTimes, String agileBeamNoise, 
+			String[] KGV11Status, String constellation, String[] canisterIDs, String[] ULSlots) {
 		this.log = log;
 		this.tempNavData = tempNavData;
 		this.sats = sats;
@@ -89,7 +89,7 @@ public class Screens {
 				"                        STARTUP MODE     "+startupMode+"                                  \r\n" + 
 				"                        DATABASE SOURCE  "+databaseSource+"         \r\n" + 
 				"                        TIME SOURCE      "+timeSource+"                                    \r\n" +
-				"                        CONSTELLATION    MIL                                    \r\n" + 
+				"                        CONSTELLATION    "+constellation+"                                    \r\n" + 
 				"                        TSM STATUS       "+tsmStatus+"         \r\n" + 
 				"                        BIT STATUS       OK                                     \r\n" + 
 				"                        LATITUDE          "+String.format("%1$6s", navData.getLatitude())+"                                \r\n" + 
@@ -234,29 +234,29 @@ public class Screens {
 				"                            "+lineTwo+"                                         \r\n";
 		newMainArea = 
 				"MAIN:EHF------------------------------------------------------------------------\r\n" + 
-				"           UL SLOTS: PRIMARY    1 N01  2 -    3 -    4 -     CONSTELLATION  MIL \r\n" + 
-				"                     SECONDARY  1 -    2 N02  3 -    4 -     TERMINAL ID   XXXX \r\n" + 
+				"           UL SLOTS: PRIMARY    1 "+String.format("%1$-3s",ULSlots[0])+"  2 "+String.format("%1$-3s",ULSlots[1])+"  3 "+String.format("%1$-3s",ULSlots[2])+"  4 "+String.format("%1$-3s",ULSlots[3])+"   CONSTELLATION  "+constellation+" \r\n" + 
+				"                     SECONDARY  1 "+String.format("%1$-3s",ULSlots[4])+"  2 "+String.format("%1$-3s",ULSlots[5])+"  3 "+String.format("%1$-3s",ULSlots[6])+"  4 "+String.format("%1$-3s",ULSlots[7])+"   TERMINAL ID   XXXX \r\n" + 
 				"                                                                                \r\n" + 
 				"KEYS                        TX RX DL                                            \r\n" + 
 				"   CON NAME       TX   RX   C3 C3 RT ST                   TX   RX   C3 C3 RT ST \r\n" + 
-				" 1 MIL NAME        -    -   -  -  -  "+nets.get(1).getNetStatus()+" 19 MIL NAME        -    -   -  -  -  "+nets.get(19).getNetStatus()+" \r\n" + 
-				" 2 MIL NAME        -    -   -  -  -  "+nets.get(2).getNetStatus()+" 20 MIL NAME        -    -   -  -  -  "+nets.get(20).getNetStatus()+" \r\n" + 
-				" 3 MIL NAME        -    -   -  -  -  "+nets.get(3).getNetStatus()+" 21 MIL NAME        -    -   -  -  -  "+nets.get(21).getNetStatus()+" \r\n" +
-				" 4 MIL NAME        -    -   -  -  -  "+nets.get(4).getNetStatus()+" 22 MIL NAME        -    -   -  -  -  "+nets.get(22).getNetStatus()+" \r\n" + 
-				" 5 MIL NAME        -    -   -  -  -  "+nets.get(5).getNetStatus()+" 23 MIL NAME        -    -   -  -  -  "+nets.get(23).getNetStatus()+" \r\n" + 
-				" 6 MIL NAME        -    -   -  -  -  "+nets.get(6).getNetStatus()+" 24 MIL NAME        -    -   -  -  -  "+nets.get(24).getNetStatus()+" \r\n" + 
-				" 7 MIL NAME        -    -   -  -  -  "+nets.get(7).getNetStatus()+" 25 MIL NAME        -    -   -  -  -  "+nets.get(25).getNetStatus()+" \r\n" + 
-				" 8 MIL NAME        -    -   -  -  -  "+nets.get(8).getNetStatus()+" 26 MIL NAME        -    -   -  -  -  "+nets.get(26).getNetStatus()+" \r\n" + 
-				" 9 MIL NAME        -    -   -  -  -  "+nets.get(9).getNetStatus()+" 27 MIL NAME        -    -   -  -  -  "+nets.get(27).getNetStatus()+" \r\n" + 
-				"10 MIL NAME        -    -   -  -  -  "+nets.get(10).getNetStatus()+" 28 MIL NAME        -    -   -  -  -  "+nets.get(28).getNetStatus()+" \r\n" + 
-				"11 MIL NAME        -    -   -  -  -  "+nets.get(11).getNetStatus()+" 29 MIL NAME        -    -   -  -  -  "+nets.get(29).getNetStatus()+" \r\n" +
-				"12 MIL NAME        -    -   -  -  -  "+nets.get(12).getNetStatus()+" 30 MIL NAME        -    -   -  -  -  "+nets.get(30).getNetStatus()+" \r\n" + 
-				"13 MIL NAME        -    -   -  -  -  "+nets.get(13).getNetStatus()+" 31 MIL NAME        -    -   -  -  -  "+nets.get(31).getNetStatus()+" \r\n" + 
-				"14 MIL NAME        -    -   -  -  -  "+nets.get(14).getNetStatus()+" 32 MIL NAME        -    -   -  -  -  "+nets.get(32).getNetStatus()+" \r\n" + 
-				"15 MIL NAME        -    -   -  -  -  "+nets.get(15).getNetStatus()+" 33 MIL NAME        -    -   -  -  -  "+nets.get(33).getNetStatus()+" \r\n" + 
-				"16 MIL NAME        -    -   -  -  -  "+nets.get(16).getNetStatus()+" 34 MIL NAME        -    -   -  -  -  "+nets.get(34).getNetStatus()+" \r\n" + 
-				"17 MIL NAME        -    -   -  -  -  "+nets.get(17).getNetStatus()+" 35 MIL NAME        -    -   -  -  -  "+nets.get(35).getNetStatus()+" \r\n" +
-				"18 MIL NAME       B01   -   -  -  -  "+nets.get(18).getNetStatus()+" 36 MIL NAME        -    -   -  -  -  "+nets.get(36).getNetStatus()+" \r\n" + 
+				" 1 "+String.format("%1$-14s",nets.get(1).getName())+"  -    -   -  -  -  "+nets.get(1).getNetStatus()+" 19 "+String.format("%1$-14s",nets.get(19).getName())+"  -    -   -  -  -  "+nets.get(19).getNetStatus()+" \r\n" + 
+				" 2 "+String.format("%1$-14s",nets.get(2).getName())+"  -    -   -  -  -  "+nets.get(2).getNetStatus()+" 20 "+String.format("%1$-14s",nets.get(20).getName())+"  -    -   -  -  -  "+nets.get(20).getNetStatus()+" \r\n" + 
+				" 3 "+String.format("%1$-14s",nets.get(3).getName())+"  -    -   -  -  -  "+nets.get(3).getNetStatus()+" 21 "+String.format("%1$-14s",nets.get(21).getName())+"  -    -   -  -  -  "+nets.get(21).getNetStatus()+" \r\n" +
+				" 4 "+String.format("%1$-14s",nets.get(4).getName())+"  -    -   -  -  -  "+nets.get(4).getNetStatus()+" 22 "+String.format("%1$-14s",nets.get(22).getName())+"  -    -   -  -  -  "+nets.get(22).getNetStatus()+" \r\n" + 
+				" 5 "+String.format("%1$-14s",nets.get(5).getName())+"  -    -   -  -  -  "+nets.get(5).getNetStatus()+" 23 "+String.format("%1$-14s",nets.get(23).getName())+"  -    -   -  -  -  "+nets.get(23).getNetStatus()+" \r\n" + 
+				" 6 "+String.format("%1$-14s",nets.get(6).getName())+"  -    -   -  -  -  "+nets.get(6).getNetStatus()+" 24 "+String.format("%1$-14s",nets.get(24).getName())+"  -    -   -  -  -  "+nets.get(24).getNetStatus()+" \r\n" + 
+				" 7 "+String.format("%1$-14s",nets.get(7).getName())+"  -    -   -  -  -  "+nets.get(7).getNetStatus()+" 25 "+String.format("%1$-14s",nets.get(25).getName())+"  -    -   -  -  -  "+nets.get(25).getNetStatus()+" \r\n" + 
+				" 8 "+String.format("%1$-14s",nets.get(8).getName())+"  -    -   -  -  -  "+nets.get(8).getNetStatus()+" 26 "+String.format("%1$-14s",nets.get(26).getName())+"  -    -   -  -  -  "+nets.get(26).getNetStatus()+" \r\n" + 
+				" 9 "+String.format("%1$-14s",nets.get(9).getName())+"  -    -   -  -  -  "+nets.get(9).getNetStatus()+" 27 "+String.format("%1$-14s",nets.get(27).getName())+"  -    -   -  -  -  "+nets.get(27).getNetStatus()+" \r\n" + 
+				"10 "+String.format("%1$-14s",nets.get(10).getName())+"  -    -   -  -  -  "+nets.get(10).getNetStatus()+" 28 "+String.format("%1$-14s",nets.get(28).getName())+"  -    -   -  -  -  "+nets.get(28).getNetStatus()+" \r\n" + 
+				"11 "+String.format("%1$-14s",nets.get(11).getName())+"  -    -   -  -  -  "+nets.get(11).getNetStatus()+" 29 "+String.format("%1$-14s",nets.get(29).getName())+"  -    -   -  -  -  "+nets.get(29).getNetStatus()+" \r\n" +
+				"12 "+String.format("%1$-14s",nets.get(12).getName())+"  -    -   -  -  -  "+nets.get(12).getNetStatus()+" 30 "+String.format("%1$-14s",nets.get(30).getName())+"  -    -   -  -  -  "+nets.get(30).getNetStatus()+" \r\n" + 
+				"13 "+String.format("%1$-14s",nets.get(13).getName())+"  -    -   -  -  -  "+nets.get(13).getNetStatus()+" 31 "+String.format("%1$-14s",nets.get(31).getName())+"  -    -   -  -  -  "+nets.get(31).getNetStatus()+" \r\n" + 
+				"14 "+String.format("%1$-14s",nets.get(14).getName())+"  -    -   -  -  -  "+nets.get(14).getNetStatus()+" 32 "+String.format("%1$-14s",nets.get(32).getName())+"  -    -   -  -  -  "+nets.get(32).getNetStatus()+" \r\n" + 
+				"15 "+String.format("%1$-14s",nets.get(15).getName())+"  -    -   -  -  -  "+nets.get(15).getNetStatus()+" 33 "+String.format("%1$-14s",nets.get(33).getName())+"  -    -   -  -  -  "+nets.get(33).getNetStatus()+" \r\n" + 
+				"16 "+String.format("%1$-14s",nets.get(16).getName())+"  -    -   -  -  -  "+nets.get(16).getNetStatus()+" 34 "+String.format("%1$-14s",nets.get(34).getName())+"  -    -   -  -  -  "+nets.get(34).getNetStatus()+" \r\n" + 
+				"17 "+String.format("%1$-14s",nets.get(17).getName())+"  -    -   -  -  -  "+nets.get(17).getNetStatus()+" 35 "+String.format("%1$-14s",nets.get(35).getName())+"  -    -   -  -  -  "+nets.get(35).getNetStatus()+" \r\n" +
+				"18 "+String.format("%1$-14s",nets.get(18).getName())+" B01   -   -  -  -  "+nets.get(18).getNetStatus()+" 36 "+String.format("%1$-14s",nets.get(36).getName())+"  -    -   -  -  -  "+nets.get(36).getNetStatus()+" \r\n" + 
 				"                                                                                \r\n" + 
 				"PTP CALLS                                                                       \r\n" + 
 				"   DEST    TX   ST     DEST    TX   ST      DEST    TX   ST      DEST    TX   ST\r\n" + 
@@ -292,7 +292,7 @@ public class Screens {
 				"                                                                                \r\n" + 
 				"                                                                                \r\n" + 
 				"                                                                                \r\n" + 
-				"          CURRENT CONSTELLATION      MIL                                        \r\n" + 
+				"          CURRENT CONSTELLATION      "+constellation+"                                        \r\n" + 
 				"                                                                                \r\n" + 
 				"          CURRENT SAT                "+satName2+"                             \r\n" + 
 				"          BEAM                       "+beam+"                                         \r\n" +
@@ -455,13 +455,13 @@ public class Screens {
 		newMainArea =
 				"MAIN:TERMINAL:KGV-11 KEYS-------------------------------------------------------\r\n" + 
 				"                                                                                \r\n" + 
-				"CURRENT CONSTELLATION  MIL             AUTO FUTURE ALL         COMPROMISE COT   \r\n" + 
+				"CURRENT CONSTELLATION  "+constellation+"             AUTO FUTURE ALL         COMPROMISE COT   \r\n" + 
 				"                                 OTAR  "+String.format("%1$-3s", otarAuto)+"  -      -           -                \r\n" + 
 				"CONSTELLATIONS                                                                  \r\n" + 
 				"         CANISTER ID      GROUP            UNIVERSAL  LINKING                   \r\n" + 
 				" LABEL   CURRENT FUTURE   ID     CHAINING  A     B    CURRENT FUTURE COMPROMISE \r\n" + 
-				" MIL     123  Y  123  N   -      -         -     -    -       -      -          \r\n" + 
-				" UFO     -    N  -    N   -      -         -     -    -       -      -          \r\n" +
+				" MIL     "+String.format("%1$-3s",canisterIDs[0])+"  Y  "+String.format("%1$-3s",canisterIDs[1])+"  N   -      -         -     -    -       -      -          \r\n" + 
+				" UFO     "+String.format("%1$-3s",canisterIDs[2])+"  N  "+String.format("%1$-3s",canisterIDs[3])+"  N   -      -         -     -    -       -      -          \r\n" +
 				"                                                                                \r\n" + 
 				"                                                                                \r\n" + 
 				"                                                                                \r\n" + 
@@ -861,27 +861,47 @@ public class Screens {
 				"                                                                                \r\n" + 
 				"                                                                                \r\n" + 
 				"                                                                                \r\n" + 
-				"CURRENT CONSTELLATION  MIL                                                      \r\n" + 
+				"CURRENT CONSTELLATION  "+constellation+"                                                      \r\n" +
 				"                                                                                \r\n" + 
 				"SATELLITES                                         TERMINAL LOGON PARAMETERS    \r\n" + 
 				"               SET   RISE  BEAMS                          C2      C2     C3     \r\n" + 
 				"  LABEL S EL   TIME  TIME  EC SA SB SC AH AL CI RB BEAM   ROBUST  CYCLE  MODE   \r\n" +
-				"  SAT01 "+satStatusChars[0]+" XX  >24.0    -   Y  Y  Y  Y  Y  Y  Y  Y  "+String.format("%1$-5s",beams[0])+"  HHR XX  ANY    MOST   \r\n" + 
-				"  SAT02 "+satStatusChars[1]+" <0     -  >24.0  Y  Y  Y  Y  Y  Y  Y  Y  "+String.format("%1$-5s",beams[1])+"  HHR X   ANY    AUTO   \r\n" + 
-				"  SAT03 "+satStatusChars[2]+"  -     -     -   Y  Y  -  -  -  -  -  -  "+String.format("%1$-5s",beams[2])+"  HHR XX  ANY    MOST   \r\n" + 
-				"  SAT04 "+satStatusChars[3]+"  -     -     -   Y  Y  Y  Y  Y  Y  Y  Y  "+String.format("%1$-5s",beams[3])+"  HHR XX  ANY    AUTO   \r\n" + 
-				"  SAT05 "+satStatusChars[4]+"  -     -     -   Y  Y  Y  Y  Y  Y  Y  Y  "+String.format("%1$-5s",beams[4])+"  HHR XX  ANY    MOST   \r\n" + 
-				"  SAT06 "+satStatusChars[5]+"  -     -     -   Y  Y  Y  Y  Y  Y  Y  Y  "+String.format("%1$-5s",beams[5])+"  HHR XX  ANY    AUTO   \r\n" + 
-				"  SAT07 "+satStatusChars[6]+"  -     -     -   Y  Y  Y  Y  Y  Y  Y  Y  "+String.format("%1$-5s",beams[6])+"  HHR XX  ANY    MOST   \r\n" + 
-				"  SAT08 "+satStatusChars[7]+"  -     -     -   Y  Y  Y  Y  Y  Y  Y  Y  "+String.format("%1$-5s",beams[7])+"  HHR XX  ANY    AUTO   \r\n" +
-				"  SAT09 "+satStatusChars[8]+"  -     -     -   Y  Y  -  -  -  -  -  -  "+String.format("%1$-5s",beams[8])+"  CI      ANY    MOST   \r\n" + 
-				"  SAT10 "+satStatusChars[9]+"  -     -     -   Y  Y  -  -  -  -  -  -  "+String.format("%1$-5s",beams[9])+"  CI      ANY    AUTO   \r\n" + 
+				"  SAT01 "+satStatusChars[0]+" "+getSatElevation("SAT01")+"  "+getSatSetTime("SAT01")+" "+getSatRiseTime("SAT01")+"  Y  Y  Y  Y  Y  Y  Y  Y  "
+						+ ""+String.format("%1$-5s",sats.get("SAT01").getBeam())+"  "+String.format("%1$-7s",sats.get("SAT01").getC2Robustness())+" "
+								+ ""+String.format("%1$-5s",sats.get("SAT01").getC2Cycle())+"  "+String.format("%1$-6s",sats.get("SAT01").getC3Mode())+" \r\n" + 
+				"  SAT02 "+satStatusChars[1]+" "+getSatElevation("SAT02")+"  "+getSatSetTime("SAT02")+" "+getSatRiseTime("SAT02")+"  Y  Y  Y  Y  Y  Y  Y  Y  "
+						+ ""+String.format("%1$-5s",sats.get("SAT02").getBeam())+"  "+String.format("%1$-7s",sats.get("SAT02").getC2Robustness())+" "
+								+ ""+String.format("%1$-5s",sats.get("SAT02").getC2Cycle())+"  "+String.format("%1$-6s",sats.get("SAT02").getC3Mode())+" \r\n" + 
+				"  SAT03 "+satStatusChars[2]+" "+getSatElevation("SAT03")+"  "+getSatSetTime("SAT03")+" "+getSatRiseTime("SAT03")+"  Y  Y  -  -  -  -  -  -  "
+						+ ""+String.format("%1$-5s",sats.get("SAT03").getBeam())+"  "+String.format("%1$-7s",sats.get("SAT03").getC2Robustness())+" "
+								+ ""+String.format("%1$-5s",sats.get("SAT03").getC2Cycle())+"  "+String.format("%1$-6s",sats.get("SAT03").getC3Mode())+" \r\n" + 
+				"  SAT04 "+satStatusChars[3]+" "+getSatElevation("SAT04")+"  "+getSatSetTime("SAT04")+" "+getSatRiseTime("SAT04")+"  Y  Y  Y  Y  Y  Y  Y  Y  "
+						+ ""+String.format("%1$-5s",sats.get("SAT04").getBeam())+"  "+String.format("%1$-7s",sats.get("SAT04").getC2Robustness())+" "
+								+ ""+String.format("%1$-5s",sats.get("SAT04").getC2Cycle())+"  "+String.format("%1$-6s",sats.get("SAT04").getC3Mode())+" \r\n" + 
+				"  SAT05 "+satStatusChars[4]+" "+getSatElevation("SAT05")+"  "+getSatSetTime("SAT05")+" "+getSatRiseTime("SAT05")+"  Y  Y  Y  Y  Y  Y  Y  Y  "
+						+ ""+String.format("%1$-5s",sats.get("SAT05").getBeam())+"  "+String.format("%1$-7s",sats.get("SAT05").getC2Robustness())+" "
+								+ ""+String.format("%1$-5s",sats.get("SAT05").getC2Cycle())+"  "+String.format("%1$-6s",sats.get("SAT05").getC3Mode())+" \r\n" + 
+				"  SAT06 "+satStatusChars[5]+" "+getSatElevation("SAT06")+"  "+getSatSetTime("SAT06")+" "+getSatRiseTime("SAT06")+"  Y  Y  Y  Y  Y  Y  Y  Y  "
+						+ ""+String.format("%1$-5s",sats.get("SAT06").getBeam())+"  "+String.format("%1$-7s",sats.get("SAT06").getC2Robustness())+" "
+								+ ""+String.format("%1$-5s",sats.get("SAT06").getC2Cycle())+"  "+String.format("%1$-6s",sats.get("SAT06").getC3Mode())+" \r\n" + 
+				"  SAT07 "+satStatusChars[6]+" "+getSatElevation("SAT07")+"  "+getSatSetTime("SAT07")+" "+getSatRiseTime("SAT07")+"  Y  Y  Y  Y  Y  Y  Y  Y  "
+						+ ""+String.format("%1$-5s",sats.get("SAT07").getBeam())+"  "+String.format("%1$-7s",sats.get("SAT07").getC2Robustness())+" "
+								+ ""+String.format("%1$-5s",sats.get("SAT07").getC2Cycle())+"  "+String.format("%1$-6s",sats.get("SAT07").getC3Mode())+" \r\n" + 
+				"  SAT08 "+satStatusChars[7]+" "+getSatElevation("SAT08")+"  "+getSatSetTime("SAT08")+" "+getSatRiseTime("SAT08")+"  Y  Y  Y  Y  Y  Y  Y  Y  "
+						+ ""+String.format("%1$-5s",sats.get("SAT08").getBeam())+"  "+String.format("%1$-7s",sats.get("SAT08").getC2Robustness())+" "
+								+ ""+String.format("%1$-5s",sats.get("SAT08").getC2Cycle())+"  "+String.format("%1$-6s",sats.get("SAT08").getC3Mode())+" \r\n" +
+				"  SAT09 "+satStatusChars[8]+" "+getSatElevation("SAT09")+"  "+getSatSetTime("SAT09")+" "+getSatRiseTime("SAT09")+"  Y  Y  -  -  -  -  -  -  "
+						+ ""+String.format("%1$-5s",sats.get("SAT09").getBeam())+"  "+String.format("%1$-7s",sats.get("SAT09").getC2Robustness())+" "
+								+ ""+String.format("%1$-5s",sats.get("SAT09").getC2Cycle())+"  "+String.format("%1$-6s",sats.get("SAT09").getC3Mode())+" \r\n" + 
+				"  SAT10 "+satStatusChars[9]+" "+getSatElevation("SAT10")+"  "+getSatSetTime("SAT10")+" "+getSatRiseTime("SAT10")+"  Y  Y  -  -  -  -  -  -  "
+						+ ""+String.format("%1$-5s",sats.get("SAT10").getBeam())+"  "+String.format("%1$-7s",sats.get("SAT10").getC2Robustness())+" "
+								+ ""+String.format("%1$-5s",sats.get("SAT10").getC2Cycle())+"  "+String.format("%1$-6s",sats.get("SAT10").getC3Mode())+" \r\n" + 
 				"                                                                                \r\n" + 
 				"                                                                                \r\n" + 
 				"KGV-11 STATUS                                                                   \r\n" + 
 				"                                     HIGH                                       \r\n" +
 				"         KEK      DL      UL         COVER                                      \r\n" + 
-				"  TYPE   UNIQUE   "+satName1+"   "+satName1+" ST   "+satName1+"           \r\n" + 
+				"  TYPE   UNIQUE   "+String.format("%1$5s",KGV11Status[0])+"   "+String.format("%1$5s",KGV11Status[1])+" T1   "+String.format("%1$5s",KGV11Status[2])+"           \r\n" + 
 				"  LOAD   R        B       B          B                                          \r\n" + 
 				"                                                                                \r\n" + 
 				"                                                                                \r\n" + 
@@ -1227,7 +1247,7 @@ public class Screens {
 		newMainArea =
 				"MAIN:TERMINAL:KGV-11 KEYS:COMSEC------------------------------------------------\r\n" + 
 				"                                                                                \r\n" + 
-				"CURRENT CONSTELLATION  MIL             AUTO FUTURE ALL          COMPROMISE COT  \r\n" + 
+				"CURRENT CONSTELLATION  "+constellation+"             AUTO FUTURE ALL          COMPROMISE COT  \r\n" + 
 				"                                 OTAR  ON   -      -            -               \r\n" + 
 				"                                                                                \r\n" + 
 				"COMSEC KEYS                                                                     \r\n" + 
@@ -1300,6 +1320,60 @@ public class Screens {
 		associatedScreens.add(96);
 		associatedScreens.add(97);
 		associatedScreens.add(98);
+		screenIndex.put(index, newScreenTemplate(15, true, true, false, false));
+		associatedScreensIndex.put(index, associatedScreens);
+		
+		// UPDATE CON KEYS SCREEN
+		// LAST SCREEN = CRYPTO KEYS SCREEN (INDEX = 15)
+		index = 83;
+		newPromptArea = 
+				"--------------------------------------------------------------------------------\r\n" + 
+				"     SELECT CONSTELLATION                                                       \r\n" + 
+				"                                                                                \r\n" + 
+				"                                                                                \r\n";
+		newOptionsArea =
+				"-------------------------------** UNCLASSIFIED **-------------------------------\r\n" + 
+				"   _______________    _______________    _______________    _______________     \r\n" + 
+				"  ¦      MIL      ¦  ¦      UFO      ¦  ¦               ¦  ¦               ¦    \r\n" + 
+				"  ¦               ¦  ¦               ¦  ¦               ¦  ¦               ¦    \r\n" + 
+				"   ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯    ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯    ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯    ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯     \r\n" + 
+				"   _______________    _______________    _______________    _______________     \r\n" +  
+				"  ¦               ¦  ¦               ¦  ¦               ¦  ¦               ¦    \r\n" + 
+				"  ¦               ¦  ¦               ¦  ¦               ¦  ¦               ¦    \r\n" + 
+				"   ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯    ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯    ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯    ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯     \r\n";
+		associatedScreens = new ArrayList<Integer>();
+		associatedScreens.add(426);
+		associatedScreens.add(427);
+		screenIndex.put(index, newScreenTemplate(15, true, true, false, false));
+		associatedScreensIndex.put(index, associatedScreens);
+		
+		// UPDATE SAT KEYS SCREEN
+		// LAST SCREEN = CRYPTO KEYS SCREEN (INDEX = 15)
+		index = 84;
+        newPromptArea = 
+                "--------------------------------------------------------------------------------\r\n" + 
+                "     SELECT SAT                                                                 \r\n" + 
+				"                                                                                \r\n" + 
+                "                                                                                \r\n";
+		newOptionsArea =
+				"-------------------------------** UNCLASSIFIED **-------------------------------\r\n" + 
+				"   _______________    _______________    _______________    _______________     \r\n" + 
+				"  ¦     SAT01     ¦  ¦     SAT02     ¦  ¦     SAT03     ¦  ¦     SAT04     ¦    \r\n" + 
+				"  ¦               ¦  ¦               ¦  ¦               ¦  ¦               ¦    \r\n" + 
+				"   ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯    ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯    ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯    ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯     \r\n" + 
+				"   _______________    _______________    _______________    _______________     \r\n" +  
+				"  ¦     SAT05     ¦  ¦     SAT06     ¦  ¦     SAT07     ¦  ¦ MORE OPTIONS  ¦    \r\n" + 
+				"  ¦               ¦  ¦               ¦  ¦               ¦  ¦               ¦    \r\n" + 
+				"   ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯    ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯    ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯    ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯     \r\n";
+		associatedScreens = new ArrayList<Integer>();
+		associatedScreens.add(440);
+		associatedScreens.add(441);
+		associatedScreens.add(442);
+		associatedScreens.add(443);
+		associatedScreens.add(444);
+		associatedScreens.add(445);
+		associatedScreens.add(446);
+		associatedScreens.add(439);
 		screenIndex.put(index, newScreenTemplate(15, true, true, false, false));
 		associatedScreensIndex.put(index, associatedScreens);
 		
@@ -3303,7 +3377,7 @@ public class Screens {
 		newMainArea = 
 				"MAIN:EHF:NET--------------------------------------------------------------------\r\n" + 
 				"                                             SETUP CAPABLE      NO              \r\n" + 
-				"         NET NUMBER         "+nets.get(selectedNet).getNetNumber()+"               CONSTELLATION      MIL             \r\n" + 
+				"         NET NUMBER         "+nets.get(selectedNet).getNetNumber()+"               CONSTELLATION      "+constellation+"             \r\n" + 
 				"         STATUS             "+String.format("%1$-8s", nets.get(selectedNet).getStatus())+"         TERMINAL ID        1234            \r\n" + 
 				"                                                                                \r\n" + 
 				"                                                                                \r\n" + 
@@ -3642,8 +3716,6 @@ public class Screens {
 		associatedScreens.add(458);  // NOT REAL VALUE CHANGE LATER FOR REAL!!!
 		screenIndex.put(index, newScreenTemplate(315, true, true, false, false));
         associatedScreensIndex.put(index, associatedScreens);
-        
-        
         
         // INTERRUPTIBLE YES NET PARAM SCREEN
         // LAST SCREEN = INTERRUPTIBLE NET PARAM SCREEN (INDEX = 321)
@@ -4630,6 +4702,232 @@ public class Screens {
 		screenIndex.put(index, newScreenTemplate(301, true, true, false, true));
         associatedScreensIndex.put(index, associatedScreens);
         
+        // UPDATE MIL CON KEYS SCREEN
+        // LAST SCREEN = UPDATE CON KEYS (INDEX = 83)
+        index = 426;
+		newOptionsArea =
+				"-------------------------------** UNCLASSIFIED **-------------------------------\r\n" + 
+				"   _______________    _______________    _______________    _______________     \r\n" + 
+				"  ¦     EXIT      ¦  ¦    CURRENT    ¦  ¦    FUTURE     ¦  ¦  DELETE KEY   ¦    \r\n" + 
+				"  ¦               ¦  ¦  CANISTER ID  ¦  ¦  CANISTER ID  ¦  ¦               ¦    \r\n" + 
+				"   ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯    ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯    ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯    ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯     \r\n" + 
+				"   _______________    _______________    _______________    _______________     \r\n" +  
+				"  ¦DELETE CON KEYS¦  ¦               ¦  ¦               ¦  ¦               ¦    \r\n" + 
+				"  ¦               ¦  ¦               ¦  ¦               ¦  ¦               ¦    \r\n" + 
+				"   ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯    ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯    ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯    ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯     \r\n";
+		associatedScreens = new ArrayList<Integer>();
+		associatedScreens.add(15);
+		associatedScreens.add(428);
+		associatedScreens.add(429);
+		associatedScreens.add(430);
+		associatedScreens.add(431);
+		screenIndex.put(index, newScreenTemplate(83, true, true, true, false));
+        associatedScreensIndex.put(index, associatedScreens);
+        
+        // UPDATE UFO CON KEYS SCREEN
+        // LAST SCREEN = UPDATE CON KEYS (INDEX = 83)
+        index = 427;
+		associatedScreens = new ArrayList<Integer>();
+		associatedScreens.add(15);
+		associatedScreens.add(428);
+		associatedScreens.add(429);
+		associatedScreens.add(430);
+		associatedScreens.add(431);
+		screenIndex.put(index, newScreenTemplate(426, true, true, true, true));
+        associatedScreensIndex.put(index, associatedScreens);
+        
+        // ENTER CURRENT CANISTER ID SCREEN
+        // LAST SCREEN = UPDATE MIL CON KEYS SCREEN (INDEX = 426) OR UPDATE UFO CON KEYS SCREEN (INDEX = 427)
+        index = 428;
+		newPromptArea =
+				"--------------------------------------------------------------------------------\r\n" + 
+				"     ENTER CANISTER ID                                                          \r\n" + 
+				"                                                                                \r\n" + 
+				"                                                                                \r\n";
+		newOptionsArea =
+				"-------------------------------** UNCLASSIFIED **-------------------------------\r\n" + 
+				"   _______________    _______________    _______________    _______________     \r\n" + 
+				"  ¦               ¦  ¦               ¦  ¦               ¦  ¦               ¦    \r\n" + 
+				"  ¦               ¦  ¦               ¦  ¦               ¦  ¦               ¦    \r\n" + 
+				"   ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯    ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯    ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯    ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯     \r\n" + 
+				"   _______________    _______________    _______________    _______________     \r\n" +  
+				"  ¦               ¦  ¦               ¦  ¦               ¦  ¦               ¦    \r\n" + 
+				"  ¦               ¦  ¦               ¦  ¦               ¦  ¦               ¦    \r\n" + 
+				"   ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯    ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯    ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯    ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯     \r\n";
+		screenIndex.put(index, newScreenTemplate(426, true, true, false, false));
+		
+		// ENTER FUTURE CANISTER ID SCREEN
+		// LAST SCREEN = UPDATE MIL CON KEYS SCREEN (INDEX = 426) OR UPDATE UFO CON KEYS SCREEN (INDEX = 427)
+		index = 429;
+		screenIndex.put(index, newScreenTemplate(428, true, true, true, true));
+		
+		// DELETE CON KEY SCREEN
+		// LAST SCREEN = UPDATE MIL CON KEYS SCREEN (INDEX = 426) OR UPDATE UFO CON KEYS SCREEN (INDEX = 427)
+		index = 430;
+		newPromptArea =
+				"--------------------------------------------------------------------------------\r\n" + 
+				"     SELECT KEY TO DELETE                                                       \r\n" + 
+				"                                                                                \r\n" + 
+				"                                                                                \r\n";
+		newOptionsArea =
+				"-------------------------------** UNCLASSIFIED **-------------------------------\r\n" + 
+				"   _______________    _______________    _______________    _______________     \r\n" + 
+				"  ¦   CHAINING    ¦  ¦  UNIVERSAL A  ¦  ¦  UNIVERSAL B  ¦  ¦               ¦    \r\n" + 
+				"  ¦               ¦  ¦               ¦  ¦               ¦  ¦               ¦    \r\n" + 
+				"   ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯    ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯    ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯    ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯     \r\n" + 
+				"   _______________    _______________    _______________    _______________     \r\n" +  
+				"  ¦               ¦  ¦               ¦  ¦               ¦  ¦               ¦    \r\n" + 
+				"  ¦               ¦  ¦               ¦  ¦               ¦  ¦               ¦    \r\n" + 
+				"   ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯    ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯    ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯    ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯     \r\n";
+		associatedScreens = new ArrayList<Integer>();
+		associatedScreens.add(435);
+		associatedScreens.add(435);
+		associatedScreens.add(435);
+		screenIndex.put(index, newScreenTemplate(426, true, true, false, false));
+        associatedScreensIndex.put(index, associatedScreens);
+		
+        // DELETE CON KEYS SCREEN
+        // LAST SCREEN = UPDATE MIL CON KEYS SCREEN (INDEX = 426)
+        index = 431;
+		newPromptArea =
+				"--------------------------------------------------------------------------------\r\n" + 
+				"     VERIFY TO DELETE ALL CON KEYS                                              \r\n" + 
+				"                                                                                \r\n" + 
+				"                                                                                \r\n";
+		screenIndex.put(index, newScreenTemplate(428, true, true, false, true));
+        
+		// INVALID ENTRY CURRENT CANISTER ID SCREEN
+		// LAST SCREEN = ENTER CURRENT CANISTER ID SCREEN (INDEX = 428) OR INVALID ENTRY CURRENT CANISTER ID SCREEN (INDEX = 432)
+		index = 432;
+		newPromptArea =
+				"--------------------------------------------------------------------------------\r\n" + 
+				"     ENTER CANISTER ID                                                          \r\n" + 
+				"                                                                                \r\n" + 
+				"                                 INVALID ENTRY                                  \r\n";
+		screenIndex.put(index, newScreenTemplate(428, true, true, false, true));
+		
+		// INVALID ENTRY FUTURE CANISTER ID SCREEN
+		// LAST SCREEN = ENTER FUTURE CANISTER ID SCREEN (INDEX = 429) OR INVALID ENTRY FUTURE CANISTER ID SCREEN (INDEX = 433)
+		index = 433;
+		screenIndex.put(index, newScreenTemplate(432, true, true, true, true));
+		
+        // VERIFY TO CHANGE CANISTER ID SCREEN
+		// LAST SCREEN = ENTER CANISTER ID SCREEN (INDEX = 428) OR INVALID ENTRY CANISTER ID SCREEN (INDEX = 431)
+		index = 434;
+		newPromptArea =
+				"--------------------------------------------------------------------------------\r\n" + 
+				"     VERIFY TO CHANGE CANISTER ID                                               \r\n" + 
+				"                                                                                \r\n" + 
+				"                                                                                \r\n";
+		screenIndex.put(index, newScreenTemplate(428, true, true, false, true));
+		
+		// VERIFY TO DELETE CON KEY SCEEN
+		// LAST SCREEN = DELETE CON KEY SCREEN (INDEX = 430)
+		index = 435;
+		newPromptArea =
+				"--------------------------------------------------------------------------------\r\n" + 
+				"     VERIFY TO DELETE KEY                                                       \r\n" + 
+				"                                                                                \r\n" + 
+				"                                                                                \r\n";
+		screenIndex.put(index, newScreenTemplate(428, true, true, false, true));
+		
+		// VERIFY TO DELETE CON KEY WORKING SRCEEN
+		// LAST SCREEN = VERIFY TO DELETE CON KEY SCREEN (INDEX = 435) OR VERIFY TO DELETE CON KEY WORKING CONT SCREEN (INDEX = 437)
+		index = 436;
+		screenIndex.put(index, newScreenTemplate(435, true, true, true, true));
+		
+		// VERIFY TO DELETE CON KEY WORKING CONT SCREEN
+		// LAST SCREEN = VERIFY TO DELETE CON KEY WORKING SRCEEN (INDEX = 436)
+		index = 437;
+		newPromptArea =
+				"--------------------------------------------------------------------------------\r\n" + 
+				"     VERIFY TO DELETE KEY                                                       \r\n" + 
+				"                                    WORKING                                     \r\n" + 
+				"                                                                                \r\n";
+		screenIndex.put(index, newScreenTemplate(435, true, true, false, true));
+		
+		// CON KEY NOT FOUND SCREEN
+		// LAST SCREEN = VERIFY TO DELETE CON KEY WORKING SRCEEN (INDEX = 436) OR VERIFY TO DELETE CON KEY WORKING CONT SCREEN (INDEX = 437)
+		index = 438;
+		newPromptArea =
+				"--------------------------------------------------------------------------------\r\n" + 
+				"     SELECT OPTION                                                              \r\n" + 
+				"                                                                                \r\n" + 
+				"                                 KEY NOT FOUND                                  \r\n";
+		associatedScreens = new ArrayList<Integer>();
+		associatedScreens.add(15);
+		associatedScreens.add(428);
+		associatedScreens.add(429);
+		associatedScreens.add(430);
+		associatedScreens.add(431);
+		screenIndex.put(index, newScreenTemplate(426, true, true, false, true));
+        associatedScreensIndex.put(index, associatedScreens);
+		
+        // UPDATE SAT KEYS CONT SCREEN
+        // LAST SCREEN = UPDATE SAT KEYS SCREEN (INDEX = 84)
+        index = 439;
+		newOptionsArea =
+				"-------------------------------** UNCLASSIFIED **-------------------------------\r\n" + 
+				"   _______________    _______________    _______________    _______________     \r\n" + 
+				"  ¦ PREV OPTIONS  ¦  ¦     SAT08     ¦  ¦     SAT09     ¦  ¦     SAT10     ¦    \r\n" + 
+				"  ¦               ¦  ¦               ¦  ¦               ¦  ¦               ¦    \r\n" + 
+				"   ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯    ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯    ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯    ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯     \r\n" + 
+				"   _______________    _______________    _______________    _______________     \r\n" +  
+				"  ¦               ¦  ¦               ¦  ¦               ¦  ¦               ¦    \r\n" + 
+				"  ¦               ¦  ¦               ¦  ¦               ¦  ¦               ¦    \r\n" + 
+				"   ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯    ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯    ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯    ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯     \r\n";
+		associatedScreens = new ArrayList<Integer>();
+		associatedScreens.add(84);
+		associatedScreens.add(447);
+		associatedScreens.add(448);
+		associatedScreens.add(449);
+		screenIndex.put(index, newScreenTemplate(84, true, true, true, false));
+        associatedScreensIndex.put(index, associatedScreens);
+        
+        // UPDATED SELECTED SAT KEYS SCREENS (INDICES 440 - 449)
+        // LAST SCREEN = UPDATE SAT KEYS SCREEN (INDEX = 84) OR UPDATE SAT KEYS CONT SCREEN (INDEX = 439)
+        index = 440;
+		newOptionsArea =
+				"-------------------------------** UNCLASSIFIED **-------------------------------\r\n" + 
+				"   _______________    _______________    _______________    _______________     \r\n" + 
+				"  ¦     EXIT      ¦  ¦DELETE CURRENT ¦  ¦ DELETE FUTURE ¦  ¦  DELETE COMP  ¦    \r\n" + 
+				"  ¦               ¦  ¦               ¦  ¦               ¦  ¦               ¦    \r\n" + 
+				"   ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯    ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯    ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯    ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯     \r\n" + 
+				"   _______________    _______________    _______________    _______________     \r\n" +  
+				"  ¦DELETE SAT KEYS¦  ¦               ¦  ¦               ¦  ¦               ¦    \r\n" + 
+				"  ¦               ¦  ¦               ¦  ¦               ¦  ¦               ¦    \r\n" + 
+				"   ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯    ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯    ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯    ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯     \r\n";
+		associatedScreens = new ArrayList<Integer>();
+		associatedScreens.add(15);
+		associatedScreens.add(460);
+		associatedScreens.add(461);
+		associatedScreens.add(462);
+		associatedScreens.add(450);
+		screenIndex.put(index, newScreenTemplate(15, true, true, true, false));
+        associatedScreensIndex.put(index, associatedScreens);
+        
+        for (int i = 441; i < 450; i++) {
+        	index = i;
+    		associatedScreens = new ArrayList<Integer>();
+    		associatedScreens.add(15);
+    		associatedScreens.add(460);
+    		associatedScreens.add(461);
+    		associatedScreens.add(462);
+    		associatedScreens.add(450);
+    		screenIndex.put(index, newScreenTemplate(440, true, true, true, true));
+            associatedScreensIndex.put(index, associatedScreens);
+        }
+        
+        // DELETE SAT KEYS SCREEN
+        // LAST SCREEN = UPDATE SELECTED SAT KEYS SCREENS (INDICES 440 - 449)
+        index = 450;
+		newPromptArea =
+				"--------------------------------------------------------------------------------\r\n" + 
+				"     VERIFY TO DELETE ALL SAT KEYS                                              \r\n" + 
+				"                                                                                \r\n" + 
+				"                                                                                \r\n";
+		screenIndex.put(index, newScreenTemplate(431, true, true, false, true));
+        
         /*
          * VALUES SHOULD BE CHANGED FOR TX PORTS
          */
@@ -4700,7 +4998,99 @@ public class Screens {
 		screenIndex.put(index, newScreenTemplate(315, true, true, true, true));
         associatedScreensIndex.put(index, associatedScreens);
         
+        // SAT KEYS NOT FOUND SCREEN
+        // LAST SCREEN = DELETE SAT KEYS SCREEN (INDEX = 450)
+        index = 459;
+		newPromptArea =
+				"--------------------------------------------------------------------------------\r\n" + 
+				"     SELECT OPTION                                                              \r\n" + 
+				"                                                                                \r\n" + 
+				"                                 KEY NOT FOUND                                  \r\n";
+		associatedScreens = new ArrayList<Integer>();
+		associatedScreens.add(15);
+		associatedScreens.add(460);
+		associatedScreens.add(461);
+		associatedScreens.add(462);
+		associatedScreens.add(450);
+		screenIndex.put(index, newScreenTemplate(440, true, true, false, true));
+        associatedScreensIndex.put(index, associatedScreens);
         
+        // DELETE CURRENT SAT KEY SCREEN
+        // LAST SCREEN = UPDATED SELECTED SAT KEYS SCREENS (INDICES 440 - 449) OR SAT KEYS NOT FOUND SCREEN (INDEX = 459)
+        index = 460;
+		newOptionsArea =
+				"-------------------------------** UNCLASSIFIED **-------------------------------\r\n" + 
+				"   _______________    _______________    _______________    _______________     \r\n" + 
+				"  ¦      DL       ¦  ¦     UL T1     ¦  ¦     UL T2     ¦  ¦     UL ST     ¦    \r\n" + 
+				"  ¦               ¦  ¦               ¦  ¦               ¦  ¦               ¦    \r\n" + 
+				"   ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯    ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯    ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯    ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯     \r\n" + 
+				"   _______________    _______________    _______________    _______________     \r\n" +  
+				"  ¦     COVER     ¦  ¦               ¦  ¦               ¦  ¦               ¦    \r\n" + 
+				"  ¦               ¦  ¦               ¦  ¦               ¦  ¦               ¦    \r\n" + 
+				"   ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯    ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯    ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯    ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯     \r\n";
+		associatedScreens = new ArrayList<Integer>();
+		associatedScreens.add(463);
+		associatedScreens.add(464);
+		associatedScreens.add(465);
+		associatedScreens.add(466);
+		associatedScreens.add(467);
+		screenIndex.put(index, newScreenTemplate(430, true, true, true, false));
+        associatedScreensIndex.put(index, associatedScreens);
+        
+        // DELETE FUTURE SAT KEY SCREEN
+        // LAST SCREEN = UPDATED SELECTED SAT KEYS SCREENS (INDICES 440 - 449) OR SAT KEYS NOT FOUND SCREEN (INDEX = 459)
+        index = 461;
+		associatedScreens = new ArrayList<Integer>();
+		associatedScreens.add(463);
+		associatedScreens.add(464);
+		associatedScreens.add(465);
+		associatedScreens.add(466);
+		associatedScreens.add(467);
+		screenIndex.put(index, newScreenTemplate(460, true, true, true, true));
+        associatedScreensIndex.put(index, associatedScreens);
+        
+        // DELETE COMPROMISE SAT KEY SCREEN
+        // LAST SCREEN = UPDATED SELECTED SAT KEYS SCREENS (INDICES 440 - 449) OR SAT KEYS NOT FOUND SCREEN (INDEX = 459)
+        index = 462;
+		associatedScreens = new ArrayList<Integer>();
+		associatedScreens.add(463);
+		associatedScreens.add(464);
+		associatedScreens.add(465);
+		associatedScreens.add(466);
+		associatedScreens.add(467);
+		screenIndex.put(index, newScreenTemplate(460, true, true, true, true));
+        associatedScreensIndex.put(index, associatedScreens);
+        
+        // VERIFY TO DELETE SAT KEY SCREENS (INDICES 463 - 467)
+        // LAST SCREEN = DELETE CURRENT SAT KEY SCREEN (INDEX = 460) OR DELETE FUTURE SAT KEY SCREEN (INDEX = 461) OR DELETE COMPROMISE SAT KEY SCREEN (INDEX = 462)
+        index = 463;
+		newPromptArea =
+				"--------------------------------------------------------------------------------\r\n" + 
+				"     VERIFY TO DELETE KEY                                                       \r\n" + 
+				"                                                                                \r\n" + 
+				"                                                                                \r\n";
+		screenIndex.put(index, newScreenTemplate(435, true, true, true, true));
+        
+		for (int i = 464; i < 468; i++) {
+			index = i;
+			screenIndex.put(index, newScreenTemplate(463, true, true, true, true));
+		}
+		
+		// VERIFY TO DELETE SAT KEY WORKING SCREEN
+		// LAST SCREEN = VERIFY TO DELETE SAT KEY SCREENS (INDICES 463 - 467)
+		index = 468;
+		screenIndex.put(index, newScreenTemplate(463, true, true, true, true));
+		
+		// VERIFY TO DELETE SAT KEY WORKING CONT SCREEN
+		// LAST SCREEN = VERIFY TO DELETE SAT KEY WORKING SCREEN (INDEX = 468)
+		index = 469;
+		newPromptArea =
+				"--------------------------------------------------------------------------------\r\n" + 
+				"     VERIFY TO DELETE KEY                                                       \r\n" + 
+				"                                    WORKING                                     \r\n" +  
+				"                                                                                \r\n";
+		screenIndex.put(index, newScreenTemplate(468, true, true, false, true));
+		
 		// ENTERED PTP CALL NUMBER SCREEN
 		// LAST SCREEN = PTP CALLS SCREEN (INDEX = 22)
 		index = 500; // NOT REAL VALUE JUST FOR TEST
@@ -5275,6 +5665,11 @@ public class Screens {
 		screenIndex.put(index, newScreenTemplate(1301, true, true, true, false));
 		associatedScreensIndex.put(index, associatedScreens);
 		
+		// WORKING VERIFY FOR DISRUPTIVE TEST CONT SCREEN
+		// LAST SCREEN = WORKING VERIFY FOR DISRUPTIVE TEST SCREEN (INDEX = 1300)
+		index = 1303;
+		screenIndex.put(index, newScreenTemplate(33, true, true, true, true));
+		
 		// COMMON TEST SCREEN
 		// LAST SCREEN = DISRUPTIVE BIT TEST SCREEN (INDEX = 1301)
 		index = 1502;
@@ -5630,6 +6025,31 @@ public class Screens {
 		} else {
 			return "";
 		}
+	}
+	
+	// Returns Truncated Satellite Elevation
+	private String getSatElevation(String satName) {
+		if (sats.get(satName).canBeAuthorized()) {
+			Integer elevation = (int) Double.parseDouble(sats.get(satName).getElevation());
+			return elevation.toString();
+		}
+		return " -";
+	}
+	
+	// Returns Satellite Set Time
+	private String getSatSetTime(String satName) {
+		if (satName.equals("SAT02")) {
+			return ">24.0";
+		}
+		return "   - ";
+	}
+	
+	// Returns Satellite Rise Time
+	private String getSatRiseTime(String satName) {
+		if (satName.equals("SAT08")) {
+			return ">24.0";
+		}
+		return "   - ";
 	}
 	
 	// Returns Formatted Alarm
